@@ -1,0 +1,10 @@
+/* Tông màu */
+:root {
+  --primary-color: #f55f8d;
+  --white-color: #fff;
+  --black-color: #000;
+  --text-color: #333;
+}
+html {
+  scroll-behavior: smooth;
+}

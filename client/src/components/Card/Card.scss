@@ -1,0 +1,7 @@
+/* styles.css hoặc trong global CSS */
+.scroll-hidden {
+  scrollbar-width: none; /* Firefox */
+}
+.scroll-hidden::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}

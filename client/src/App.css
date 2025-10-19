@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "Signature";
+  /* src: url("./assets/fonts/signature.woff2") format("woff2"); */
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+.font-signature {
+  font-family: "Signature", cursive;
+}
+
+

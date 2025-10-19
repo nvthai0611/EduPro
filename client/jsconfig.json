@@ -1,0 +1,12 @@
+// Nếu dùng @ thì phải config
+// Còn nếu không dùng thì chỉ cần npm rồi import như 1 component bình thường
+{
+    "compilerOptions": {
+        "baseUrl": "./src", // Đặt baseUrl là thư mục src
+        "paths": {
+            "@/*": [
+                "shadcn-ui/*"
+            ] // Alias @ trỏ đến thư mục src/shadcn-ui
+        }
+    }
+}

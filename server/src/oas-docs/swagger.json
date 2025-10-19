@@ -1,0 +1,9 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Spa Booking API",
+    "version": "0.1.0",
+    "description": "Mô tả API của bạn..."
+  },
+  "paths": { }
+}

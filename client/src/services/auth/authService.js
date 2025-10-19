@@ -1,0 +1,237 @@
+import { TYPE_AUTH } from "../../constains/auth";
+import { apiClient } from "../../utils/clientAxios";
+import Cookies from "js-cookie";
+class AuthService {
+  constructor() {
+    this.userKey = "user_data";
+    this.refreshTokenKey = "refreshToken";
+  }
+
+  getUser() {
+    if (typeof window === "undefined") return null;
+    const userRaw = Cookies.get(this.userKey);
+    try {
+      return userRaw?.startsWith("j:")
+        ? JSON.parse(userRaw.slice(2))
+        : JSON.parse(userRaw);
+    } catch {
+      return null;
+    }
+  }
+
+  getRefreshToken() {
+    if (typeof window === "undefined") return null;
+    return Cookies.get(this.refreshTokenKey);
+  }
+
+  storeUserData(user, refreshToken = null) {
+    Cookies.set(this.userKey, JSON.stringify(user), {
+      sameSite: "Strict",
+      secure: import.meta.env.VITE_PROD === "production",
+    });
+
+    if (refreshToken) {
+      Cookies.set(this.refreshTokenKey, refreshToken, {
+        sameSite: "Strict",
+        secure: import.meta.env.VITE_PROD === "production",
+      });
+    }
+  }
+
+  clearAuthData() {
+    const domain = import.meta.env.PROD === "production" ? "haeispa.online" : undefined;
+
+    // Xoá với cả domain và không domain để đảm bảo
+    [undefined, domain].forEach((d) => {
+      Cookies.remove(this.userKey, { path: "/", domain: d });
+      Cookies.remove(this.refreshTokenKey, { path: "/", domain: d });
+      Cookies.remove("accessToken", { path: "/", domain: d });
+      Cookies.remove("refreshToken", { path: "/", domain: d });
+      Cookies.remove("user_data", { path: "/", domain: d });
+    });
+
+    // Nếu có lưu token vào cookie riêng
+    apiClient.removeCookie("accessToken");
+    apiClient.removeCookie("refreshToken");
+    apiClient.removeCookie("user_data");
+
+    apiClient.setToken(null); // clear localStorage / token trong header
+    localStorage.clear();
+  }
+
+  isAuthenticated() {
+    return !!(apiClient.getTokenFromCookie() && this.getUser());
+  }
+
+  async register(credentials) {
+    try {
+      const response = await apiClient.post("/auth/register", { data: credentials });
+      return response;
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || "Đăng ký thất bại. Vui lòng thử lagi.",
+      };
+    }
+  }
+
+  async checkExistEmailOrPhone(email, phoneNumber) {
+    try {
+      const response = await apiClient.post("/auth/check-email-phone", { email, phoneNumber });
+      return response;
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || "Xác thực thất bại, vui lòng kiểm tra lại",
+      };
+    }
+  }
+
+  async login(credentials) {
+    try {
+      let url = "/auth/login";
+      if (credentials.type === TYPE_AUTH.MANAGER) {
+        url = "/auth/login/manager";
+      }
+      const response = await apiClient.post(url, { data: credentials });
+      const res = response.data;
+
+      if (response.success && res.accessToken && res.user) {
+        apiClient.setToken(res.accessToken); // lưu token vào cookie
+
+        this.storeUserData(res.user, null);
+      }
+
+      return response;
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || "Đăng nhập thất bại. Vui lòng thử lại.",
+      };
+    }
+  }
+
+  async logout() {
+    try {
+      const token = apiClient.getTokenFromCookie();
+      if (!token) {
+        return { success: true, message: "No active session" };
+      }
+      const res = await apiClient.get("/auth/logout");
+
+      if (res.success) {
+        return {
+          success: true,
+          message: res.message || "Đăng xuất thành công",
+          data: res,
+        };
+      }
+    } catch (error) {
+      return { success: false, message: error.message || "Đăng xuất thất bại" };
+    } finally {
+      this.clearAuthData(); // Xóa dữ liệu xác thực (token, user, etc.)
+    }
+  }
+
+  async refreshToken() {
+    try {
+      const refreshToken = this.getRefreshToken();
+      if (!refreshToken) return false;
+
+      const response = await apiClient.post("/auth/refresh", { refreshToken });
+
+      if (response.success && response.token && response.user) {
+        apiClient.setToken(response.token);
+        this.storeUserData(
+          response.user,
+          response.refreshToken || refreshToken
+        );
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      this.clearAuthData();
+      return false;
+    }
+  }
+
+  getAuthState() {
+    return {
+      user: this.getUser(),
+      token: apiClient.getTokenFromCookie(),
+      isAuthenticated: this.isAuthenticated(),
+      isLoading: false,
+    };
+  }
+
+  async updateProfile(userData) {
+    try {
+      const response = await apiClient.put("/auth/profile", userData);
+
+      if (response.success && response.user) {
+        const updatedUser = {
+          ...this.getUser(),
+          ...response.user,
+        };
+        this.storeUserData(updatedUser);
+      }
+
+      return response;
+    } catch (error) {
+      return {
+        success: false,
+        message:
+          error.message || "Cập nhật thông tin thất bại. Vui lòng thử lại.",
+      };
+    }
+  }
+
+  async changePassword(currentPassword, newPassword) {
+    try {
+      return await apiClient.post("/auth/change-password", {
+        currentPassword,
+        newPassword,
+      });
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || "Đổi mật khẩu thất bại.",
+      };
+    }
+  }
+
+  initAuth() {
+    apiClient.initSession();
+    const user = this.getUser();
+    const token = apiClient.getTokenFromCookie();
+
+    if (user && !token) {
+      this.refreshToken();
+    }
+  }
+
+  async fetchCurrentUser() {
+    try {
+      const response = await apiClient.get("/auth/users");
+      if (response.data && response.data.success && response.data.data) {
+        this.storeUserData(response.data.data);
+        return response.data.data;
+      }
+      return null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  async sendEmailResetPassword(email) {
+    return await apiClient.post("/auth/forgot-password-email", { email });
+  }
+
+  async confirmEmailResetPassword(token) {
+    return await apiClient.post("/auth/confirm-reset-password", { token });
+  }
+}
+
+export const authService = new AuthService();
+export default authService;
