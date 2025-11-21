@@ -59,6 +59,6 @@ export const privateRoutes = (
       <Route path="customer-care" element={<CustomerCare />} />
       <Route path="setting" element={<SettingPage />} />
     </Route>
-
+      
   </>
 );

@@ -15,6 +15,7 @@ import ConfirmEmailResetPasswordSuccess from "../pages/Auth/ConfirmEmail";
 // Learning Platform Pages
 import CourseList from "../pages/Courses/CourseList";
 import CourseDetail from "../pages/Courses/CourseDetail";
+// choi phép người dùng được phép truy cập ngay cả khi chưa đăng nhập
 export const publicRoutes = (
   <>
     {/* Bọc toàn bộ các trang public vào middleware kiểm tra role */}

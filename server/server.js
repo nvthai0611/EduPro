@@ -1,8 +1,6 @@
 const express = require("express");
 const http = require("http");
-const bodyParser = require("body-parser");
-const swaggerJsdoc = require("swagger-jsdoc");
-const swaggerUi = require("swagger-ui-express");
+
 const morgan = require("morgan");
 const { Server } = require("socket.io");
 const socketService = require("./src/utils/socket/socket");
@@ -16,33 +14,32 @@ const connectFlash = require("connect-flash");
 const cors = require("cors");
 const connectDB = require("./src/config/db");
 
-//Test bull
-const { ExpressAdapter } = require('@bull-board/express');
-const { createBullBoard } = require('@bull-board/api');
-const { BullAdapter } = require('@bull-board/api/bullAdapter');
+// //Test bull
+// const { ExpressAdapter } = require('@bull-board/express');
+// const { createBullBoard } = require('@bull-board/api');
+// const { BullAdapter } = require('@bull-board/api/bullAdapter');
 
 dotenv.config();
 const passport = require("passport");
 const passportGoogle = require("./src/passports/passport.google");
 const apiRouter = require("./src/routes/api");
-const User = require("./src/models/user.model");
+// const User = require("./src/models/user.model");
 
-// Cron
-require("./src/utils/cron/cronUser");
-require("./src/utils/cron/promotion.cron");
-require("./src/utils/cron/coupons.cron");
-require("./src/utils/cron/userCoupons.cron");
-require("./src/utils/cron/learningReminders.cron");
+// // Cron
+// require("./src/utils/cron/cronUser");
+// require("./src/utils/cron/promotion.cron");
+// require("./src/utils/cron/coupons.cron");
+// require("./src/utils/cron/userCoupons.cron");
+// require("./src/utils/cron/learningReminders.cron");
 
 //queue
-const couponEmailQueue = require("./src/utils/queue/couponEmail.queue");
+// const couponEmailQueue = require("./src/utils/queue/couponEmail.queue");
 const app = express();
 
 // ================= CORS =================
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
-  "https://haeispa.online",
   "http://localhost:9999",
 ];
 const corsOptions = {
@@ -59,16 +56,16 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
-// ================= Bull Queue =================
-const serverAdapter = new ExpressAdapter();
-serverAdapter.setBasePath('/admin/queues');
+// // ================= Bull Queue =================
+// const serverAdapter = new ExpressAdapter();
+// serverAdapter.setBasePath('/admin/queues');
 
-createBullBoard({
-  queues: [new BullAdapter(couponEmailQueue)],
-  serverAdapter
-});
+// createBullBoard({
+//   queues: [new BullAdapter(couponEmailQueue)],
+//   serverAdapter
+// });
 
-app.use('/admin/queues', serverAdapter.getRouter());
+// app.use('/admin/queues', serverAdapter.getRouter());
 // ================= Middleware =================
 app.use(morgan("dev"));
 app.use("/uploads", express.static("uploads"));
@@ -88,10 +85,10 @@ app.use(passport.session());
 // ================= Passport =================
 passport.use("google", passportGoogle);
 passport.serializeUser((user, done) => done(null, user.id));
-passport.deserializeUser(async (id, done) => {
-  const user = await User.findById(id);
-  done(null, user);
-});
+// passport.deserializeUser(async (id, done) => {
+//   const user = await User.findById(id);
+//   done(null, user);
+// });
 
 // ================= Body Parser =================
 app.use(express.urlencoded({ extended: true }));
@@ -104,37 +101,37 @@ app.use((req, res, next) => {
 });
 
 // ================= Swagger =================
-const swaggerOptions = {
-  definition: {
-    openapi: "3.1.0",
-    info: {
-      title: "Spa Booking API",
-      version: "0.1.0",
-      description: "This is a simple CRUD API with Swagger",
-      license: {
-        name: "MIT",
-        url: "https://spdx.org/licenses/MIT.html",
-      },
-      contact: {
-        name: "Spa Booking",
-        email: "hainvthe172670@fpt.edu.vn",
-      },
-    },
-    servers: [
-      {
-        url: "http://localhost:9999",
-        description: "Development server",
-      },
-    ],
-  },
-  apis: [
-    "./src/routes/v1/user/booking_public/*.js",
-    "./src/models/*.js",
-    "./src/controllers/*.js",
-  ],
-};
-const specs = swaggerJsdoc(swaggerOptions);
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs, { explorer: true }));
+// const swaggerOptions = {
+//   definition: {
+//     openapi: "3.1.0",
+//     info: {
+//       title: "Spa Booking API",
+//       version: "0.1.0",
+//       description: "This is a simple CRUD API with Swagger",
+//       license: {
+//         name: "MIT",
+//         url: "https://spdx.org/licenses/MIT.html",
+//       },
+//       contact: {
+//         name: "Spa Booking",
+//         email: "hainvthe172670@fpt.edu.vn",
+//       },
+//     },
+//     servers: [
+//       {
+//         url: "http://localhost:9999",
+//         description: "Development server",
+//       },
+//     ],
+//   },
+//   apis: [
+//     "./src/routes/v1/user/booking_public/*.js",
+//     "./src/models/*.js",
+//     "./src/controllers/*.js",
+//   ],
+// };
+// const specs = swaggerJsdoc(swaggerOptions);
+// app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs, { explorer: true }));
 
 // ================= API Routes =================
 app.use("/api/v1", apiRouter);
