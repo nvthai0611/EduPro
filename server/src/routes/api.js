@@ -7,7 +7,7 @@ router.get("/", (req, res) => {
 // // Auth routes
 // const authRouter = require("./v1/auth/auth.routes");
 // const userRouter = require("./v1/auth/user.routes");
-
+// checkout
 // // Public routes
 // const coursesRouter = require("./v1/courses.routes");
 // const bundlesRouter = require("./v1/bundles.routes");
