@@ -21,7 +21,7 @@ import connectDB from "./src/config/db";
 
 dotenv.config();
 import passport from "passport";
-// import passportGoogle from "./src/passports/passport.google";
+import "./src/passports/passport.google";
 import { apiRouter } from "./src/routes/api";
 // const User = require("./src/models/user.model");
 
@@ -83,13 +83,17 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // ================= Passport =================
-// passport.use("google", passportGoogle);
-// passport.serializeUser((user, done) => done(null, user.id));
-// passport.deserializeUser(async (id, done) => {
-//   const user = await User.findById(id);
-//   done(null, user);
-// });
-
+// passport.google.ts registers the Google strategy when imported
+passport.serializeUser((user: any, done: any) => done(null, (user as any).id));
+passport.deserializeUser(async (id: any, done: any) => {
+  try {
+    const User = require("./src/models/user.model").default || require("./src/models/user.model");
+    const user = await User.findById(id);
+    done(null, user);
+  } catch (err) {
+    done(err);
+  }
+});
 // ================= Body Parser =================
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
