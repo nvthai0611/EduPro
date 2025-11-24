@@ -183,7 +183,6 @@ const updateNgrokWebhookUrl = async () => {
   }
 };
 
-
 // ================= Start Server =================
 const server = http.createServer(app);
 const io = new Server(server, { cors: corsOptions });
