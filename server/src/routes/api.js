@@ -1,9 +1,24 @@
 const express = require("express");
+const bundlesRouter = require("./v1/bundles.routes");
 const router = express.Router();
+
+
+router.use("/bundles", bundlesRouter);
+
 
 router.get("/", (req, res) => {
   res.send("check");
 });
+
+
+
+
+
+
+
+
+
+
 // // Auth routes
 // const authRouter = require("./v1/auth/auth.routes");
 // const userRouter = require("./v1/auth/user.routes");

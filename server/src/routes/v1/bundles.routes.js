@@ -1,12 +1,15 @@
 const express = require("express");
 const router = express.Router();
-const {
-  getBundles,
-  getBundleDetail,
-} = require("../../controllers/v1/bundlePublic.controller");
+
 
 // Public routes - no authentication required
-router.get("/", getBundles);
-router.get("/:slug", getBundleDetail);
+// router.get("/", getBundles);
+// router.get("/:slug", getBundleDetail);
+
+// get all courses 
+router.get("/:slug/courses", (req, res) => {
+  res.send(`Courses in bundle: ${req.params.slug}`);
+});
+
 
 module.exports = router;
