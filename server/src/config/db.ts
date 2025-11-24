@@ -1,10 +1,7 @@
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(process.env.MONGODB_URL as string);
     //postgress sql
     console.log("Connected to MongoDB successfully!");
   } catch (error) {

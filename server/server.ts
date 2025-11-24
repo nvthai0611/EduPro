@@ -1,18 +1,18 @@
-const express = require("express");
-const http = require("http");
+import express from "express";
+import http from "http";
 
-const morgan = require("morgan");
-const { Server } = require("socket.io");
-const socketService = require("./src/utils/socket/socket");
-const PayOS = require("@payos/node");
-const axios = require("axios");
-const fs = require("fs");
-const dotenv = require("dotenv");
-const cookieParser = require("cookie-parser");
-const session = require("express-session");
-const connectFlash = require("connect-flash");
-const cors = require("cors");
-const connectDB = require("./src/config/db");
+import morgan from "morgan";
+import { Server } from "socket.io";
+import socketService from "./src/utils/socket/socket";
+import PayOS from "@payos/node";
+import axios from "axios";
+import fs from "fs";
+import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
+import session from "express-session";
+import connectFlash from "connect-flash";
+import cors from "cors";
+import connectDB from "./src/config/db";
 
 // //Test bull
 // const { ExpressAdapter } = require('@bull-board/express');
@@ -20,9 +20,9 @@ const connectDB = require("./src/config/db");
 // const { BullAdapter } = require('@bull-board/api/bullAdapter');
 
 dotenv.config();
-const passport = require("passport");
-const passportGoogle = require("./src/passports/passport.google");
-const apiRouter = require("./src/routes/api");
+import passport from "passport";
+// import passportGoogle from "./src/passports/passport.google";
+import { apiRouter } from "./src/routes/api";
 // const User = require("./src/models/user.model");
 
 // // Cron
@@ -43,7 +43,7 @@ const allowedOrigins = [
   "http://localhost:9999",
 ];
 const corsOptions = {
-  origin: function (origin, callback) {
+  origin: (origin: any, callback: any) => {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -83,8 +83,8 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // ================= Passport =================
-passport.use("google", passportGoogle);
-passport.serializeUser((user, done) => done(null, user.id));
+// passport.use("google", passportGoogle);
+// passport.serializeUser((user, done) => done(null, user.id));
 // passport.deserializeUser(async (id, done) => {
 //   const user = await User.findById(id);
 //   done(null, user);
@@ -141,7 +141,7 @@ app.use((req, res, next) => {
   res.status(404).json({ error: "Không tìm thấy trang" });
 });
 
-app.use((err, req, res, next) => {
+app.use((err: any, req: any, res: any, next: any) => {
   console.error(err.stack);
   res.status(err.status || 500).json({
     error: true,
@@ -154,19 +154,23 @@ connectDB();
 
 // ================= PayOS =================
 const payos = new PayOS(
-  process.env.PAYOS_CLIENT_ID,
-  process.env.PAYOS_API_KEY,
-  process.env.PAYOS_CHECKSUM_KEY
+  process.env.PAYOS_CLIENT_ID as string,
+  process.env.PAYOS_API_KEY as string,
+  process.env.PAYOS_CHECKSUM_KEY as string
 );
 
 // ================= Auto Update Ngrok Webhook =================
+declare global {
+  // eslint-disable-next-line no-var
+  var ngrokWebhookUrl: string;
+}
 global.ngrokWebhookUrl = "";
 const updateNgrokWebhookUrl = async () => {
   if (process.env.USE_NGROK !== "true") return;
 
   try {
     const res = await axios.get("http://127.0.0.1:4040/api/tunnels");
-    const httpsTunnel = res.data.tunnels.find(t => t.proto === "https");
+    const httpsTunnel = res.data.tunnels.find((t: any) => t.proto === "https");
     if (httpsTunnel) {
       global.ngrokWebhookUrl = `${httpsTunnel.public_url}/api/v1/payos/receive-hook`;
       console.log("✅ Ngrok Webhook URL:", global.ngrokWebhookUrl);
@@ -174,11 +178,10 @@ const updateNgrokWebhookUrl = async () => {
     } else {
       console.warn("⚠️ Không tìm thấy tunnel dạng https.");
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error("❌ Lỗi khi lấy webhook URL:", err.message);
   }
 };
-
 
 // ================= Start Server =================
 const server = http.createServer(app);
