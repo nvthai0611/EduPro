@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "node --watch server.js"
+    "dev": "ts-node-dev --respawn --transpile-only server.ts"
   },
   "author": "\u001b[A\u001b[B",
   "license": "ISC",
@@ -46,5 +46,18 @@
     "uuid": "^11.1.0",
     "validator": "^13.15.0",
     "yup": "^1.6.1"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/connect-flash": "^0.0.40",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/express": "^5.0.5",
+    "@types/express-session": "^1.18.2",
+    "@types/morgan": "^1.9.10",
+    "@types/node": "^24.10.1",
+    "@types/passport": "^1.0.17",
+    "@types/validator": "^13.15.10",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.9.3"
   }
 }
