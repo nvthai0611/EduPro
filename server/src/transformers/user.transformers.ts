@@ -1,4 +1,3 @@
-import { log } from "console";
 import Transformer from "../core/transformers";
 export default class extends Transformer {
     response(instance: { _id: any; fullName: any; email: any; status: any; image: any; type: any; birthDate: any; branchId: any; phoneNumber: any; created_at: any; updated_at: any; }, user?: Express.User) {
