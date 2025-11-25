@@ -3,8 +3,8 @@ import passport from "passport";
 
 import * as authController from "../../../controllers/v1/auth/auth.controller";
 import { createAccessToken, refreshAccessToken } from "../../../utils/jwt";
-import UserTransformer from "../../../transformers/user.transformers";
-import { profile } from "console";
+import UserTransformer from "../../../modules/user/user.transformers";
+import { encryptAES } from "../../../utils/crypto";
 
 const router: Router = Router();
 
@@ -23,7 +23,7 @@ router.post('/confirm-reset-password', authController.confirmEmailResetPassword)
 router.get(
   "/google",
   passport.authenticate("google", {
-    scope: ["profile", "email", "https://www.googleapis.com/auth/userinfo.profile"], 
+    scope: ["profile", "email", "https://www.googleapis.com/auth/userinfo.profile"],
     session: false,
   })
 );
@@ -63,7 +63,16 @@ router.get(
       // Set Cookies
       res.cookie("user_data", user_parse, cookieOptions as any);
       res.cookie("accessToken", accessToken, cookieOptions as any);
-      // res.cookie("refreshToken", refreshToken, cookieOptions as any);
+      res.cookie("refreshToken", refreshToken, cookieOptions as any);
+
+      // // user_data
+      // res.cookie("layout_snapshot", await encryptAES(`${JSON.stringify(user_parse)}`), cookieOptions as any);
+
+      // // accessToken
+      // res.cookie("render_id", await encryptAES(`${accessToken}`), cookieOptions as any);
+
+      // // refreshToken
+      // res.cookie("viewport_sig", await encryptAES(`${refreshToken}`), cookieOptions as any);
 
       return res.redirect(process.env.FRONTEND_URL!);
     } catch (error) {

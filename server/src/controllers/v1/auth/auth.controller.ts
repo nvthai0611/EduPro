@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import User from "../../../models/user.model";
+import User from "../../../modules/user/user.model";
 import { successResponse, errorResponse } from "../../../utils/response";
 import { linkResetPassword } from "../../../services/userService/auth.service";
 
