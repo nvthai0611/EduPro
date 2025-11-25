@@ -2,7 +2,7 @@ import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import User from "../models/user.model";
 
-const findOrCreateUser = async (email: any, providerId: any, fullName: any) => {
+const findOrCreateUser = async (email: any, providerId: any, fullName: any, image: any) => {
   let user = await User.findOne({ email });
 
   if (!user) {
@@ -10,6 +10,7 @@ const findOrCreateUser = async (email: any, providerId: any, fullName: any) => {
       fullName,
       email,
       provider: providerId,
+      image: image || user.image,
       status: true,
       isActive: true,
       confirmEmail: true,
@@ -19,6 +20,7 @@ const findOrCreateUser = async (email: any, providerId: any, fullName: any) => {
     user.set({
       fullName,
       provider: providerId,
+      image: image || user.image,
       isGuest: false,
       status: true,
       isActive: true,
@@ -28,7 +30,7 @@ const findOrCreateUser = async (email: any, providerId: any, fullName: any) => {
   }
 
   if (!user.status || !user.isActive || !user.confirmEmail) return null;
-  if (user.role !== "customer" && user.role !== "user") return null;
+  if (user.role !== "customer" && user.role !== "admin") return null;
 
   return user;
 };
@@ -41,12 +43,14 @@ passport.use(
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       callbackURL: process.env.GOOGLE_CALLBACK_URL!,
     },
-    async (_accessToken: any, _refreshToken: any, profile: { displayName: any; emails: any; }, done: (arg0: null, arg1: boolean) => any) => {
+    async (_accessToken: any, _refreshToken: any, profile: { displayName: any; emails: any; photos: any }, done: (arg0: null, arg1: boolean) => any) => {
       try {
-        const { displayName: fullName, emails } = profile;
+        const { displayName: fullName, emails, photos } = profile;
 
         const email = emails?.[0]?.value;
-        const user = await findOrCreateUser(email, "google", fullName);
+        const image = photos?.[0]?.value;
+        if (!email) return done(null, false);
+        const user = await findOrCreateUser(email, "google", fullName, image);
 
         if (!user) return done(null, false);
         return done(null, user);
