@@ -1,485 +1,476 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
-import { 
-  Star, 
-  Users, 
-  Clock, 
-  Play, 
-  Lock, 
-  CheckCircle, 
-  Download,
-  Heart,
-  Share2,
-  BookOpen,
-  Award,
-  Target,
-  Users2
-} from 'lucide-react';
-import { useAuth } from '../../hooks/useAuth';
-import { courseService } from '../../services/courseService';
-import { useParams } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Users, PlayCircle, Clock, ArrowLeft, BookmarkPlus, Circle, CheckCircle, Lock, ChevronDown, ChevronUp, MessageCircle } from 'lucide-react';
 
-const CourseDetail = () => {
-  const { slug } = useParams();
-  const { user } = useAuth();
-  const [course, setCourse] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [isPurchased, setIsPurchased] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
+export default function FreeCourses() {
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [currentLesson, setCurrentLesson] = useState(null);
+  const [expandedChapters, setExpandedChapters] = useState({ 1: true });
 
-  useEffect(() => {
-    fetchCourseDetail();
-  }, [slug]);
+  const courses = [
+    {
+      id: 1,
+      slug: "kien-thuc-nhap-mon-it",
+      title: "Kiến Thức Nhập Môn IT",
+      subtitle: "Kiến thức nhập môn{}",
+      gradient: "from-pink-500 via-purple-500 to-purple-700",
+      students: "137.665",
+      lessons: "9",
+      duration: "3h12p",
+      progress: 0,
+      totalLessons: 12,
+      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      chapters: [
+        {
+          id: 1,
+          title: "1. Khái niệm kỹ thuật cần biết",
+          duration: "0/3 | 23:09",
+          lessons: [
+            { 
+              id: 1, 
+              title: "1. Mô hình Client - Server là gì?", 
+              duration: "11:35", 
+              completed: false, 
+              current: true,
+              videoUrl: "https://www.youtube.com/embed/IoL9izioni4Y"
+            },
+            { 
+              id: 2, 
+              title: "2. Domain là gì? Tên miền là gì?", 
+              duration: "10:34", 
+              completed: false, 
+              locked: false,
+              videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+            },
+            { 
+              id: 3, 
+              title: "3. Mua áo F8 | Đăng ký học Offline", 
+              duration: "01:00", 
+              completed: false, 
+              locked: true,
+              videoUrl: ""
+            }
+          ]
+        },
+        {
+          id: 2,
+          title: "2. Môi trường, con người IT",
+          duration: "0/3 | 01:46:14",
+          lessons: [
+            { 
+              id: 4, 
+              title: "1. Các mô hình làm việc phổ biến", 
+              duration: "12:30", 
+              completed: false, 
+              locked: false,
+              videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+            },
+            { 
+              id: 5, 
+              title: "2. Làm việc nhóm hiệu quả", 
+              duration: "15:20", 
+              completed: false, 
+              locked: false,
+              videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+            }
+          ]
+        },
+        {
+          id: 3,
+          title: "3. Phương pháp, định hướng",
+          duration: "0/4 | 01:04:27",
+          lessons: [
+            { 
+              id: 6, 
+              title: "1. Lộ trình học lập trình", 
+              duration: "18:45", 
+              completed: false, 
+              locked: false,
+              videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+            }
+          ]
+        },
+        {
+          id: 4,
+          title: "4. Hoàn thành khóa học",
+          duration: "0/2 | 13:00",
+          lessons: [
+            { 
+              id: 7, 
+              title: "1. Chia sẻ và nhận xét", 
+              duration: "08:30", 
+              completed: false, 
+              locked: false,
+              videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      id: 2,
+      slug: "lap-trinh-cpp-co-ban",
+      title: "Lập trình C++ cơ bản, nâng cao",
+      subtitle: "Từ cơ bản\nđến nâng cao",
+      gradient: "from-cyan-400 to-cyan-600",
+      students: "38.186",
+      lessons: "55",
+      duration: "10h18p",
+      progress: 0,
+      totalLessons: 55,
+      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      chapters: []
+    },
+    {
+      id: 3,
+      slug: "html-css-tu-zero-den-hero",
+      title: "HTML CSS từ Zero đến Hero",
+      subtitle: "HTML, CSS\ntừ zero đến hero",
+      gradient: "from-cyan-500 to-blue-600",
+      students: "216.556",
+      lessons: "117",
+      duration: "29h5p",
+      progress: 0,
+      totalLessons: 117,
+      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      chapters: []
+    },
+    {
+      id: 4,
+      slug: "responsive-voi-grid-system",
+      title: "Responsive Với Grid System",
+      subtitle: "Responsive\n@web design",
+      gradient: "from-purple-600 to-purple-900",
+      students: "48.158",
+      lessons: "34",
+      duration: "6h31p",
+      progress: 0,
+      totalLessons: 34,
+      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      chapters: []
+    },
+    {
+      id: 5,
+      slug: "lap-trinh-javascript-co-ban",
+      title: "Lập Trình JavaScript Cơ Bản",
+      subtitle: "JavaScript\n{.Cơ bản}",
+      gradient: "from-yellow-400 via-orange-400 to-orange-500",
+      students: "137.665",
+      lessons: "9",
+      duration: "24h15p",
+      progress: 0,
+      totalLessons: 24,
+      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      chapters: []
+    },
+    {
+      id: 6,
+      slug: "lap-trinh-javascript-nang-cao",
+      title: "Lập Trình JavaScript Nâng Cao",
+      subtitle: "JavaScript\n{.Nâng cao}",
+      gradient: "from-red-500 to-orange-600",
+      students: "41.927",
+      lessons: "19",
+      duration: "8h41p",
+      progress: 0,
+      totalLessons: 19,
+      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      chapters: []
+    },
+    {
+      id: 7,
+      slug: "lam-viec-voi-terminal-ubuntu",
+      title: "Làm việc với Terminal & Ubuntu",
+      subtitle: "WSL Ubuntu\nWindows Terminal",
+      gradient: "from-pink-600 via-rose-500 to-orange-500",
+      students: "21.542",
+      lessons: "28",
+      duration: "4h59p",
+      progress: 0,
+      totalLessons: 28,
+      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      chapters: []
+    },
+    {
+      id: 8,
+      slug: "xay-dung-website-voi-reactjs",
+      title: "Xây Dựng Website với ReactJS",
+      subtitle: "React JS\nLearn once, write anywhere",
+      gradient: "from-indigo-900 to-purple-900",
+      students: "79.297",
+      lessons: "112",
+      duration: "27h32p",
+      progress: 0,
+      totalLessons: 112,
+      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      chapters: []
+    }
+  ];
 
-  const fetchCourseDetail = async () => {
-    try {
-      setLoading(true);
-      const response = await courseService.getCourseDetail(slug);
-      setCourse(response.data);
-      
-      // Check if user has purchased this course
-      if (user) {
-        const hasPurchased = await courseService.checkPurchase(response.data._id);
-        setIsPurchased(hasPurchased);
-      }
-    } catch (error) {
-      console.error('Error fetching course detail:', error);
-    } finally {
-      setLoading(false);
+  const toggleChapter = (chapterId) => {
+    setExpandedChapters(prev => ({
+      ...prev,
+      [chapterId]: !prev[chapterId]
+    }));
+  };
+
+  const handleLessonClick = (lesson) => {
+    if (!lesson.locked) {
+      setCurrentLesson(lesson);
     }
   };
 
-  const handlePurchase = () => {
-    if (!user) {
-      // Redirect to login
-      window.location.href = '/dang-nhap';
-      return;
-    }
+  const getCurrentLesson = (course) => {
+    if (currentLesson) return currentLesson;
     
-    // Redirect to checkout
-    window.location.href = `/checkout?course=${course._id}`;
-  };
-
-  const handleStartLearning = () => {
-    if (course.price === 0 || isPurchased) {
-      // Redirect to first lesson
-      const firstLesson = course.modules?.[0]?.lessons?.[0];
-      if (firstLesson) {
-        window.location.href = `/learn/${course._id}/${firstLesson._id}`;
+    // Find first lesson that is current or not completed
+    for (const chapter of course.chapters) {
+      for (const lesson of chapter.lessons) {
+        if (lesson.current || !lesson.completed) {
+          return lesson;
+        }
       }
-    } else {
-      handlePurchase();
     }
+    return course.chapters[0]?.lessons[0];
   };
 
-  const formatPrice = (price) => {
-    if (price === 0) return 'Miễn phí';
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(price);
-  };
+  if (selectedCourse) {
+    const course = courses.find(c => c.slug === selectedCourse);
 
-  const formatDuration = (minutes) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    if (hours > 0) {
-      return `${hours} giờ ${mins} phút`;
-    }
-    return `${mins} phút`;
-  };
-
-  const getTotalLessons = () => {
-    return course?.modules?.reduce((total, module) => total + module.lessons.length, 0) || 0;
-  };
-
-  const getPreviewLessons = () => {
-    return course?.modules?.flatMap(module => 
-      module.lessons.filter(lesson => lesson.isFree)
-    ) || [];
-  };
-
-  if (loading) {
+    const activeLesson = getCurrentLesson(course);
+    
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <div className="bg-gray-800 text-white">
+          <div className="max-w-full mx-auto px-4 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => {
+                  setSelectedCourse(null);
+                  setCurrentLesson(null);
+                }}
+                className="hover:bg-gray-700 p-2 rounded-lg transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center font-bold">
+                  F8
+                </div>
+                <span className="font-semibold">{course.title}</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-6 text-sm">
+              <span>{course.progress}%</span>
+              <span>{course.progress}/{course.totalLessons} bài học</span>
+              <button className="hover:text-orange-400 transition-colors flex items-center gap-1">
+                <BookmarkPlus className="w-5 h-5" />
+                <span>Ghi chú</span>
+              </button>
+              <button className="hover:text-orange-400 transition-colors">
+                ❓ Hướng dẫn
+              </button>
+            </div>
+          </div>
+        </div>
 
-  if (!course) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Khóa học không tồn tại</h2>
-          <Button onClick={() => window.history.back()}>
-            Quay lại
-          </Button>
+        <div className="flex max-w-full">
+          {/* Video Player Area */}
+          <div className="flex-1 bg-black">
+            <div className="relative" style={{ paddingTop: '56.25%' }}>
+              <iframe
+                className="absolute inset-0 w-full h-full"
+                src={activeLesson?.videoUrl || course.videoUrl}
+                title={activeLesson?.title || course.title}
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
+            </div>
+
+            {/* Video Title and Navigation */}
+            <div className="bg-white p-6">
+              <h1 className="text-2xl font-bold text-gray-900 mb-6">
+                {activeLesson?.title || "Mô hình Client - Server là gì?"}
+              </h1>
+              <div className="flex items-center justify-between">
+                <button className="flex items-center gap-2 text-gray-400 px-6 py-2 rounded-full border border-gray-300 hover:border-blue-400 hover:text-blue-400 transition-colors">
+                  <span>←</span>
+                  <span>BÀI TRƯỚC</span>
+                </button>
+                <button className="flex items-center gap-2 bg-blue-400 text-white px-6 py-2 rounded-full hover:bg-blue-500 transition-colors">
+                  <span>BÀI TIẾP THEO</span>
+                  <span>→</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Sidebar - Course Content */}
+          <div className="w-96 bg-white border-l border-gray-200 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 64px)' }}>
+            <div className="p-4">
+              {/* Achievement Badge */}
+              <div className="bg-orange-50 rounded-lg p-4 mb-4">
+                <div className="flex items-start gap-3">
+                  <div className="text-4xl">🔥</div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-1">
+                      Bắt đầu chuỗi ngày học
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      Hoàn thành 1 bài để bắt đầu!
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <h2 className="font-bold text-gray-900 mb-4">Nội dung khóa học</h2>
+
+              {/* Chapters */}
+              <div className="space-y-2">
+                {course.chapters?.map((chapter) => (
+                  <div key={chapter.id} className="border border-gray-200 rounded-lg overflow-hidden">
+                    {/* Chapter Header */}
+                    <button
+                      onClick={() => toggleChapter(chapter.id)}
+                      className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex-1 text-left">
+                        <h3 className="font-semibold text-gray-900 mb-1">
+                          {chapter.title}
+                        </h3>
+                        <p className="text-sm text-gray-500">{chapter.duration}</p>
+                      </div>
+                      {expandedChapters[chapter.id] ? (
+                        <ChevronUp className="w-5 h-5 text-gray-400" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5 text-gray-400" />
+                      )}
+                    </button>
+
+                    {/* Chapter Lessons */}
+                    {expandedChapters[chapter.id] && (
+                      <div className="border-t border-gray-200">
+                        {chapter.lessons.map((lesson) => (
+                          <div
+                            key={lesson.id}
+                            onClick={() => handleLessonClick(lesson)}
+                            className={`flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors ${
+                              lesson.locked ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+                            } ${
+                              (currentLesson?.id === lesson.id) || (lesson.current && !currentLesson) ? 'bg-orange-50' : ''
+                            }`}
+                          >
+                            <div className="flex-shrink-0">
+                              {lesson.completed ? (
+                                <CheckCircle className="w-5 h-5 text-green-500" />
+                              ) : lesson.locked ? (
+                                <Lock className="w-5 h-5 text-gray-400" />
+                              ) : (
+                                <Circle className={`w-5 h-5 ${
+                                  (currentLesson?.id === lesson.id) || (lesson.current && !currentLesson) ? 'text-orange-500' : 'text-gray-300'
+                                }`} />
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <p className={`text-sm ${
+                                (currentLesson?.id === lesson.id) || (lesson.current && !currentLesson) ? 'text-orange-500 font-medium' : 'text-gray-700'
+                              }`}>
+                                {lesson.title}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {lesson.locked && (
+                                <Lock className="w-4 h-4 text-gray-400" />
+                              )}
+                              <span className="text-xs text-gray-500">{lesson.duration}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Q&A Button */}
+            <div className="sticky bottom-0 p-4 bg-white border-t border-gray-200">
+              <button className="w-full flex items-center justify-center gap-2 bg-orange-500 text-white py-3 rounded-full hover:bg-orange-600 transition-colors">
+                <MessageCircle className="w-5 h-5" />
+                <span className="font-medium">Hỏi đáp</span>
+              </button>
+              <button className="w-full mt-2 flex items-center justify-center gap-2 border border-gray-300 text-gray-700 py-2 rounded-full hover:border-gray-400 transition-colors text-sm">
+                <span>+ Thêm ghi chú tại 00:00</span>
+              </button>
+            </div>
+
+            {/* Bottom Navigation */}
+            <div className="p-4 bg-gray-50 border-t border-gray-200">
+              <button className="w-full flex items-center justify-between text-gray-700 hover:text-gray-900 transition-colors">
+                <span className="font-medium">1. Khái niệm kỹ thuật cần biết</span>
+                <span>→</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <Badge variant="secondary" className="bg-white/20 text-white">
-                  {course.category?.name || 'Lập trình'}
-                </Badge>
-                <Badge variant="secondary" className="bg-white/20 text-white">
-                  {course.level === 'beginner' ? 'Cơ bản' : 
-                   course.level === 'intermediate' ? 'Trung bình' : 'Nâng cao'}
-                </Badge>
-              </div>
-              
-              <h1 className="text-4xl font-bold mb-4">
-                {course.title}
-              </h1>
-              
-              <p className="text-xl text-blue-100 mb-6">
-                {course.description}
-              </p>
-              
-              <div className="flex items-center space-x-6 mb-6">
-                <div className="flex items-center space-x-2">
-                  <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                  <span className="text-lg font-semibold">
-                    {course.rating?.toFixed(1) || '5.0'}
-                  </span>
-                  <span className="text-blue-200">({course.reviewCount || 0} đánh giá)</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Users className="w-5 h-5" />
-                  <span className="text-lg">{course.totalStudents || 0} học viên</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Clock className="w-5 h-5" />
-                  <span className="text-lg">{formatDuration(course.totalDuration || 0)}</span>
-                </div>
-              </div>
-              
-              <div className="flex items-center space-x-4">
-                <Button
-                  size="lg"
-                  className="bg-white text-blue-600 hover:bg-gray-100"
-                  onClick={handleStartLearning}
-                >
-                  <Play className="w-5 h-5 mr-2" />
-                  {course.price === 0 || isPurchased ? 'Bắt đầu học' : 'Mua khóa học'}
-                </Button>
-                
-                <Button variant="outline" size="lg" className="border-white text-white hover:bg-white/10">
-                  <Heart className="w-5 h-5 mr-2" />
-                  Yêu thích
-                </Button>
-                
-                <Button variant="outline" size="lg" className="border-white text-white hover:bg-white/10">
-                  <Share2 className="w-5 h-5 mr-2" />
-                  Chia sẻ
-                </Button>
-              </div>
-            </div>
-            
-            <div className="relative">
-              <img
-                src={course.thumbnail || 'https://via.placeholder.com/600x400'}
-                alt={course.title}
-                className="w-full h-80 object-cover rounded-lg shadow-2xl"
-              />
-              <div className="absolute inset-0 bg-black/20 rounded-lg"></div>
-            </div>
-          </div>
+    <div className="min-h-screen bg-white p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Khóa học miễn phí</h1>
+          <a href="#" className="text-orange-500 hover:text-orange-600 font-medium flex items-center gap-1">
+            Xem lộ trình <span>›</span>
+          </a>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2">
-            {/* Tabs */}
-            <div className="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg">
-              {[
-                { id: 'overview', label: 'Tổng quan', icon: BookOpen },
-                { id: 'content', label: 'Nội dung', icon: Play },
-                { id: 'reviews', label: 'Đánh giá', icon: Star }
-              ].map(tab => (
-                <Button
-                  key={tab.id}
-                  variant={activeTab === tab.id ? 'default' : 'ghost'}
-                  className="flex-1"
-                  onClick={() => setActiveTab(tab.id)}
-                >
-                  <tab.icon className="w-4 h-4 mr-2" />
-                  {tab.label}
-                </Button>
-              ))}
-            </div>
-
-            {/* Tab Content */}
-            {activeTab === 'overview' && (
-              <div className="space-y-6">
-                {/* What You'll Learn */}
-                {course.whatYouWillLearn && course.whatYouWillLearn.length > 0 && (
-                  <Card>
-                    <CardHeader>
-                      <h3 className="text-xl font-semibold flex items-center">
-                        <Target className="w-5 h-5 mr-2 text-green-600" />
-                        Bạn sẽ học được gì
-                      </h3>
-                    </CardHeader>
-                    <CardContent>
-                      <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        {course.whatYouWillLearn.map((item, index) => (
-                          <li key={index} className="flex items-start space-x-2">
-                            <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                            <span className="text-gray-700">{item}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Requirements */}
-                {course.requirements && course.requirements.length > 0 && (
-                  <Card>
-                    <CardHeader>
-                      <h3 className="text-xl font-semibold flex items-center">
-                        <Award className="w-5 h-5 mr-2 text-blue-600" />
-                        Yêu cầu đầu vào
-                      </h3>
-                    </CardHeader>
-                    <CardContent>
-                      <ul className="space-y-2">
-                        {course.requirements.map((req, index) => (
-                          <li key={index} className="flex items-start space-x-2">
-                            <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
-                            <span className="text-gray-700">{req}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Target Audience */}
-                {course.targetAudience && course.targetAudience.length > 0 && (
-                  <Card>
-                    <CardHeader>
-                      <h3 className="text-xl font-semibold flex items-center">
-                        <Users2 className="w-5 h-5 mr-2 text-purple-600" />
-                        Phù hợp với
-                      </h3>
-                    </CardHeader>
-                    <CardContent>
-                      <ul className="space-y-2">
-                        {course.targetAudience.map((audience, index) => (
-                          <li key={index} className="flex items-start space-x-2">
-                            <div className="w-2 h-2 bg-purple-600 rounded-full mt-2 flex-shrink-0"></div>
-                            <span className="text-gray-700">{audience}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            )}
-
-            {activeTab === 'content' && (
-              <Card>
-                <CardHeader>
-                  <h3 className="text-xl font-semibold">Nội dung khóa học</h3>
-                  <p className="text-gray-600">
-                    {getTotalLessons()} bài học • {formatDuration(course.totalDuration || 0)}
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {course.modules?.map((module, moduleIndex) => (
-                      <div key={module._id} className="border rounded-lg">
-                        <div className="p-4 bg-gray-50 border-b">
-                          <h4 className="font-semibold text-gray-900">
-                            {module.title}
-                          </h4>
-                          <p className="text-sm text-gray-600 mt-1">
-                            {module.lessons.length} bài học
-                          </p>
-                        </div>
-                        <div className="p-4 space-y-2">
-                          {module.lessons.map((lesson, lessonIndex) => (
-                            <div
-                              key={lesson._id}
-                              className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg"
-                            >
-                              <div className="flex items-center space-x-3">
-                                {lesson.isFree ? (
-                                  <Play className="w-4 h-4 text-green-600" />
-                                ) : isPurchased ? (
-                                  <Play className="w-4 h-4 text-blue-600" />
-                                ) : (
-                                  <Lock className="w-4 h-4 text-gray-400" />
-                                )}
-                                <span className="text-gray-900">{lesson.title}</span>
-                                {lesson.isFree && (
-                                  <Badge variant="secondary" className="text-xs">
-                                    Miễn phí
-                                  </Badge>
-                                )}
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <span className="text-sm text-gray-500">
-                                  {Math.floor(lesson.videoDuration / 60)}:{(lesson.videoDuration % 60).toString().padStart(2, '0')}
-                                </span>
-                                {lesson.resources && lesson.resources.length > 0 && (
-                                  <Download className="w-4 h-4 text-gray-400" />
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {activeTab === 'reviews' && (
-              <Card>
-                <CardHeader>
-                  <h3 className="text-xl font-semibold">Đánh giá từ học viên</h3>
-                  <div className="flex items-center space-x-4">
-                    <div className="flex items-center space-x-1">
-                      <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                      <span className="text-2xl font-bold">{course.rating?.toFixed(1) || '5.0'}</span>
-                    </div>
-                    <span className="text-gray-600">
-                      ({course.reviewCount || 0} đánh giá)
-                    </span>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8 text-gray-500">
-                    <p>Chức năng đánh giá đang được phát triển</p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Purchase Card */}
-            <Card className="sticky top-8">
-              <CardContent className="p-6">
-                <div className="text-center mb-4">
-                  {course.salePrice && course.salePrice < course.price ? (
-                    <div className="space-y-2">
-                      <div className="text-3xl font-bold text-red-600">
-                        {formatPrice(course.salePrice)}
-                      </div>
-                      <div className="text-lg text-gray-500 line-through">
-                        {formatPrice(course.price)}
-                      </div>
-                      <Badge className="bg-red-100 text-red-800">
-                        Tiết kiệm {Math.round(((course.price - course.salePrice) / course.price) * 100)}%
-                      </Badge>
-                    </div>
-                  ) : (
-                    <div className="text-3xl font-bold text-blue-600">
-                      {formatPrice(course.price)}
-                    </div>
-                  )}
-                </div>
-
-                <Button
-                  className="w-full mb-4"
-                  size="lg"
-                  onClick={handleStartLearning}
-                >
-                  <Play className="w-5 h-5 mr-2" />
-                  {course.price === 0 || isPurchased ? 'Bắt đầu học' : 'Mua khóa học'}
-                </Button>
-
-                <div className="text-center text-sm text-gray-600 mb-4">
-                  Hoặc
-                </div>
-
-                <Button
-                  variant="outline"
-                  className="w-full mb-4"
-                  onClick={() => window.location.href = '/checkout?course=' + course._id}
-                >
-                  Thêm vào giỏ hàng
-                </Button>
-
-                <Separator className="my-4" />
-
-                <div className="space-y-3 text-sm">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Truy cập trọn đời</span>
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Chứng chỉ hoàn thành</span>
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Hỗ trợ 24/7</span>
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Cập nhật miễn phí</span>
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Instructor Card */}
-            <Card>
-              <CardHeader>
-                <h3 className="text-lg font-semibold">Giảng viên</h3>
-              </CardHeader>
-              <CardContent>
+        {/* Courses Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {courses.map((course) => (
+            <div 
+              key={course.id} 
+              onClick={() => setSelectedCourse(course.slug)}
+              className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer"
+            >
+              {/* Card Header with Gradient */}
+              <div className={`h-48 bg-gradient-to-br ${course.gradient} flex items-center justify-center text-white p-6`}>
                 <div className="text-center">
-                  <img
-                    src={course.instructor?.image || 'https://via.placeholder.com/100x100'}
-                    alt="Hoàng An IT"
-                    className="w-20 h-20 rounded-full mx-auto mb-4"
-                  />
-                  <h4 className="font-semibold text-lg">Hoàng An IT</h4>
-                  <p className="text-gray-600 text-sm mb-4">
-                    Fullstack Developer & Instructor
-                  </p>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div className="text-center">
-                      <div className="font-semibold text-blue-600">50+</div>
-                      <div className="text-gray-600">Khóa học</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="font-semibold text-green-600">10K+</div>
-                      <div className="text-gray-600">Học viên</div>
-                    </div>
+                  <h3 className="text-2xl font-bold mb-2 whitespace-pre-line">{course.subtitle}</h3>
+                </div>
+              </div>
+
+              {/* Card Body */}
+              <div className="p-5">
+                <h4 className="font-semibold text-gray-900 mb-2 text-base">
+                  {course.title}
+                </h4>
+                <p className="text-orange-500 font-medium mb-4">Miễn phí</p>
+
+                {/* Stats */}
+                <div className="flex items-center justify-between text-sm text-gray-600">
+                  <div className="flex items-center gap-1">
+                    <Users className="w-4 h-4" />
+                    <span>{course.students}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <PlayCircle className="w-4 h-4" />
+                    <span>{course.lessons}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Clock className="w-4 h-4" />
+                    <span>{course.duration}</span>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
   );
-};
-
-export default CourseDetail;
+}
