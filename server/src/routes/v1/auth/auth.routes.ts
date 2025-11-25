@@ -2,9 +2,8 @@ import { Router, Request, Response } from "express";
 import passport from "passport";
 
 import * as authController from "../../../controllers/v1/auth/auth.controller";
-import { createAccessToken, refreshAccessToken } from "../../../utils/jwt";
+import { createAccessToken, decodeToken, refreshAccessToken } from "../../../utils/jwt";
 import UserTransformer from "../../../modules/user/user.transformers";
-import { encryptAES } from "../../../utils/crypto";
 
 const router: Router = Router();
 
@@ -44,6 +43,7 @@ router.get(
       const accessToken = await createAccessToken({
         userId: (req.user as any)["_id"],
         role: (req.user as any).role || "customer",
+        image: (req.user as any).image
       });
 
       const refreshToken = await refreshAccessToken();
@@ -61,18 +61,9 @@ router.get(
       };
 
       // Set Cookies
-      res.cookie("user_data", user_parse, cookieOptions as any);
-      res.cookie("accessToken", accessToken, cookieOptions as any);
-      res.cookie("refreshToken", refreshToken, cookieOptions as any);
 
-      // // user_data
-      // res.cookie("layout_snapshot", await encryptAES(`${JSON.stringify(user_parse)}`), cookieOptions as any);
-
-      // // accessToken
-      // res.cookie("render_id", await encryptAES(`${accessToken}`), cookieOptions as any);
-
-      // // refreshToken
-      // res.cookie("viewport_sig", await encryptAES(`${refreshToken}`), cookieOptions as any);
+      // accessToken
+      res.cookie("render_id", accessToken, cookieOptions as any);
 
       return res.redirect(process.env.FRONTEND_URL!);
     } catch (error) {

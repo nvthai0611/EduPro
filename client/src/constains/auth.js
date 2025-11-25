@@ -1,10 +1,7 @@
 export const AUTH_TOKEN = {
-  ACCESS_TOKEN: "accessToken",
-  REFRESH_TOKEN: "refreshToken",
-  USER_DATA: "user_data",
-  // ACCESS_TOKEN: "render_id",
-  // REFRESH_TOKEN: "viewport_sig",
-  // USER_DATA: "layout_snapshot",
+  ACCESS_TOKEN: "render_id",
+  REFRESH_TOKEN: "viewport_sig",
+  USER_DATA: "layout_snapshot",
 };
 
 export const TYPE_AUTH = {

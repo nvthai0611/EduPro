@@ -1,19 +1,24 @@
-import { TYPE_AUTH } from "../../constains/auth";
+import { AUTH_TOKEN, TYPE_AUTH } from "../../constains/auth";
 import { apiClient } from "../../utils/clientAxios";
 import Cookies from "js-cookie";
+
+function decodeJWT(token) {
+  const payload = token.split(".")[1];
+  return JSON.parse(atob(payload));
+}
+
 class AuthService {
   constructor() {
-    this.userKey = "user_data";
-    this.refreshTokenKey = "refreshToken";
+    this.userKey = AUTH_TOKEN.USER_DATA;
+    this.accessTokenKey = AUTH_TOKEN.ACCESS_TOKEN;
+    this.refreshTokenKey = AUTH_TOKEN.REFRESH_TOKEN;
   }
 
   getUser() {
     if (typeof window === "undefined") return null;
-    const userRaw = Cookies.get(this.userKey);
+
     try {
-      return userRaw?.startsWith("j:")
-        ? JSON.parse(userRaw.slice(2))
-        : JSON.parse(userRaw);
+      return decodeJWT(Cookies.get(this.accessTokenKey));
     } catch {
       return null;
     }
@@ -45,15 +50,13 @@ class AuthService {
     [undefined, domain].forEach((d) => {
       Cookies.remove(this.userKey, { path: "/", domain: d });
       Cookies.remove(this.refreshTokenKey, { path: "/", domain: d });
-      Cookies.remove("accessToken", { path: "/", domain: d });
-      Cookies.remove("refreshToken", { path: "/", domain: d });
-      Cookies.remove("user_data", { path: "/", domain: d });
+      Cookies.remove(this.accessTokenKey, { path: "/", domain: d });
     });
 
     // Nếu có lưu token vào cookie riêng
-    apiClient.removeCookie("accessToken");
-    apiClient.removeCookie("refreshToken");
-    apiClient.removeCookie("user_data");
+    apiClient.removeCookie(this.userKey);
+    apiClient.removeCookie(this.refreshTokenKey);
+    apiClient.removeCookie(this.accessTokenKey);
 
     apiClient.setToken(null); // clear localStorage / token trong header
     localStorage.clear();
