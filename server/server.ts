@@ -42,6 +42,7 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
   "http://localhost:9999",
+  "https://edu-pro-delta.vercel.app/",
 ];
 const corsOptions = {
   origin: (origin: any, callback: any) => {
@@ -201,7 +202,7 @@ updateNgrokWebhookUrl().then(() => {
   server.listen(PORT, () => {
     const domain =
       process.env.NODE_ENV === "production"
-        ? `https://express.haeispa.online`
+        ? `https://edu-pro-delta.vercel.app/`
         : `http://localhost:${PORT}`;
     console.log(`🚀 Server đang chạy tại: ${domain}`);
   });
