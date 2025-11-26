@@ -1,39 +1,50 @@
+import { Route } from "react-router-dom";
+
+// Layouts
 import DefaultLayout from "../layouts/DefaultLayout/DefaultLayout";
 import AuthLayout from "../layouts/AuthLayout/AuthLayout";
+
+// Pages
 import Home from "../pages/Home/Home";
 import About from "../pages/About/About";
 import Login from "../pages/Auth/Login";
-import { Route } from "react-router-dom";
-import GuestMiddleware from "../middlewares/GuestMiddleware";
-import EmailVerifiedSuccess from "../pages/Admin/User/VerifyPage";
 import LoginUserForm from "../components/AuthForm/login-user-form";
-import RoleRedirectMiddleware from "../middlewares/RoleRedirectMiddleware";
-import Assistant3D from "../pages/AI_Agent/Assistant3D";
 import RegisterPage from "../pages/Auth/Register";
 import ForgotPasswordPage from "../pages/Auth/ForgotPass";
 import ConfirmEmailResetPasswordSuccess from "../pages/Auth/ConfirmEmail";
-// Learning Platform Pages
+import EmailVerifiedSuccess from "../pages/Admin/User/VerifyPage";
+import Assistant3D from "../pages/AI_Agent/Assistant3D";
+
+// Middlewares
+import GuestMiddleware from "../middlewares/GuestMiddleware";
+import RoleRedirectMiddleware from "../middlewares/RoleRedirectMiddleware";
+
+// Learning Platform
 import CourseList from "../pages/Courses/CourseList";
 import CourseDetail from "../pages/Courses/CourseDetail";
-// choi phép người dùng được phép truy cập ngay cả khi chưa đăng nhập
+
+// ========== PUBLIC ROUTES ==========
 export const publicRoutes = (
   <>
-    {/* Bọc toàn bộ các trang public vào middleware kiểm tra role */}
+    {/* Wrapper check role cho toàn bộ public pages */}
     <Route element={<RoleRedirectMiddleware />}>
       <Route element={<DefaultLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/ai-agent" element={<Assistant3D />} />
 
-        {/* Learning Platform Routes */}
+        {/* Course Routes */}
         <Route path="/courses">
-          <Route path="" element={<CourseList />} />
+          {/* List page */}
+          <Route index element={<CourseList />} />
+
+          {/* Detail page - nhận slug */}
           <Route path=":slug" element={<CourseDetail />} />
         </Route>
       </Route>
     </Route>
 
-    {/* Các route cho đăng nhập/đăng ký, chỉ cho guest vào */}
+    {/* Auth Pages – chỉ cho guest vào */}
     <Route element={<AuthLayout />}>
       <Route element={<GuestMiddleware />}>
         <Route path="/dang-nhap" element={<LoginUserForm />} />
@@ -44,9 +55,12 @@ export const publicRoutes = (
     </Route>
 
     {/* Verify email */}
-    <Route path="verify-account/:id" element={<EmailVerifiedSuccess />} />
+    <Route path="/verify-account/:id" element={<EmailVerifiedSuccess />} />
 
     {/* Confirm reset password */}
-    <Route path="/confirm-temp-password" element={<ConfirmEmailResetPasswordSuccess />} />
+    <Route
+      path="/confirm-temp-password"
+      element={<ConfirmEmailResetPasswordSuccess />}
+    />
   </>
 );
