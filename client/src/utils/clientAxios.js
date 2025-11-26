@@ -101,9 +101,9 @@ export const getTokenFromCookie = () => {
 export const initSession = () => {
   const token = getToken();
   if (token) {
-    console.log("🔄 Session initialized with token");
+    console.log("Session initialized with token");
   } else {
-    console.log("❌ No token found for session");
+    console.log("No token found for session");
   }
 };
 

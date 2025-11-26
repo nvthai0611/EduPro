@@ -1,7 +1,7 @@
-import React, { useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Users, PlayCircle, Clock, Globe, Database, Smartphone, Zap } from 'lucide-react'; 
-import { courseData } from '../../data/courseData'; 
+import { courseData } from '../../../data/courseData'; 
 
 
 // Dữ liệu các chuyên môn
