@@ -24,11 +24,6 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
     },
-    googleId: {
-      type: String,
-      unique: true,
-      sparse: true,
-    },
     image: {
       type: String,
       default:

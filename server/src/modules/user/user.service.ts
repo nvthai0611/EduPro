@@ -24,14 +24,17 @@ class UserService {
     return userRepository.update(id, data);
   }
 
-  async findOrCreateUser(email: any, providerId: any, fullName: any, image: any): Promise<IUser | null> {
+  async findOrCreateUser(
+    email: any,
+    fullName: any,
+    image: any
+  ): Promise<IUser | null> {
     let user = await userRepository.findByEmail(email);
 
     if (!user) {
       user = {
         fullName,
         email,
-        googleId: providerId,
         image: image,
         status: true,
         isActive: true,
@@ -39,7 +42,7 @@ class UserService {
         isGuest: false,
         purchasedCourses: [],
         purchasedBundles: [],
-      }
+      };
 
       await userRepository.create(user);
     } else if (user.isGuest) {
