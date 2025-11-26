@@ -62,3 +62,8 @@ src
     - hooks
         - useClient.js
         - useTracking.js
+
+
+
+
+- Data được gửi từ fe xuống be hoặc từ be lên fe đều phải mã hóa 

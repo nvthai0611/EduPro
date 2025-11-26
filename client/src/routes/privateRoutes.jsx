@@ -4,7 +4,6 @@ import AuthMiddleware from "../middlewares/AuthMiddleware";
 import PageUserManagement from "../pages/Admin/User/Page";
 import LayoutAdmin from "../layouts/AdminLayout/Layout";
 import PageProductManagement from "../pages/Admin/Product/Page";
-import AdminDashboard from "../pages/Admin/Dasboard/revenue-dashboard";
 import PageCouponsManagement from "../pages/Admin/Coupon/Page";
 import DefaultLayout from "../layouts/DefaultLayout/DefaultLayout";
 import { TYPE_AUTH } from "../constains/auth";

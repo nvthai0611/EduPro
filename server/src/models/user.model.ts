@@ -24,10 +24,10 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
     },
-    googleId: { 
-      type: String, 
-      unique: true, 
-      sparse: true 
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
     },
     image: {
       type: String,
@@ -177,7 +177,6 @@ userSchema.methods.getPurchasedCourseIds = function () {
 userSchema.methods.getPurchasedBundleIds = function () {
   return this.purchasedBundles.map((purchase) => purchase.bundleId.toString());
 };
-
 // Virtual for total courses purchased
 userSchema.virtual("totalCoursesPurchased").get(function () {
   return this.purchasedCourses.length;
@@ -189,4 +188,4 @@ userSchema.virtual("totalBundlesPurchased").get(function () {
 });
 
 const User = mongoose.model("User", userSchema);
-module.exports = User;
+export default User;
