@@ -6,7 +6,6 @@ import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 import socketService from "./utils/socket";
 
-
 const App = () => {
   useEffect(() => {
     socketService.connect();

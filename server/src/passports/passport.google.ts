@@ -1,39 +1,6 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-import User from "../models/user.model";
-
-const findOrCreateUser = async (email: any, providerId: any, fullName: any, image: any) => {
-  let user = await User.findOne({ email });
-
-  if (!user) {
-    user = await User.create({
-      fullName,
-      email,
-      provider: providerId,
-      image: image || user.image,
-      status: true,
-      isActive: true,
-      confirmEmail: true,
-      isGuest: false,
-    });
-  } else if (user.isGuest) {
-    user.set({
-      fullName,
-      provider: providerId,
-      image: image || user.image,
-      isGuest: false,
-      status: true,
-      isActive: true,
-      confirmEmail: true,
-    });
-    await user.save();
-  }
-
-  if (!user.status || !user.isActive || !user.confirmEmail) return null;
-  if (user.role !== "customer" && user.role !== "admin") return null;
-
-  return user;
-};
+import UserService from "../modules/user/user.service";
 
 passport.use(
   "google",
@@ -43,14 +10,14 @@ passport.use(
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       callbackURL: process.env.GOOGLE_CALLBACK_URL!,
     },
-    async (_accessToken: any, _refreshToken: any, profile: { displayName: any; emails: any; photos: any }, done: (arg0: null, arg1: boolean) => any) => {
+    async (_accessToken: any, _refreshToken: any, profile: { displayName: any; emails: any; photos: any; }, done: (err: any, user?: any) => any) => {
       try {
         const { displayName: fullName, emails, photos } = profile;
 
         const email = emails?.[0]?.value;
         const image = photos?.[0]?.value;
         if (!email) return done(null, false);
-        const user = await findOrCreateUser(email, "google", fullName, image);
+        const user = await UserService.findOrCreateUser(email, "google", fullName, image);
 
         if (!user) return done(null, false);
         return done(null, user);
