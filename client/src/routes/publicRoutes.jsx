@@ -1,4 +1,5 @@
 import { Route } from "react-router-dom";
+import AdvisoryPage from '../pages/AdvisoryPage';
 
 // Layouts
 import DefaultLayout from "../layouts/DefaultLayout/DefaultLayout";
@@ -32,7 +33,7 @@ export const publicRoutes = (
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/ai-agent" element={<Assistant3D />} />
-
+        <Route path="/advisory" element={<AdvisoryPage />} />
         {/* Course Routes */}
         <Route path="/courses">
           {/* 1. Trang Index: /courses - Hiển thị TẤT CẢ khóa học và các box chuyên môn */}
