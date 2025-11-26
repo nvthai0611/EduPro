@@ -4,6 +4,7 @@ import { authRoutes } from "./v1/auth/auth.routes";
 import { categoryRoutes } from "./v1/categories.routes";
 import { roleRoutes } from "./v1/roles.routes";
 import { userRoutes } from "./v1/users.routes";
+import { courseRoutes } from "./v1/course/course.routes";
 
 // Authentication routes
 router.use("/auth", authRoutes);
@@ -16,5 +17,8 @@ router.use("/admin/role", roleRoutes);
 
 // User routes
 router.use("/admin/user", userRoutes);
+
+// Course routes
+router.use("/courses", courseRoutes );
 
 export const apiRouter: Router = router;

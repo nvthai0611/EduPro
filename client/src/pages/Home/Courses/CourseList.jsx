@@ -1,7 +1,7 @@
-import React, { useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Users, PlayCircle, Clock, Globe, Database, Smartphone, Zap } from 'lucide-react'; 
-import { courseData } from '../../data/courseData'; 
+import { courseData } from '../../../data/courseData'; 
 
 
 // Dữ liệu các chuyên môn
@@ -133,9 +133,10 @@ export default function CourseList() {
                             >
                                 <i className="fas fa-play-circle mr-2"></i> Bắt đầu học ngay
                             </button>
-                            <div className="px-8 py-3 bg-white bg-opacity-0 border-2 border-white text-white font-semibold rounded-full hover:bg-opacity-10 transition cursor-pointer">
-                                Tư vấn lộ trình
-                            </div>
+<Link to="/advisory" className="px-8 py-3 bg-white bg-opacity-0 border-2 border-white text-white font-semibold rounded-full hover:bg-opacity-10 transition cursor-pointer inline-block">
+  Tư vấn lộ trình
+</Link>
+
                         </div>
                     </div>
                 </div>

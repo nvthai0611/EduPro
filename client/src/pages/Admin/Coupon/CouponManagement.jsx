@@ -33,14 +33,12 @@ import {
   addNewCoupon,
   getAllCoupon,
   updateCoupon,
-  getCoupon,
   getAllService,
   deleteCoupon,
 } from "../../../services/admin/couponService";
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -60,7 +58,6 @@ export default function CouponsManagement() {
   const [services, setServices] = useState([]);
   const [couponDialogOpen, setCouponDialogOpen] = useState(false);
   const [coupon, setCoupon] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [sortField, setSortField] = useState("code");
   const [sortDirection, setSortDirection] = useState("asc");
   const [viewDetailMode, setViewDetailMode] = useState(false);

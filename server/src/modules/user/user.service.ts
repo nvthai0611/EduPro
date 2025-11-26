@@ -24,35 +24,29 @@ class UserService {
     return userRepository.update(id, data);
   }
 
-  async findOrCreateUser(email: any, providerId: any, fullName: any, image: any): Promise<IUser | null> {
+  async findOrCreateUser(
+    email: any,
+    fullName: any,
+    image: any
+  ): Promise<IUser | null> {
     let user = await userRepository.findByEmail(email);
 
     if (!user) {
       user = {
-        fullName,
-        email,
+        fullName: fullName,
+        email: email,
         image: image,
         status: true,
+        role: "customer",
         isActive: true,
         confirmEmail: true,
         isGuest: false,
         purchasedCourses: [],
         purchasedBundles: [],
-      }
+      };
 
       await userRepository.create(user);
-    } else if (user.isGuest) {
-      // user.set({
-      //   fullName,
-      //   provider: providerId,
-      //   image: image,
-      //   isGuest: false,
-      //   status: true,
-      //   isActive: true,
-      //   confirmEmail: true,
-      // });
-      // await user.save();
-    }
+    } 
 
     if (!user.status || !user.isActive || !user.confirmEmail) return null;
     if (user.role !== "customer" && user.role !== "admin") return null;

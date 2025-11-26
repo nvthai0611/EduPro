@@ -42,6 +42,7 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
   "http://localhost:9999",
+  "https://edu-pro-delta.vercel.app/",
 ];
 const corsOptions = {
   origin: (origin: any, callback: any) => {
@@ -88,7 +89,9 @@ app.use(passport.session());
 passport.serializeUser((user: any, done: any) => done(null, (user as any).id));
 passport.deserializeUser(async (id: any, done: any) => {
   try {
-    const User = require("./src/models/user.model").default || require("./src/models/user.model");
+    const User =
+      require("./src/models/user.model").default ||
+      require("./src/models/user.model");
     const user = await User.findById(id);
     done(null, user);
   } catch (err) {
@@ -199,7 +202,7 @@ updateNgrokWebhookUrl().then(() => {
   server.listen(PORT, () => {
     const domain =
       process.env.NODE_ENV === "production"
-        ? `https://express.haeispa.online`
+        ? `https://edu-pro-delta.vercel.app/`
         : `http://localhost:${PORT}`;
     console.log(`🚀 Server đang chạy tại: ${domain}`);
   });
