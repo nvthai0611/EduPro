@@ -1,12 +1,14 @@
 import { privateRoutes } from "../routes/privateRoutes";
 import { publicRoutes } from "../routes/publicRoutes";
 import { Routes } from "react-router-dom";
+import AdvisoryPage from '../pages/AdvisoryPage';
 const Layout = () => {
   return (
     <Routes>
       {publicRoutes}
       {privateRoutes}
     </Routes>
+    
   );
 };
 
