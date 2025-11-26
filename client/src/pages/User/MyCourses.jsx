@@ -29,8 +29,8 @@ const MyCourses = () => {
   const fetchMyCourses = async () => {
     try {
       setLoading(true);
-      const response = await courseService.getMyCourses();
-      setCourses(response.data || []);
+      // const response = await courseService.getMyCourses();
+      setCourses([]);
     } catch (error) {
       console.error('Error fetching my courses:', error);
     } finally {
