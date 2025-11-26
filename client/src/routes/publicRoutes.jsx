@@ -35,11 +35,14 @@ export const publicRoutes = (
 
         {/* Course Routes */}
         <Route path="/courses">
-          {/* List page */}
+          {/* 1. Trang Index: /courses - Hiển thị TẤT CẢ khóa học và các box chuyên môn */}
           <Route index element={<CourseList />} />
 
-          {/* Detail page - nhận slug */}
-          <Route path=":slug" element={<CourseDetail />} />
+          {/* 2. Trang Chuyên môn: /courses/category/frontend - Hiển thị theo category */}
+          <Route path="category/:categorySlug" element={<CourseList />} />
+
+          {/* 3. Trang Chi tiết: /courses/detail/kien-thuc-nhap-mon-it - Trang chi tiết khóa học */}
+          <Route path="detail/:slug" element={<CourseDetail />} />
         </Route>
       </Route>
     </Route>
