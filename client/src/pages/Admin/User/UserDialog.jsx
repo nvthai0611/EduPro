@@ -29,20 +29,6 @@ export default function UserDialog({ open, onOpenChange, roleOptions, user, onSa
         status: "false", // Khởi tạo là chuỗi "false" hoặc "true"
     })
 
-    // State để lưu trữ danh sách chi nhánh
-    const [branch, setBranch] = useState([]);
-
-    // Hook useEffect để tải dữ liệu chi nhánh khi component được mount
-    useEffect(() => {
-        const fetchData = async () => {
-            const responseDataBranch = await getAllBranch();
-            if (responseDataBranch.success) {
-                setBranch(responseDataBranch.data)
-            }
-        }
-        fetchData();
-    }, []) // Mảng dependency rỗng đảm bảo chạy một lần khi mount
-
     // Hook useEffect để điền dữ liệu form khi có user hoặc khi dialog mở/đóng
     useEffect(() => {
         if (user) {
@@ -184,24 +170,6 @@ export default function UserDialog({ open, onOpenChange, roleOptions, user, onSa
                                             {positions.filter(value => value !== "serviceStaff").map((value) => ( // Lọc "serviceStaff" trước khi map
                                                 <SelectItem key={value} value={value}>
                                                     {value}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="branchId" className="text-right">
-                                        Địa chỉ chi nhánh
-                                    </Label>
-                                    <Select value={formData.branchId} onValueChange={(value) => handleSelectChange("branchId", value)}>
-                                        <SelectTrigger className="col-span-3 ">
-                                            <SelectValue placeholder="Chọn địa chỉ chi nhánh" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {branch.map((value) => (
-                                                <SelectItem key={value._id} value={value._id}>
-                                                    {value.address}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>

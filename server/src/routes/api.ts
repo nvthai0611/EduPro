@@ -1,8 +1,20 @@
 import { Router, Request, Response } from "express";
 const router: Router = Router();
 import { authRoutes } from "./v1/auth/auth.routes";
+import { categoryRoutes } from "./v1/categories.routes";
+import { roleRoutes } from "./v1/roles.routes";
+import { userRoutes } from "./v1/users.routes";
 
-// // Authentication routes
+// Authentication routes
 router.use("/auth", authRoutes);
+
+// Category routes
+router.use("/category", categoryRoutes);
+
+// Role routes
+router.use("/admin/role", roleRoutes);
+
+// User routes
+router.use("/admin/user", userRoutes);
 
 export const apiRouter: Router = router;

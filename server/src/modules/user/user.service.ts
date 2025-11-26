@@ -31,7 +31,6 @@ class UserService {
       user = {
         fullName,
         email,
-        googleId: providerId,
         image: image,
         status: true,
         isActive: true,
@@ -59,6 +58,10 @@ class UserService {
     if (user.role !== "customer" && user.role !== "admin") return null;
 
     return user;
+  }
+
+  async deleteUser(id: string): Promise<IUser | null> {
+    return userRepository.delete(id);
   }
 }
 
