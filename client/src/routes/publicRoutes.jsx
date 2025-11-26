@@ -1,11 +1,11 @@
 import { Route } from "react-router-dom";
+import AdvisoryPage from '../pages/AdvisoryPage';
 
 // Layouts
 import DefaultLayout from "../layouts/DefaultLayout/DefaultLayout";
 import AuthLayout from "../layouts/AuthLayout/AuthLayout";
 
 // Pages
-import Home from "../pages/Home/Home";
 import About from "../pages/About/About";
 import Login from "../pages/Auth/Login";
 import LoginUserForm from "../components/AuthForm/login-user-form";
@@ -18,10 +18,10 @@ import Assistant3D from "../pages/AI_Agent/Assistant3D";
 // Middlewares
 import GuestMiddleware from "../middlewares/GuestMiddleware";
 import RoleRedirectMiddleware from "../middlewares/RoleRedirectMiddleware";
+import CourseList from "../pages/Home/Courses/CourseList";
+import CourseDetail from "../pages/Home/Courses/CourseDetail";
 
 // Learning Platform
-import CourseList from "../pages/Courses/CourseList";
-import CourseDetail from "../pages/Courses/CourseDetail";
 
 // ========== PUBLIC ROUTES ==========
 export const publicRoutes = (
@@ -29,19 +29,14 @@ export const publicRoutes = (
     {/* Wrapper check role cho toàn bộ public pages */}
     <Route element={<RoleRedirectMiddleware />}>
       <Route element={<DefaultLayout />}>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<CourseList />} />
         <Route path="/about" element={<About />} />
         <Route path="/ai-agent" element={<Assistant3D />} />
-
+        <Route path="/advisory" element={<AdvisoryPage />} />
         {/* Course Routes */}
         <Route path="/courses">
-          {/* 1. Trang Index: /courses - Hiển thị TẤT CẢ khóa học và các box chuyên môn */}
           <Route index element={<CourseList />} />
-
-          {/* 2. Trang Chuyên môn: /courses/category/frontend - Hiển thị theo category */}
           <Route path="category/:categorySlug" element={<CourseList />} />
-
-          {/* 3. Trang Chi tiết: /courses/detail/kien-thuc-nhap-mon-it - Trang chi tiết khóa học */}
           <Route path="detail/:slug" element={<CourseDetail />} />
         </Route>
       </Route>
