@@ -11,10 +11,12 @@ const router: Router = Router();
 // ===============================
 //        FORGOT PASSWORD
 // ===============================
-router.post('/forgot-password-email', authController.sendLinkResetPassword);
+router.post("/forgot-password-email", authController.sendLinkResetPassword);
 
-router.post('/confirm-reset-password', authController.confirmEmailResetPassword);
-
+router.post(
+  "/confirm-reset-password",
+  authController.confirmEmailResetPassword
+);
 
 // ===============================
 //        GOOGLE AUTH
@@ -23,7 +25,11 @@ router.post('/confirm-reset-password', authController.confirmEmailResetPassword)
 router.get(
   "/google",
   passport.authenticate("google", {
-    scope: ["profile", "email", "https://www.googleapis.com/auth/userinfo.profile"], 
+    scope: [
+      "profile",
+      "email",
+      "https://www.googleapis.com/auth/userinfo.profile",
+    ],
     session: false,
   })
 );
@@ -49,7 +55,9 @@ router.get(
       const refreshToken = await refreshAccessToken();
 
       // FIX: Truyền user vào transformer
-      const user_parse = new UserTransformer(req.user).response(req.user as any);
+      const user_parse = new UserTransformer(req.user).response(
+        req.user as any
+      );
 
       const isProduction = process.env.NODE_ENV === "production";
 

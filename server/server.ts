@@ -88,7 +88,9 @@ app.use(passport.session());
 passport.serializeUser((user: any, done: any) => done(null, (user as any).id));
 passport.deserializeUser(async (id: any, done: any) => {
   try {
-    const User = require("./src/models/user.model").default || require("./src/models/user.model");
+    const User =
+      require("./src/models/user.model").default ||
+      require("./src/models/user.model");
     const user = await User.findById(id);
     done(null, user);
   } catch (err) {

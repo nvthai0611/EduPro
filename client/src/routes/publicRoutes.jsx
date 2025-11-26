@@ -13,8 +13,8 @@ import RegisterPage from "../pages/Auth/Register";
 import ForgotPasswordPage from "../pages/Auth/ForgotPass";
 import ConfirmEmailResetPasswordSuccess from "../pages/Auth/ConfirmEmail";
 // Learning Platform Pages
-import CourseList from "../pages/Courses/CourseList";
-import CourseDetail from "../pages/Courses/CourseDetail";
+import CourseList from "../pages/Home/Courses/CourseList";
+import CourseDetail from "../pages/Home/Courses/CourseDetail";
 // choi phép người dùng được phép truy cập ngay cả khi chưa đăng nhập
 export const publicRoutes = (
   <>
