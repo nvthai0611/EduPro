@@ -69,7 +69,7 @@ router.get(
         sameSite: isProduction ? "none" : "strict",
         secure: isProduction,
         httpOnly: false,
-        domain: isProduction ? "haeispa.online" : undefined,
+        domain: isProduction ? "edu-pro-delta.vercel.app" : undefined,
       };
 
       // Set Cookies
