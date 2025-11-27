@@ -33,10 +33,11 @@ class UserService {
 
     if (!user) {
       user = {
-        fullName,
-        email,
+        fullName: fullName,
+        email: email,
         image: image,
         status: true,
+        role: "customer",
         isActive: true,
         confirmEmail: true,
         isGuest: false,
@@ -45,23 +46,16 @@ class UserService {
       };
 
       await userRepository.create(user);
-    } else if (user.isGuest) {
-      // user.set({
-      //   fullName,
-      //   provider: providerId,
-      //   image: image,
-      //   isGuest: false,
-      //   status: true,
-      //   isActive: true,
-      //   confirmEmail: true,
-      // });
-      // await user.save();
-    }
+    } 
 
     if (!user.status || !user.isActive || !user.confirmEmail) return null;
     if (user.role !== "customer" && user.role !== "admin") return null;
 
     return user;
+  }
+
+  async deleteUser(id: string): Promise<IUser | null> {
+    return userRepository.delete(id);
   }
 }
 
