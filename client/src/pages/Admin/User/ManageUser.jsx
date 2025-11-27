@@ -78,8 +78,6 @@ export default function UserManagement() {
   const [userToDelete, setUserToDelete] = useState(null)
   // State cho trạng thái tải (loading)
   const [loading, setLoading] = useState(false)
-  // State để lưu trữ danh sách vị trí (Position)
-  const [position, setPosition] = useState([]);
   // State để kích hoạt lại useEffect sau khi gửi form
   const [submited, setSubmited] = useState(false);
 
@@ -101,9 +99,6 @@ export default function UserManagement() {
           // Ví dụ: roleResponse?.data.data[0] = { "CUSTOMER": "customer", "STAFF": "staff" }
           // setRoleOptions sẽ là: [["CUSTOMER", "customer"], ["STAFF", "staff"], ...]
         }
-        // if (positionResponse?.success) {
-        //   setPosition(positionResponse.data) // Cập nhật state `position`
-        // }
       } catch (error) {
         console.log(error); // Ghi lỗi ra console
       }
@@ -264,11 +259,12 @@ export default function UserManagement() {
       setLoading(true) // Bắt đầu trạng thái loading
 
       // Cập nhật người dùng hiện có
-      if (userData?._id) {
-        const updatedUser = await updateUser(userData?._id, userData) // Gọi API cập nhật
+      if (userData?.id) {
+        const updatedUser = await updateUser(userData?.id, userData) // Gọi API cập nhật
+        
         setLoading(false) // Kết thúc loading
-        if (updatedUser?.data.success == true) {
-          toast.success(updatedUser?.data.message, { // Thông báo thành công
+        if (updatedUser.response.ok) {
+          toast.success(updatedUser?.data, { // Thông báo thành công
             style: {
               backgroundColor: "#f0f4ff",
               color: "#1e3a8a",
@@ -276,10 +272,9 @@ export default function UserManagement() {
             duration: 2000,
           });
           setIsUserDialogOpen(false) // Đóng dialog
-          // Cập nhật người dùng trong danh sách `users`
-          setUsers(users?.map((user) => (user?._id === userData?._id ? { ...user, ...updatedUser?.data.data } : user)))
+          setSubmited(!submited);
         } else {
-          toast.error(updatedUser?.data.message, { // Thông báo lỗi
+          toast.error(updatedUser?.data, { // Thông báo lỗi
             style: {
               backgroundColor: "#f0f4ff",
               color: "#1e3a8a",
@@ -290,10 +285,12 @@ export default function UserManagement() {
       }
       // Tạo người dùng mới
       else {
+
         const createUser = await addUser(userData) // Gọi API thêm người dùng
+        
         setLoading(false) // Kết thúc loading
-        if (createUser.data.success == true) {
-          toast.success(createUser?.data.message, { // Thông báo thành công
+        if (createUser.response.ok) {
+          toast.success(createUser?.data, { // Thông báo thành công
             style: {
               backgroundColor: "#f0f4ff",
               color: "#1e3a8a",
@@ -301,9 +298,9 @@ export default function UserManagement() {
             duration: 2000,
           });
           setIsUserDialogOpen(false) // Đóng dialog
-          setUsers([...users, createUser?.data.data]) // Thêm người dùng mới vào danh sách
+          setSubmited(!submited);
         } else {
-          toast.error(createUser?.data.message, { // Thông báo lỗi
+          toast.error(createUser?.data, { // Thông báo lỗi
             style: {
               backgroundColor: "#f0f4ff",
               color: "#1e3a8a",
@@ -673,7 +670,6 @@ export default function UserManagement() {
         roleOptions={roleOptions}
         onSave={handleSaveUser}
         loading={loading}
-        positions={position}
       />
 
       {/* Dialog xác nhận xóa */}
