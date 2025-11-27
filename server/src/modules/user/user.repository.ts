@@ -20,6 +20,10 @@ class UserRepository {
   async findAll(): Promise<IUser[]> {
     return User.find();
   }
+
+  async delete(id: string): Promise<IUser | null> {
+    return User.findByIdAndDelete(id);
+  }
 }
 
 export default new UserRepository();

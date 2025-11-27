@@ -14,7 +14,6 @@ export interface IUser {
   fullName: string;
   email?: string;
   password?: string;
-  googleId?: string | null;
   image?: string;
   status?: boolean;
   role?: "customer" | "admin";
@@ -80,12 +79,6 @@ const userSchema = new Schema<IUserDocument>(
     },
     password: {
       type: String,
-    },
-    googleId: {
-      type: String,
-      unique: true,
-      sparse: true,
-      default: null,
     },
     image: {
       type: String,

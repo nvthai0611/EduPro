@@ -72,9 +72,6 @@ router.get(
         domain: isProduction ? "edu-pro-delta.vercel.app" : undefined,
       };
 
-      // Set Cookies
-
-      // accessToken
       res.cookie("render_id", accessToken, cookieOptions as any);
 
       return res.redirect(process.env.FRONTEND_URL!);
