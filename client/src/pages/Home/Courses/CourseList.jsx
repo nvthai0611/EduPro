@@ -1,23 +1,8 @@
-<<<<<<< HEAD:client/src/pages/Courses/CourseList.jsx
-import React, { useMemo, useRef } from "react";
-import { Link, useParams } from "react-router-dom";
-import {
-  Users,
-  PlayCircle,
-  Clock,
-  Globe,
-  Database,
-  Smartphone,
-  Zap,
-} from "lucide-react";
-import { courseData } from "../../data/courseData";
-=======
 import { useMemo, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Users, PlayCircle, Clock, Globe, Database, Smartphone, Zap } from 'lucide-react'; 
 import { courseData } from '../../../data/courseData'; 
 
->>>>>>> 1bc9350140f093489035a634a8426de11d75eb58:client/src/pages/Home/Courses/CourseList.jsx
 
 // Dữ liệu các chuyên môn
 const professions = [
@@ -143,39 +128,8 @@ export default function CourseList() {
     return courseData.filter((c) => c.category === categorySlug);
   }, [categorySlug]);
 
-<<<<<<< HEAD:client/src/pages/Courses/CourseList.jsx
   // Lấy tên chuyên môn để hiển thị tiêu đề
   const currentProfession = professions.find((p) => p.slug === categorySlug);
-=======
-    return (
-        <div className="min-h-screen bg-white pb-12">
-            
-            {/* --- 1. HEADER CHÍNH (Chỉ hiển thị trên trang /courses index) --- */}
-            {!isCategoryPage && (
-                <div className="pt-16 pb-12 bg-gradient-to-r from-blue-600 to-purple-700 mb-10 text-white shadow-xl rounded-b-xl">
-                    <div className="max-w-7xl mx-auto px-4">
-                        <h2 className="text-4xl font-extrabold mb-4 text-center">
-                            Học Lập Trình Từ Cơ Bản Đến Nâng Cao
-                        </h2>
-                        <p className="text-lg text-gray-200 mb-8 text-center max-w-3xl mx-auto">
-                            Khám phá thế giới lập trình với các khóa học chất lượng cao từ HoangAn IT. Từ Frontend đến Backend, từ Web đến Mobile - chúng tôi có tất cả!
-                        </p>
-                        <div className="flex justify-center gap-4">
-                            <button 
-                                onClick={scrollToCourses} // Bấm vào thì cuộn xuống danh sách khóa học
-                                className="flex items-center justify-center px-8 py-3 bg-white text-blue-600 font-semibold rounded-full shadow-lg hover:bg-gray-100 transition"
-                            >
-                                <i className="fas fa-play-circle mr-2"></i> Bắt đầu học ngay
-                            </button>
-<Link to="/advisory" className="px-8 py-3 bg-white bg-opacity-0 border-2 border-white text-white font-semibold rounded-full hover:bg-opacity-10 transition cursor-pointer inline-block">
-  Tư vấn lộ trình
-</Link>
-
-                        </div>
-                    </div>
-                </div>
-            )}
->>>>>>> 1bc9350140f093489035a634a8426de11d75eb58:client/src/pages/Home/Courses/CourseList.jsx
 
   // Text cho Tiêu đề trang
   let headerTitle = "Khóa học miễn phí";
