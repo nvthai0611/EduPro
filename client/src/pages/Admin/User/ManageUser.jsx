@@ -47,12 +47,15 @@ import {
   updateUser
 } from '../../../services/admin/userService' // Các API liên quan đến người dùng
 import { isValidEmail, isValidName, isValidPhone } from "../../../utils/validation" // Các hàm kiểm tra dữ liệu
-import { getAllPositions } from "../../../services/commonService" // API lấy tất cả vị trí
+import Cookies from "js-cookie"
+import { jwtDecode } from "jwt-decode"
 
 const USERS_PER_PAGE = 10; // Số người dùng hiển thị trên mỗi trang
 export default function UserManagement() {
   // State để lưu trữ danh sách người dùng
   const [users, setUsers] = useState([])
+  // State cho thanh tìm kiếm
+  const [currentId, setCurrentId] = useState(null)
   // State cho thanh tìm kiếm
   const [searchTerm, setSearchTerm] = useState("")
   // State cho bộ lọc vai trò
@@ -75,8 +78,6 @@ export default function UserManagement() {
   const [userToDelete, setUserToDelete] = useState(null)
   // State cho trạng thái tải (loading)
   const [loading, setLoading] = useState(false)
-  // State để lưu trữ danh sách vị trí (Position)
-  const [position, setPosition] = useState([]);
   // State để kích hoạt lại useEffect sau khi gửi form
   const [submited, setSubmited] = useState(false);
 
@@ -85,26 +86,25 @@ export default function UserManagement() {
     const fetchUsers = async () => {
       try {
         const response = await getAllUsers() // Gọi API lấy tất cả người dùng
-        const roleResponse = await getAllRole(); // Gọi API lấy tất cả vai trò
-        const positionResponse = await getAllPositions(); // Gọi API lấy tất cả vị trí
 
-        if (response?.data.success == true) {
-          setUsers(response?.data.data) // Cập nhật state `users`
+        const roleResponse = await getAllRole(); // Gọi API lấy tất cả vai trò
+
+        if (response?.data) {
+          setUsers(response?.data) // Cập nhật state `users`
         }
-        if (roleResponse?.data.success) {
+
+        if (roleResponse) {
           // Chuyển đổi đối tượng vai trò thành mảng các cặp [label, value]
-          setRoleOptions(Object.entries(roleResponse?.data.data[0]));
+          setRoleOptions(Object.entries(roleResponse?.data));
           // Ví dụ: roleResponse?.data.data[0] = { "CUSTOMER": "customer", "STAFF": "staff" }
           // setRoleOptions sẽ là: [["CUSTOMER", "customer"], ["STAFF", "staff"], ...]
-        }
-        if (positionResponse?.success) {
-          setPosition(positionResponse.data) // Cập nhật state `position`
         }
       } catch (error) {
         console.log(error); // Ghi lỗi ra console
       }
     }
     fetchUsers() // Gọi hàm fetchUsers
+    setCurrentId(jwtDecode(Cookies.get("render_id")).userId);
   }, [submited]) // Dependencies: chạy lại khi `submited` thay đổi
 
   // Lọc và sắp xếp người dùng dựa trên `searchTerm`, `roleFilter`, `statusFilter`, `sortField`, `sortDirection`
@@ -190,12 +190,13 @@ export default function UserManagement() {
   const confirmDeleteUser = async () => {
     if (userToDelete) {
       try {
-        const response = await deleteUserById(userToDelete?.id) // Gọi API xóa người dùng
-        if (response?.data.success) {
-          setUsers(users.filter((user) => user?.id !== userToDelete?.id)) // Cập nhật danh sách người dùng sau khi xóa
+        const response = await deleteUserById(userToDelete?._id) // Gọi API xóa người dùng
+        if (response) {
+          setUsers(users.filter((user) => user?._id !== userToDelete?._id)) // Cập nhật danh sách người dùng sau khi xóa
           setIsDeleteDialogOpen(false) // Đóng dialog
           setUserToDelete(null) // Xóa người dùng khỏi state
           toast.success("Người dùng đã được xóa thành công"); // Hiển thị thông báo thành công
+          setSubmited(!submited);
         }
         else {
           toast.error(response?.data.message); // Hiển thị thông báo lỗi từ server
@@ -260,9 +261,10 @@ export default function UserManagement() {
       // Cập nhật người dùng hiện có
       if (userData?.id) {
         const updatedUser = await updateUser(userData?.id, userData) // Gọi API cập nhật
+        
         setLoading(false) // Kết thúc loading
-        if (updatedUser?.data.success == true) {
-          toast.success(updatedUser?.data.message, { // Thông báo thành công
+        if (updatedUser.response.ok) {
+          toast.success(updatedUser?.data, { // Thông báo thành công
             style: {
               backgroundColor: "#f0f4ff",
               color: "#1e3a8a",
@@ -270,10 +272,9 @@ export default function UserManagement() {
             duration: 2000,
           });
           setIsUserDialogOpen(false) // Đóng dialog
-          // Cập nhật người dùng trong danh sách `users`
-          setUsers(users?.map((user) => (user?.id === userData?.id ? { ...user, ...updatedUser?.data.data } : user)))
+          setSubmited(!submited);
         } else {
-          toast.error(updatedUser?.data.message, { // Thông báo lỗi
+          toast.error(updatedUser?.data, { // Thông báo lỗi
             style: {
               backgroundColor: "#f0f4ff",
               color: "#1e3a8a",
@@ -284,10 +285,12 @@ export default function UserManagement() {
       }
       // Tạo người dùng mới
       else {
+
         const createUser = await addUser(userData) // Gọi API thêm người dùng
+        
         setLoading(false) // Kết thúc loading
-        if (createUser.data.success == true) {
-          toast.success(createUser?.data.message, { // Thông báo thành công
+        if (createUser.response.ok) {
+          toast.success(createUser?.data, { // Thông báo thành công
             style: {
               backgroundColor: "#f0f4ff",
               color: "#1e3a8a",
@@ -295,9 +298,9 @@ export default function UserManagement() {
             duration: 2000,
           });
           setIsUserDialogOpen(false) // Đóng dialog
-          setUsers([...users, createUser?.data.data]) // Thêm người dùng mới vào danh sách
+          setSubmited(!submited);
         } else {
-          toast.error(createUser?.data.message, { // Thông báo lỗi
+          toast.error(createUser?.data, { // Thông báo lỗi
             style: {
               backgroundColor: "#f0f4ff",
               color: "#1e3a8a",
@@ -322,7 +325,7 @@ export default function UserManagement() {
   // Chuyển đổi trạng thái hoạt động/khóa của người dùng
   const toggleUserStatus = async (userId) => {
     try {
-      const user = users.find((user) => user?.id === userId) // Tìm người dùng theo ID
+      const user = users.find((user) => user?._id === userId) // Tìm người dùng theo ID
       if (!user) return // Nếu không tìm thấy, thoát
       const changeStatus = await updateUser(userId, { status: !user.status }) // Gọi API cập nhật trạng thái
       if (changeStatus?.data.success == true) {
@@ -333,8 +336,9 @@ export default function UserManagement() {
           },
           duration: 2000,
         });
-        setUsers(users?.map((user) => (user?.id === userId ? { ...user, status: !user?.status } : user))) // Cập nhật trạng thái trong state
+        setUsers(users?.map((user) => (user?._id === userId ? { ...user, status: !user?.status } : user))) // Cập nhật trạng thái trong state
       }
+      setSubmited(!submited);
     } catch (error) {
       console.log(error) // Ghi lỗi ra console
       toast.error("Đã xảy ra lỗi khi cập nhật trạng thái người dùng", { // Thông báo lỗi chung
@@ -350,7 +354,7 @@ export default function UserManagement() {
   // Thay đổi vai trò của người dùng
   const changeUserRole = async (userId, newRole) => {
     try {
-      const user = users?.find((user) => user?.id === userId) // Tìm người dùng theo ID
+      const user = users?.find((user) => user?._id === userId) // Tìm người dùng theo ID
       if (user?.role === 'admin' && newRole === 'admin') {
         toast.error("Vai trò quản trị viên không thể thay đổi thành quản trị viên", {
           style: {
@@ -370,8 +374,9 @@ export default function UserManagement() {
           },
           duration: 2000,
         });
-        setUsers(users?.map((user) => (user?.id === userId ? { ...user, role: newRole } : user))) // Cập nhật vai trò trong state
+        setUsers(users?.map((user) => (user?._id === userId ? { ...user, role: newRole } : user))) // Cập nhật vai trò trong state
       }
+      setSubmited(!submited);
     } catch (error) {
       console.log(error) // Ghi lỗi ra console
       toast.error("Đã xảy ra lỗi khi cập nhật vai trò người dùng", { // Thông báo lỗi chung
@@ -446,9 +451,9 @@ export default function UserManagement() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tất cả vai trò</SelectItem>
-                  {roleOptions.map(([label, value]) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
+                  {roleOptions.map(([index, value]) => (
+                    <SelectItem key={index} value={value.name} className="capitalize">
+                      {value.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -527,7 +532,7 @@ export default function UserManagement() {
                   </TableRow>
                 ) : (
                   paginatedUsers.map((user) => (
-                    <TableRow key={user?.id}>
+                    <TableRow key={user?._id}>
                       <TableCell className="font-medium">{user?.fullName}</TableCell>
                       <TableCell>{user?.email}</TableCell>
                       <TableCell>
@@ -541,73 +546,65 @@ export default function UserManagement() {
                         )}
                       </TableCell>
                       <TableCell>{formatDate(user?.createdAt)}</TableCell>
-                      <TableCell className="text-right">
-                        {/* Menu hành động cho từng người dùng */}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <span className="sr-only">Mở menu</span>
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleEditUser(user)}>
-                              <PenSquare className="mr-2 h-4 w-4" />
-                              Xem chi tiết
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => toggleUserStatus(user?.id)}>
-                              {user?.status === true ? (
-                                <>
-                                  <Lock className="mr-2 h-4 w-4" />
-                                  Khóa tài khoản
-                                </>
-                              ) : (
-                                <>
-                                  <Unlock className="mr-2 h-4 w-4" />
-                                  Mở khóa tài khoản
-                                </>
-                              )}
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            {/* Dropdown con để thay đổi vai trò */}
-                            <DropdownMenu>
-                              <DropdownMenuTrigger className="flex items-center w-full px-2 py-1.5 text-sm">
-                                <Users className="mr-2 h-4 w-4" />
-                                Thay đổi vai trò
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent>
-                                <DropdownMenuItem
-                                  onClick={() => changeUserRole(user?.id, "admin")}
-                                  disabled={user?.role === "admin"}
-                                >
-                                  Đặt làm Quản trị viên
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => changeUserRole(user?.id, "staff")}
-                                  disabled={user?.role === "staff"}
-                                >
-                                  Đặt làm Nhân viên
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => changeUserRole(user?.id, "customer")}
-                                  disabled={user?.role === "customer"}
-                                >
-                                  Đặt làm Khách hàng
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => handleDeleteUser(user)}
-                              className="text-red-600 focus:text-red-600"
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Xóa
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
+                      {user._id !== currentId && (
+                        <TableCell className="text-right">
+                          {/* Menu hành động cho từng người dùng */}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">Mở menu</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEditUser(user)}>
+                                <PenSquare className="mr-2 h-4 w-4" />
+                                Xem chi tiết
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => toggleUserStatus(user?._id)}>
+                                {user?.status === true ? (
+                                  <>
+                                    <Lock className="mr-2 h-4 w-4" />
+                                    Khóa tài khoản
+                                  </>
+                                ) : (
+                                  <>
+                                    <Unlock className="mr-2 h-4 w-4" />
+                                    Mở khóa tài khoản
+                                  </>
+                                )}
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              {/* Dropdown con để thay đổi vai trò */}
+                              <DropdownMenu>
+                                <DropdownMenuTrigger className="flex items-center w-full px-2 py-1.5 text-sm">
+                                  <Users className="mr-2 h-4 w-4" />
+                                  Thay đổi vai trò
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                  {roleOptions.map((role) => (
+                                    <DropdownMenuItem
+                                      key={role[1].name}
+                                      onClick={() => changeUserRole(user?._id, `${role[1].name}`)}
+                                    >
+                                      Đặt làm<span className="capitalize">{role[1].name}</span>
+                                    </DropdownMenuItem>
+                                  ))}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteUser(user)}
+                                className="text-red-600 focus:text-red-600"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Xóa
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))
                 )}
@@ -673,7 +670,6 @@ export default function UserManagement() {
         roleOptions={roleOptions}
         onSave={handleSaveUser}
         loading={loading}
-        positions={position}
       />
 
       {/* Dialog xác nhận xóa */}
