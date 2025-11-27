@@ -9,31 +9,18 @@ export const client = {
   setToken: function (token) {
     this.token = token;
   },
-  init_session: function () {
-    const savedToken = Cookies.get("accessToken");
-    console.log("savedToken", savedToken);
-
-    if (savedToken) {
-      this.setToken(savedToken);
-    }
-  },
-  init_cookie: function () {
-    const match = document.cookie.match(/(^|;) ?accessToken=([^;]*)/);
-    return match ? match[2] : null;
-  },
   send: async function (url, method = "GET", body = null) {
     // url = SERVER_API + url;
     url = `${this.serverApi}${url}`;
-    const token = Cookies.get("accessToken"); // lay luon token vi khong muon sua o login
+    
     const headers = {
       "Content-Type": "application/json",
     };
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
+
     const options = {
       method,
       headers,
+      credentials: "include",
     };
 
     if (body) {
@@ -41,7 +28,9 @@ export const client = {
     }
 
     const response = await fetch(url, options);
+    
     const data = await response.json();
+    
     return { response, data };
   },
 
