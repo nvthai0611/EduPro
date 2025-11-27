@@ -5,6 +5,6 @@ import { courseRoutes } from "./v1/course/course.routes";
 // // Authentication routes
 router.use("/auth", authRoutes);
 
-router.use("/courses", courseRoutes );
+router.use("/courses", courseRoutes);
 
 export const apiRouter: Router = router;

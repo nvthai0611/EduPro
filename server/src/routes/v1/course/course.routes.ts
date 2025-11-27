@@ -2,7 +2,7 @@ import {
   createCourse,
   getCourse,
   getCoursesByManager,
-    getAllCourses,
+  getAllCourses,
 } from "../../../controllers/v1/course/course.controller";
 import { Router } from "express";
 
