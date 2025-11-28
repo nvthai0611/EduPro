@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const lessonSchema = new mongoose.Schema(
   {
@@ -12,43 +12,16 @@ const lessonSchema = new mongoose.Schema(
       ref: "Course",
       required: true,
     },
-    title: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    description: {
-      type: String,
-      trim: true,
-    },
-    order: {
-      type: Number,
-      required: true,
-      min: 1,
-    },
-    videoUrl: {
-      type: String,
-      required: true,
-    },
-    videoDuration: {
-      type: Number,
-      required: true,
-      min: 0, // giây
-    },
-    isFree: {
-      type: Boolean,
-      default: false,
-    },
+    title: { type: String, required: true, trim: true },
+    description: { type: String, trim: true },
+    order: { type: Number, required: true, min: 1 },
+    videoUrl: { type: String, required: true },
+    videoDuration: { type: Number, required: true, min: 0 }, // giây
+    isFree: { type: Boolean, default: false },
     resources: [
       {
-        name: {
-          type: String,
-          required: true,
-        },
-        url: {
-          type: String,
-          required: true,
-        },
+        name: { type: String, required: true },
+        url: { type: String, required: true },
         type: {
           type: String,
           enum: ["pdf", "code", "slides", "other"],
@@ -63,8 +36,8 @@ const lessonSchema = new mongoose.Schema(
 // Indexes
 lessonSchema.index({ courseId: 1, order: 1 });
 lessonSchema.index({ moduleId: 1, order: 1 });
-lessonSchema.index({ isFree: 1 });
-
+lessonSchema.index({courseId: 1});// tối ưu truy vấn
+lessonSchema.index({moduleId: 1});
 // Virtual for formatted duration
 lessonSchema.virtual("formattedDuration").get(function () {
   const minutes = Math.floor(this.videoDuration / 60);
@@ -78,4 +51,4 @@ lessonSchema.methods.isAccessible = function (userPurchasedCourses = []) {
 };
 
 const Lesson = mongoose.model("Lesson", lessonSchema);
-module.exports = Lesson;
+export default Lesson;

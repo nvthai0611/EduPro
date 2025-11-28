@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import Layout from "./core/Layout";
-import { useBookingStore } from "./stores/zustand/bookingStore";
+// import { useBookingStore } from "./stores/zustand/bookingStore";
 import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 import socketService from "./utils/socket";

@@ -29,8 +29,8 @@ const CourseManagement = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [levelFilter, setLevelFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [levelFilter, setLevelFilter] = useState('all');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
@@ -54,11 +54,11 @@ const CourseManagement = () => {
       setLoading(true);
       const params = {
         search: searchTerm,
-        status: statusFilter,
-        level: levelFilter,
-        admin: true
+        status: statusFilter === 'all' ? '' : statusFilter,
+        level: levelFilter === 'all' ? '' : levelFilter,
       };
-      const response = await courseService.getAllCourses(params);
+      const response = await courseService.getCourses(params);
+      console.log('Courses fetched:', response);
       setCourses(response.data || []);
     } catch (error) {
       console.error('Error fetching courses:', error);
@@ -230,7 +230,7 @@ const CourseManagement = () => {
                 <SelectValue placeholder="Trạng thái" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tất cả trạng thái</SelectItem>
+                <SelectItem value="all">Tất cả trạng thái</SelectItem>
                 <SelectItem value="published">Đã xuất bản</SelectItem>
                 <SelectItem value="draft">Bản nháp</SelectItem>
               </SelectContent>
@@ -241,7 +241,7 @@ const CourseManagement = () => {
                 <SelectValue placeholder="Cấp độ" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tất cả cấp độ</SelectItem>
+                <SelectItem value="all">Tất cả cấp độ</SelectItem>
                 <SelectItem value="beginner">Cơ bản</SelectItem>
                 <SelectItem value="intermediate">Trung bình</SelectItem>
                 <SelectItem value="advanced">Nâng cao</SelectItem>
@@ -250,8 +250,8 @@ const CourseManagement = () => {
             
             <Button variant="outline" onClick={() => {
               setSearchTerm('');
-              setStatusFilter('');
-              setLevelFilter('');
+              setStatusFilter('all');
+              setLevelFilter('all');
             }}>
               <Filter className="w-4 h-4 mr-2" />
               Xóa bộ lọc
@@ -303,10 +303,10 @@ const CourseManagement = () => {
                         </div>
                       </td>
                       <td className="p-4">
-                        <Badge variant="outline">
+                        {/* <Badge variant="outline">
                           {course.level === 'beginner' ? 'Cơ bản' : 
                            course.level === 'intermediate' ? 'Trung bình' : 'Nâng cao'}
-                        </Badge>
+                        </Badge> */}
                       </td>
                       <td className="p-4">
                         <span className="font-medium">
@@ -314,10 +314,10 @@ const CourseManagement = () => {
                         </span>
                       </td>
                       <td className="p-4">
-                        <div className="flex items-center space-x-1">
+                        {/* <div className="flex items-center space-x-1">
                           <Users className="w-4 h-4 text-gray-400" />
                           <span>{course.totalStudents || 0}</span>
-                        </div>
+                        </div> */}
                       </td>
                       <td className="p-4">
                         <div className="flex items-center space-x-1">

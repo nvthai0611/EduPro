@@ -1,6 +1,6 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
-const moduleSchema = new mongoose.Schema(
+const sectionSchema = new mongoose.Schema(
   {
     courseId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -28,22 +28,21 @@ const moduleSchema = new mongoose.Schema(
       },
     ],
   },
-  { collection: "Modules", timestamps: true }
+  { collection: "Sections", timestamps: true }
 );
 
 // Indexes
-moduleSchema.index({ courseId: 1, order: 1 });
-
-// Virtual for total duration of module
-moduleSchema.virtual("totalDuration").get(function () {
+sectionSchema.index({ courseId: 1, order: 1 });
+// Virtual for total duration of section
+sectionSchema.virtual("totalDuration").get(function () {
   // This will be populated when lessons are loaded
   return 0;
 });
 
 // Virtual for total lessons count
-moduleSchema.virtual("totalLessons").get(function () {
+sectionSchema.virtual("totalLessons").get(function () {
   return this.lessons ? this.lessons.length : 0;
 });
 
-const Module = mongoose.model("Module", moduleSchema);
-module.exports = Module;
+const Section = mongoose.model("Section", sectionSchema);
+export default Section;

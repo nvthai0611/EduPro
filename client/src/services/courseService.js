@@ -4,8 +4,10 @@ export const courseService = {
   // Lấy danh sách khóa học
   getCourses: async (params = {}) => {
     try {
-      const response = await apiClient.get('/api/v1/courses', { params });
-      return response.data;
+      // baseURL đã có /api/v1 rồi, chỉ cần /courses
+      const response = await apiClient.get('/courses', params);
+      console.log('getCourses response:', response);
+      return response;
     } catch (error) {
       console.error('Error fetching courses:', error);
       throw error;
@@ -15,67 +17,54 @@ export const courseService = {
   // Lấy chi tiết khóa học
   getCourseById: async (id) => {
     try {
-      const response = await apiClient.get(`/api/v1/courses/${id}`);
-      return response.data;
+      const response = await apiClient.get(`/courses/${id}`);
+      return response;
     } catch (error) {
       console.error('Error fetching course:', error);
       throw error;
     }
   },
 
-  // Lấy khóa học theo slug
-  getCourseBySlug: async (slug) => {
+  // Tạo khóa học mới
+  createCourse: async (courseData) => {
     try {
-      const response = await apiClient.get(`/api/v1/courses/slug/${slug}`);
-      return response.data;
+      const response = await apiClient.post('/courses', courseData);
+      return response;
     } catch (error) {
-      console.error('Error fetching course by slug:', error);
+      console.error('Error creating course:', error);
       throw error;
     }
   },
 
-  // Lấy khóa học phổ biến
-  getPopularCourses: async () => {
+  // Cập nhật khóa học
+  updateCourse: async (id, courseData) => {
     try {
-      const response = await apiClient.get('/api/v1/courses/popular');
-      return response.data;
+      const response = await apiClient.patch(`/courses/${id}`, courseData);
+      return response;
     } catch (error) {
-      console.error('Error fetching popular courses:', error);
+      console.error('Error updating course:', error);
       throw error;
     }
   },
 
-  // Lấy khóa học miễn phí
-  getFreeCourses: async () => {
+  // Xóa khóa học
+  deleteCourse: async (id) => {
     try {
-      const response = await apiClient.get('/api/v1/courses/free');
-      return response.data;
+      const response = await apiClient.delete(`/courses/${id}`);
+      return response;
     } catch (error) {
-      console.error('Error fetching free courses:', error);
+      console.error('Error deleting course:', error);
       throw error;
     }
   },
 
-  // Lấy khóa học theo danh mục
-  getCoursesByCategory: async (categoryId) => {
+  // Submit khóa học để review
+  submitForReview: async (id) => {
     try {
-      const response = await apiClient.get(`/api/v1/courses/category/${categoryId}`);
-      return response.data;
+      const response = await apiClient.patch(`/courses/${id}/submit`);
+      return response;
     } catch (error) {
-      console.error('Error fetching courses by category:', error);
-      throw error;
-    }
-  },
-
-  // Tìm kiếm khóa học
-  searchCourses: async (query) => {
-    try {
-      const response = await apiClient.get('/api/v1/courses/search', { 
-        params: { q: query } 
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error searching courses:', error);
+      console.error('Error submitting course:', error);
       throw error;
     }
   }
