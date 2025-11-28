@@ -7,15 +7,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  Edit, 
-  Trash2, 
-  Eye, 
-  Play, 
-  Users, 
+import {
+  Plus,
+  Search,
+  Filter,
+  Edit,
+  Trash2,
+  Eye,
+  Play,
+  Users,
   Star,
   Clock,
   DollarSign,
@@ -23,14 +23,14 @@ import {
   TrendingUp,
   MoreHorizontal
 } from 'lucide-react';
-import { courseService } from '../../../services/courseService';
+import { courseService } from '../../../services/admin/courseService';
 
 const CourseManagement = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [levelFilter, setLevelFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [levelFilter, setLevelFilter] = useState('all');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
@@ -38,11 +38,10 @@ const CourseManagement = () => {
     title: '',
     description: '',
     thumbnail: '',
-    category: '',
+    category: 'frontend',
     level: 'beginner',
     price: 0,
-    isPremium: false,
-    isPublished: false
+    status: 'draft'
   });
 
   useEffect(() => {
@@ -52,16 +51,29 @@ const CourseManagement = () => {
   const fetchCourses = async () => {
     try {
       setLoading(true);
-      const params = {
+
+      const response = await courseService.getCourses({
         search: searchTerm,
-        status: statusFilter,
-        level: levelFilter,
-        admin: true
-      };
-      const response = await courseService.getAllCourses(params);
-      setCourses(response.data || []);
+        status: statusFilter === 'all' ? '' : statusFilter,
+        level: levelFilter === 'all' ? '' : levelFilter,
+      });
+
+      // Backend returns { success: true, data: [...] }
+      // But if response is already an array, use it directly
+      let coursesData;
+      if (Array.isArray(response)) {
+        coursesData = response;
+      } else if (response?.data) {
+        coursesData = Array.isArray(response.data) ? response.data : [];
+      } else {
+        coursesData = [];
+      }
+      
+      console.log('Final coursesData:', coursesData);
+      setCourses(coursesData);
     } catch (error) {
       console.error('Error fetching courses:', error);
+      setCourses([]);
     } finally {
       setLoading(false);
     }
@@ -76,11 +88,10 @@ const CourseManagement = () => {
         title: '',
         description: '',
         thumbnail: '',
-        category: '',
+        category: 'frontend',
         level: 'beginner',
         price: 0,
-        isPremium: false,
-        isPublished: false
+        status: 'draft'
       });
     } catch (error) {
       console.error('Error creating course:', error);
@@ -90,7 +101,7 @@ const CourseManagement = () => {
   const handleEditCourse = async () => {
     try {
       const response = await courseService.updateCourse(selectedCourse._id, selectedCourse);
-      setCourses(prev => prev.map(course => 
+      setCourses(prev => prev.map(course =>
         course._id === selectedCourse._id ? response.data : course
       ));
       setShowEditDialog(false);
@@ -113,9 +124,10 @@ const CourseManagement = () => {
 
   const handleToggleStatus = async (course) => {
     try {
-      const updatedCourse = { ...course, isPublished: !course.isPublished };
+      const newStatus = course?.status === 'published' ? 'draft' : 'published';
+      const updatedCourse = { ...course, status: newStatus };
       const response = await courseService.updateCourse(course._id, updatedCourse);
-      setCourses(prev => prev.map(c => 
+      setCourses(prev => prev.map(c =>
         c._id === course._id ? response.data : c
       ));
     } catch (error) {
@@ -155,7 +167,7 @@ const CourseManagement = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
@@ -167,7 +179,7 @@ const CourseManagement = () => {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
@@ -175,14 +187,14 @@ const CourseManagement = () => {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Đã xuất bản</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {courses.filter(c => c.isPublished).length}
+                  {courses.filter(c => c?.status === "published").length}
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
-        
-        <Card>
+
+        {/* <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
               <Users className="w-8 h-8 text-purple-600" />
@@ -194,9 +206,9 @@ const CourseManagement = () => {
               </div>
             </div>
           </CardContent>
-        </Card>
-        
-        <Card>
+        </Card> */}
+
+        {/* <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
               <DollarSign className="w-8 h-8 text-orange-600" />
@@ -208,7 +220,7 @@ const CourseManagement = () => {
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
 
       {/* Filters */}
@@ -224,34 +236,34 @@ const CourseManagement = () => {
                 className="pl-10"
               />
             </div>
-            
+
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger>
                 <SelectValue placeholder="Trạng thái" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tất cả trạng thái</SelectItem>
+                <SelectItem value="all">Tất cả trạng thái</SelectItem>
                 <SelectItem value="published">Đã xuất bản</SelectItem>
                 <SelectItem value="draft">Bản nháp</SelectItem>
               </SelectContent>
             </Select>
-            
+
             <Select value={levelFilter} onValueChange={setLevelFilter}>
               <SelectTrigger>
                 <SelectValue placeholder="Cấp độ" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tất cả cấp độ</SelectItem>
+                <SelectItem value="all">Tất cả cấp độ</SelectItem>
                 <SelectItem value="beginner">Cơ bản</SelectItem>
                 <SelectItem value="intermediate">Trung bình</SelectItem>
                 <SelectItem value="advanced">Nâng cao</SelectItem>
               </SelectContent>
             </Select>
-            
+
             <Button variant="outline" onClick={() => {
               setSearchTerm('');
-              setStatusFilter('');
-              setLevelFilter('');
+              setStatusFilter('all');
+              setLevelFilter('all');
             }}>
               <Filter className="w-4 h-4 mr-2" />
               Xóa bộ lọc
@@ -285,52 +297,52 @@ const CourseManagement = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {courses.map(course => (
+                  {courses.filter(course => course && course._id).map(course => (
                     <tr key={course._id} className="border-b hover:bg-gray-50">
                       <td className="p-4">
                         <div className="flex items-center space-x-3">
                           <img
-                            src={course.thumbnail || 'https://via.placeholder.com/60x40'}
-                            alt={course.title}
+                            src={course?.thumbnail || 'https://via.placeholder.com/60x40'}
+                            alt={course?.title || 'Course'}
                             className="w-15 h-10 object-cover rounded"
                           />
                           <div>
-                            <h4 className="font-medium text-gray-900">{course.title}</h4>
+                            <h4 className="font-medium text-gray-900">{course?.title}</h4>
                             <p className="text-sm text-gray-600 line-clamp-1">
-                              {course.description}
+                              {course?.description}
                             </p>
                           </div>
                         </div>
                       </td>
                       <td className="p-4">
                         <Badge variant="outline">
-                          {course.level === 'beginner' ? 'Cơ bản' : 
-                           course.level === 'intermediate' ? 'Trung bình' : 'Nâng cao'}
+                          {course?.level === 'beginner' ? 'Cơ bản' :
+                            course?.level === 'intermediate' ? 'Trung bình' : 'Nâng cao'}
                         </Badge>
                       </td>
                       <td className="p-4">
                         <span className="font-medium">
-                          {formatPrice(course.price)}
+                          {formatPrice(course?.price)}
                         </span>
                       </td>
                       <td className="p-4">
                         <div className="flex items-center space-x-1">
                           <Users className="w-4 h-4 text-gray-400" />
-                          <span>{course.totalStudents || 0}</span>
+                          <span>{course?.totalStudents || 0}</span>
                         </div>
                       </td>
                       <td className="p-4">
                         <div className="flex items-center space-x-1">
                           <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          <span>{course.rating?.toFixed(1) || '5.0'}</span>
+                          <span>{course?.rating?.toFixed(1) || '5.0'}</span>
                         </div>
                       </td>
                       <td className="p-4">
-                        <Badge 
-                          variant={course.isPublished ? "default" : "secondary"}
-                          className={course.isPublished ? "bg-green-100 text-green-800" : ""}
+                        <Badge
+                          variant={course?.status === "published" ? "default" : "secondary"}
+                          className={course?.status === "published" ? "bg-green-100 text-green-800" : ""}
                         >
-                          {course.isPublished ? 'Đã xuất bản' : 'Bản nháp'}
+                          {course?.status === "published" ? 'Đã xuất bản' : 'Bản nháp'}
                         </Badge>
                       </td>
                       <td className="p-4">
@@ -338,7 +350,7 @@ const CourseManagement = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => window.open(`/courses/${course.slug}`, '_blank')}
+                            onClick={() => window.open(`/courses/${course?.slug}`, '_blank')}
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
@@ -357,12 +369,12 @@ const CourseManagement = () => {
                             size="sm"
                             onClick={() => handleToggleStatus(course)}
                           >
-                            {course.isPublished ? 'Ẩn' : 'Xuất bản'}
+                            {course?.status === "published" ? 'Ẩn' : 'Xuất bản'}
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleDeleteCourse(course._id)}
+                            onClick={() => handleDeleteCourse(course?._id)}
                             className="text-red-600 hover:text-red-700"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -413,11 +425,28 @@ const CourseManagement = () => {
                 placeholder="https://example.com/image.jpg"
               />
             </div>
+            <div>
+              <Label htmlFor="category">Danh mục</Label>
+              <Select
+                value={newCourse.category}
+                onValueChange={(value) => setNewCourse(prev => ({ ...prev, category: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="frontend">Frontend</SelectItem>
+                  <SelectItem value="backend">Backend</SelectItem>
+                  <SelectItem value="mobile">Mobile</SelectItem>
+                  <SelectItem value="devops">DevOps</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="level">Cấp độ</Label>
-                <Select 
-                  value={newCourse.level} 
+                <Select
+                  value={newCourse.level}
                   onValueChange={(value) => setNewCourse(prev => ({ ...prev, level: value }))}
                 >
                   <SelectTrigger>
@@ -445,16 +474,8 @@ const CourseManagement = () => {
               <label className="flex items-center space-x-2">
                 <input
                   type="checkbox"
-                  checked={newCourse.isPremium}
-                  onChange={(e) => setNewCourse(prev => ({ ...prev, isPremium: e.target.checked }))}
-                />
-                <span>Khóa học Premium</span>
-              </label>
-              <label className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={newCourse.isPublished}
-                  onChange={(e) => setNewCourse(prev => ({ ...prev, isPublished: e.target.checked }))}
+                  checked={newCourse.status === 'published'}
+                  onChange={(e) => setNewCourse(prev => ({ ...prev, status: e.target.checked ? 'published' : 'draft' }))}
                 />
                 <span>Xuất bản ngay</span>
               </label>
@@ -507,11 +528,28 @@ const CourseManagement = () => {
                   placeholder="https://example.com/image.jpg"
                 />
               </div>
+              <div>
+                <Label htmlFor="edit-category">Danh mục</Label>
+                <Select
+                  value={selectedCourse.category}
+                  onValueChange={(value) => setSelectedCourse(prev => ({ ...prev, category: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="frontend">Frontend</SelectItem>
+                    <SelectItem value="backend">Backend</SelectItem>
+                    <SelectItem value="mobile">Mobile</SelectItem>
+                    <SelectItem value="devops">DevOps</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="edit-level">Cấp độ</Label>
-                  <Select 
-                    value={selectedCourse.level} 
+                  <Select
+                    value={selectedCourse.level}
                     onValueChange={(value) => setSelectedCourse(prev => ({ ...prev, level: value }))}
                   >
                     <SelectTrigger>
@@ -539,16 +577,8 @@ const CourseManagement = () => {
                 <label className="flex items-center space-x-2">
                   <input
                     type="checkbox"
-                    checked={selectedCourse.isPremium}
-                    onChange={(e) => setSelectedCourse(prev => ({ ...prev, isPremium: e.target.checked }))}
-                  />
-                  <span>Khóa học Premium</span>
-                </label>
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={selectedCourse.isPublished}
-                    onChange={(e) => setSelectedCourse(prev => ({ ...prev, isPublished: e.target.checked }))}
+                    checked={selectedCourse.status === 'published'}
+                    onChange={(e) => setSelectedCourse(prev => ({ ...prev, status: e.target.checked ? 'published' : 'draft' }))}
                   />
                   <span>Xuất bản</span>
                 </label>

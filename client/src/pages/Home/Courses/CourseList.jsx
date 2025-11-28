@@ -45,7 +45,7 @@ const CourseCard = ({ course }) => {
 
     return (
         <Link
-            to={`/courses/detail/${course.slug}`} 
+            to={`/courses/${course.slug}`} 
             className="rounded-2xl shadow-md overflow-hidden bg-white hover:shadow-xl transition-shadow duration-300 transform hover:-translate-y-1 cursor-pointer"
         >
             <div
