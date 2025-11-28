@@ -1,27 +1,70 @@
 import CourseRepository from "./course.repository";
 
 class CourseService {
-  async createCourse(courseData: any) : Promise<any> {
-    // Validate course data
-    if (!courseData.title ||
+  async createCourse(courseData: any): Promise<any> {
+    if (
+      !courseData.title ||
       !courseData.description ||
-      !courseData.price ||
-      !courseData.instructorId
+      courseData.price === undefined
     ) {
       throw new Error("Missing required course fields");
     }
-    courseData.status = "draft"; // default status
+    
+    // Set default values if not provided
+    if (!courseData.status) {
+      courseData.status = "draft";
+    }
+    
+    // Use instructorId if provided, otherwise use manager_id
+    if (!courseData.manager_id && courseData.instructorId) {
+      courseData.manager_id = courseData.instructorId;
+    }
+    
     const course = await CourseRepository.create(courseData);
     return course;
   }
-  
-  async getAllCourses() : Promise<any> {
-    const courses = await CourseRepository.getAllCourses();
+
+  async getAllCourses(filters: any = {}): Promise<any> {
+    const query: any = { isDeleted: { $ne: true } };
+
+    if (filters.search) {
+      query.$or = [
+        { title: { $regex: filters.search, $options: "i" } },
+        { description: { $regex: filters.search, $options: "i" } },
+      ];
+    }
+
+    if (filters.status) {
+      query.status = filters.status;
+    }
+
+    if (filters.level) {
+      query.level = filters.level;
+    }
+
+    if (filters.category) {
+      query.category = filters.category;
+    }
+
+    if (filters.isFeatured !== undefined) {
+      query.isFeatured = filters.isFeatured === "true";
+    }
+
+    if (filters.price !== undefined) {
+      query.price = filters.price;
+    }
+
+    const courses = await CourseRepository.findAll(query);
     return courses;
   }
-  // chua hoan thanh
-  async getCourseService(courseId: string): Promise<any> {
+
+  async getCourseById(courseId: string): Promise<any> {
     const course = await CourseRepository.getCourseById(courseId);
+    return course;
+  }
+
+  async getCourseBySlug(courseSlug: string): Promise<any> {
+    const course = await CourseRepository.getCourseBySlug(courseSlug);
     return course;
   }
 
@@ -29,14 +72,31 @@ class CourseService {
     const courses = await CourseRepository.getCoursesByInstructorId(instructorId);
     return courses;
   }
+
+  async getCoursesByManagerService(managerId: string): Promise<any> {
+    const courses = await CourseRepository.getCoursesByManagerId(managerId);
+    return courses;
+  }
+
   async updateCourseService(courseId: string, updateData: any): Promise<any> {
     const updatedCourse = await CourseRepository.updateCourse(courseId, updateData);
     return updatedCourse;
   }
-  //soft delete
+
   async deleteCourseService(courseId: string): Promise<any> {
-    const deletedCourse = await CourseRepository.updateCourse(courseId, { isDeleted: true });
+    const deletedCourse = await CourseRepository.updateCourse(courseId, { 
+      isDeleted: true 
+    });
     return deletedCourse;
+  }
+
+  async getCourseWithDetails(courseId: string): Promise<any> {
+    const course = await CourseRepository.getCourseById(courseId);
+    if (!course) {
+      throw new Error("Course not found");
+    }
+    // TODO: Populate modules and lessons when those services are ready
+    return course;
   }
 }
 
