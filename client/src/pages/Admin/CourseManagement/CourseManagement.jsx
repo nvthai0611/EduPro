@@ -7,15 +7,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  Edit, 
-  Trash2, 
-  Eye, 
-  Play, 
-  Users, 
+import {
+  Plus,
+  Search,
+  Filter,
+  Edit,
+  Trash2,
+  Eye,
+  Play,
+  Users,
   Star,
   Clock,
   DollarSign,
@@ -23,14 +23,14 @@ import {
   TrendingUp,
   MoreHorizontal
 } from 'lucide-react';
-import { courseService } from '../../../services/courseService';
+import { courseService } from '../../../services/admin/courseService';
 
 const CourseManagement = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [levelFilter, setLevelFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [levelFilter, setLevelFilter] = useState('all');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
@@ -52,14 +52,29 @@ const CourseManagement = () => {
   const fetchCourses = async () => {
     try {
       setLoading(true);
-      const params = {
-        search: searchTerm,
-        status: statusFilter,
-        level: levelFilter,
-        admin: true
-      };
-      const response = await courseService.getAllCourses(params);
-      setCourses(response.data || []);
+
+      const response = await courseService.getCourses();
+
+      setCourses(response.filter((course) => {
+        // Tìm kiếm theo tên, slug hoặc mô tả
+        const matchesSearch =
+          course?.title.toLowerCase().includes(searchTerm?.toLowerCase()) ||
+          course?.slug.toLowerCase().includes(searchTerm?.toLowerCase()) ||
+          course?.description.toLowerCase().includes(searchTerm?.toLowerCase());
+
+        // Lọc theo trạng thái
+        const matchesStatus = statusFilter === "all" ||
+          (statusFilter === "published" && course?.isPublished === true) ||
+          (statusFilter === "draft" && course?.isPublished === false)
+
+        // Lọc theo level
+        const matchesLevel = levelFilter === "all" ||
+          (levelFilter === "beginner" && course?.level === "beginner") ||
+          (levelFilter === "intermediate" && course?.level === "intermediate") ||
+          (levelFilter === "advanced" && course?.level === "advanced")
+
+        return matchesSearch && matchesStatus && matchesLevel
+      }) || []);
     } catch (error) {
       console.error('Error fetching courses:', error);
     } finally {
@@ -90,7 +105,7 @@ const CourseManagement = () => {
   const handleEditCourse = async () => {
     try {
       const response = await courseService.updateCourse(selectedCourse._id, selectedCourse);
-      setCourses(prev => prev.map(course => 
+      setCourses(prev => prev.map(course =>
         course._id === selectedCourse._id ? response.data : course
       ));
       setShowEditDialog(false);
@@ -115,7 +130,7 @@ const CourseManagement = () => {
     try {
       const updatedCourse = { ...course, isPublished: !course.isPublished };
       const response = await courseService.updateCourse(course._id, updatedCourse);
-      setCourses(prev => prev.map(c => 
+      setCourses(prev => prev.map(c =>
         c._id === course._id ? response.data : c
       ));
     } catch (error) {
@@ -167,7 +182,7 @@ const CourseManagement = () => {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
@@ -181,7 +196,7 @@ const CourseManagement = () => {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
@@ -195,7 +210,7 @@ const CourseManagement = () => {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
@@ -224,34 +239,34 @@ const CourseManagement = () => {
                 className="pl-10"
               />
             </div>
-            
+
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger>
                 <SelectValue placeholder="Trạng thái" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tất cả trạng thái</SelectItem>
+                <SelectItem value="all">Tất cả trạng thái</SelectItem>
                 <SelectItem value="published">Đã xuất bản</SelectItem>
                 <SelectItem value="draft">Bản nháp</SelectItem>
               </SelectContent>
             </Select>
-            
+
             <Select value={levelFilter} onValueChange={setLevelFilter}>
               <SelectTrigger>
                 <SelectValue placeholder="Cấp độ" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tất cả cấp độ</SelectItem>
+                <SelectItem value="all">Tất cả cấp độ</SelectItem>
                 <SelectItem value="beginner">Cơ bản</SelectItem>
                 <SelectItem value="intermediate">Trung bình</SelectItem>
                 <SelectItem value="advanced">Nâng cao</SelectItem>
               </SelectContent>
             </Select>
-            
+
             <Button variant="outline" onClick={() => {
               setSearchTerm('');
-              setStatusFilter('');
-              setLevelFilter('');
+              setStatusFilter('all');
+              setLevelFilter('all');
             }}>
               <Filter className="w-4 h-4 mr-2" />
               Xóa bộ lọc
@@ -304,8 +319,8 @@ const CourseManagement = () => {
                       </td>
                       <td className="p-4">
                         <Badge variant="outline">
-                          {course.level === 'beginner' ? 'Cơ bản' : 
-                           course.level === 'intermediate' ? 'Trung bình' : 'Nâng cao'}
+                          {course.level === 'beginner' ? 'Cơ bản' :
+                            course.level === 'intermediate' ? 'Trung bình' : 'Nâng cao'}
                         </Badge>
                       </td>
                       <td className="p-4">
@@ -326,7 +341,7 @@ const CourseManagement = () => {
                         </div>
                       </td>
                       <td className="p-4">
-                        <Badge 
+                        <Badge
                           variant={course.isPublished ? "default" : "secondary"}
                           className={course.isPublished ? "bg-green-100 text-green-800" : ""}
                         >
@@ -416,8 +431,8 @@ const CourseManagement = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="level">Cấp độ</Label>
-                <Select 
-                  value={newCourse.level} 
+                <Select
+                  value={newCourse.level}
                   onValueChange={(value) => setNewCourse(prev => ({ ...prev, level: value }))}
                 >
                   <SelectTrigger>
@@ -510,8 +525,8 @@ const CourseManagement = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="edit-level">Cấp độ</Label>
-                  <Select 
-                    value={selectedCourse.level} 
+                  <Select
+                    value={selectedCourse.level}
                     onValueChange={(value) => setSelectedCourse(prev => ({ ...prev, level: value }))}
                   >
                     <SelectTrigger>

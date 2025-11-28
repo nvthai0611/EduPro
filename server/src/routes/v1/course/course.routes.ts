@@ -1,9 +1,10 @@
 import {
   createCourse,
-  getCourse,
+  getCourseById,
   getCoursesByManager,
-    getAllCourses,
-} from "../../../controllers/v1/course/course.controller";
+  getAllCourses,
+  getCourseBySlug,
+} from "../../../modules/course/course.controller";
 import { Router } from "express";
 
 const router: Router = Router();
@@ -13,7 +14,8 @@ router.get("/", (req, res) => {
 });
 router.get("/all", getAllCourses);
 router.post("/", createCourse);
-router.get("/:id", getCourse);
+router.get("/:id", getCourseById);
+router.get("/slug/:slug", getCourseBySlug);
 router.get("/manager/:managerId", getCoursesByManager);
 
 export const courseRoutes: Router = router;

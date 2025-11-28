@@ -20,6 +20,8 @@ import GuestMiddleware from "../middlewares/GuestMiddleware";
 import RoleRedirectMiddleware from "../middlewares/RoleRedirectMiddleware";
 import CourseList from "../pages/Home/Courses/CourseList";
 import CourseDetail from "../pages/Home/Courses/CourseDetail";
+import CourseLearnDetail from "../pages/Courses/CourseLearnDetail";
+import Profile from "../pages/Auth/Profile";
 
 // Learning Platform
 
@@ -31,13 +33,15 @@ export const publicRoutes = (
       <Route element={<DefaultLayout />}>
         <Route path="/" element={<CourseList />} />
         <Route path="/about" element={<About />} />
-        <Route path="/ai-agent" element={<Assistant3D />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/tai-khoan" element={<Profile />} />
         <Route path="/advisory" element={<AdvisoryPage />} />
         {/* Course Routes */}
         <Route path="/courses">
           <Route index element={<CourseList />} />
           <Route path="category/:categorySlug" element={<CourseList />} />
-          <Route path="detail/:slug" element={<CourseDetail />} />
+          <Route path="learn/:slug" element={<CourseLearnDetail />} />
+          <Route path=":slug" element={<CourseDetail />} />
         </Route>
       </Route>
     </Route>

@@ -1,22 +1,26 @@
-import CourseModel from "../models/course.model";
+import { Course } from "./course.model";
 
 class CourseRepository {
   create(courseData: any) {
-    return CourseModel.create(courseData);
+    return Course.create(courseData);
   }
   // Get all courses
   getAllCourses() {
-    return CourseModel.find()
+    return Course.find()
       .lean();
   }
   // find course by id
   getCourseById(courseId: string) {
-    return CourseModel.findById(courseId).lean();
+    return Course.findById(courseId).lean();
+  }
+
+  getCourseBySlug(courseSlug: string) {
+    return Course.findOne({ slug: courseSlug }).lean();
   }
 
   // find courses by manager id
   getCoursesByManagerId(managerId: string) {
-    return CourseModel.find({ manager_id: managerId })
+    return Course.find({ manager_id: managerId })
       .select("title price status created_at updated_at")
       .lean();
   }
@@ -24,19 +28,19 @@ class CourseRepository {
   // update course by id
   updateCourseById(courseId: string, updateData: any) {
     updateData.updated_at = new Date();
-    return CourseModel.findByIdAndUpdate(courseId, updateData, {
+    return Course.findByIdAndUpdate(courseId, updateData, {
       new: true,
     }).lean();
   }
 
   // delete course by id
   deleteCourseById(courseId: string) {
-    return CourseModel.findByIdAndDelete(courseId).lean();
+    return Course.findByIdAndDelete(courseId).lean();
   }
 
   //publish
   publishCourseById(courseId: string) {
-    return CourseModel.findByIdAndUpdate(
+    return Course.findByIdAndUpdate(
       courseId,
       { status: "published", updated_at: new Date() },
       { new: true }

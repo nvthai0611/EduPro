@@ -1,4 +1,4 @@
-import courseService from "../../../services/adminService/courseService";                               
+import courseService from "./course.service";
 
 export const createCourse = async (req: any, res: any) => {
   try {
@@ -17,6 +17,7 @@ export const getAllCourses = async (req: any, res: any) => {
   try {
     // Implementation for getting all courses can be added here
     const courses = await courseService.getAllCourses();
+
     res.status(200).json({ success: true, data: courses });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
@@ -26,17 +27,30 @@ export const getAllCourses = async (req: any, res: any) => {
 /*
     Get course by id
 */
-export const getCourse = async (req: any, res: any) => {
+export const getCourseById = async (req: any, res: any) => {
   try {
     const courseId = req.params.id;
-    const course = await courseService.getCourseService(courseId);
+    const course = await courseService.getCourseById(courseId);
     if (!course) {
       return res.status(404).json({ success: false, message: "Course not found" });
     }
     res.status(200).json({ success: true, data: course });
-    } catch (error) {   
+  } catch (error) {
     res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+export const getCourseBySlug = async (req: any, res: any) => {
+  try {
+    const courseSlug = req.params.slug;
+    const course = await courseService.getCourseBySlug(courseSlug);
+    if (!course) {
+      return res.status(404).json({ success: false, message: "Course not found" });
     }
+    res.status(200).json({ success: true, data: course });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
 };
 
 export const getCoursesByManager = async (req: any, res: any) => {

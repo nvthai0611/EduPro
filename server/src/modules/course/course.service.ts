@@ -1,4 +1,4 @@
-import CourseRepository from "../../repository/course.repository";
+import CourseRepository from "./course.repository";
 
 class CourseService {
   async createCourse(courseData: any) : Promise<any> {
@@ -20,8 +20,13 @@ class CourseService {
     return courses;
   }
   // chua hoan thanh
-  async getCourseService(courseId: string): Promise<any> {
+  async getCourseById(courseId: string): Promise<any> {
     const course = await CourseRepository.getCourseById(courseId);
+    return course;
+  }
+
+  async getCourseBySlug(courseSlug: string): Promise<any> {
+    const course = await CourseRepository.getCourseBySlug(courseSlug);
     return course;
   }
 
@@ -29,7 +34,6 @@ class CourseService {
     const courses = await CourseRepository.getCoursesByManagerId(managerId);
     return courses;
   }
-  asy
 }
 
 export default new CourseService();
