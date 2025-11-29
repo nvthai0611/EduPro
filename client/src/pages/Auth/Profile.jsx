@@ -30,8 +30,9 @@ const Profile = () => {
 
   // Lưu vào localStorage mỗi khi profileData thay đổi
   useEffect(() => {
-    if (profileData.name || profileData.email) {
+    if (profileData.name || profileData.email || profileData.phone || profileData.bio) {
       localStorage.setItem('userProfile', JSON.stringify(profileData));
+      console.log('✅ Đã lưu vào localStorage:', profileData);
     }
   }, [profileData]);
 
@@ -39,6 +40,7 @@ const Profile = () => {
   useEffect(() => {
     if (displayName) {
       localStorage.setItem('displayName', displayName);
+      console.log('✅ Đã lưu displayName:', displayName);
     }
   }, [displayName]);
 
@@ -51,10 +53,13 @@ const Profile = () => {
       const savedProfile = localStorage.getItem('userProfile');
       const savedDisplayName = localStorage.getItem('displayName');
       
+      console.log('📂 Đọc từ localStorage:', { savedProfile, savedDisplayName });
+      
       if (savedProfile) {
         const parsed = JSON.parse(savedProfile);
         setProfileData(parsed);
         setDisplayName(savedDisplayName || parsed.name || '');
+        console.log('✅ Đã load dữ liệu từ localStorage');
       }
       
       const res = await fetch("/api/auth/profile", {
@@ -166,16 +171,15 @@ const Profile = () => {
       return false;
     }
     
- // Validate phone (nếu có nhập)
-if (profileData.phone?.trim()) {
-  // Chấp nhận: bắt đầu bằng 0, 10-11 chữ số
-  const phoneRegex = /^0[0-9]{9,10}$/;
-
-  if (!phoneRegex.test(profileData.phone.replace(/\s/g, ''))) {
-    setError("Số điện thoại không hợp lệ. Vui lòng nhập đúng");
-    return false;
-  }
-}
+    // Validate phone (nếu có nhập)
+    if (profileData.phone?.trim()) {
+      // Chấp nhận: +84xxxxxxxxx, 84xxxxxxxxx, 0xxxxxxxxx (9-11 số)
+      const phoneRegex = /^(\+84|84|0)(3|5|7|8|9)[0-9]{8}$/;
+      if (!phoneRegex.test(profileData.phone.replace(/\s/g, ''))) {
+        setError("Số điện thoại không hợp lệ. Vui lòng nhập số Việt Nam (vd: 0987654321 hoặc +84987654321)");
+        return false;
+      }
+    }
     
     if (profileData.bio.length > 500) {
       setError("Giới thiệu không được vượt quá 500 ký tự");
@@ -236,10 +240,14 @@ if (profileData.phone?.trim()) {
   };
 
   const handleProfileChange = (field, value) => {
-    setProfileData(prev => ({
-      ...prev,
+    const newData = {
+      ...profileData,
       [field]: value
-    }));
+    };
+    setProfileData(newData);
+    
+    // Lưu ngay vào localStorage khi thay đổi
+    localStorage.setItem('userProfile', JSON.stringify(newData));
   };
 
   if (loading) return (
@@ -337,6 +345,9 @@ if (profileData.phone?.trim()) {
                   className="border border-gray-200 focus:border-green-500 focus:ring-1 focus:ring-green-200 rounded-lg text-sm"
                   placeholder="user@example.com"
                 />
+                <p className="text-xs text-gray-400 mt-1">
+                  Định dạng: user@example.com
+                </p>
               </div>
 
               {/* Phone */}
@@ -352,6 +363,9 @@ if (profileData.phone?.trim()) {
                   className="border border-gray-200 focus:border-purple-500 focus:ring-1 focus:ring-purple-200 rounded-lg text-sm"
                   placeholder="0987654321"
                 />
+                <p className="text-xs text-gray-400 mt-1">
+                  Định dạng: 0987654321 hoặc +84987654321
+                </p>
               </div>
 
               {/* Bio */}
