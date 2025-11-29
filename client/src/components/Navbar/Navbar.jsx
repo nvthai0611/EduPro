@@ -17,6 +17,7 @@ const DATA_NAV = [
   { path: "/", nameKey: "home" },
   { path: "/courses", nameKey: "courses" },
   { path: "/about", nameKey: "about" },
+  { path: "/advisory", nameKey: "advisory" },
 ]
 
 const USER_MENU_ITEMS = [
