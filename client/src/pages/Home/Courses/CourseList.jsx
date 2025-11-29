@@ -75,21 +75,21 @@ const CourseCard = ({ course }) => {
   const duration = course.duration || "N/A";
   const color = course.color || "from-gray-300 to-gray-500";
 
-  return (
-    <Link
-      to={`/courses/detail/${course.slug}`}
-      className="rounded-2xl shadow-md overflow-hidden bg-white hover:shadow-xl transition-shadow duration-300 transform hover:-translate-y-1 cursor-pointer"
-    >
-      <div
-        className={`h-48 bg-gradient-to-br ${color} flex items-center justify-center text-white text-lg font-semibold p-4 text-center`}
-        style={{ lineHeight: "1.2" }}
-      >
-        <div className="flex flex-col">
-          <h3 className="text-2xl font-bold mb-2 whitespace-pre-line">
-            {labelLines}
-          </h3>
-        </div>
-      </div>
+    return (
+        <Link
+            to={`/courses/${course.slug}`} 
+            className="rounded-2xl shadow-md overflow-hidden bg-white hover:shadow-xl transition-shadow duration-300 transform hover:-translate-y-1 cursor-pointer"
+        >
+            <div
+                className={`h-48 bg-gradient-to-br ${color} flex items-center justify-center text-white text-lg font-semibold p-4 text-center`}
+                style={{ lineHeight: '1.2' }}
+            >
+                <div className="flex flex-col">
+                    <h3 className="text-2xl font-bold mb-2 whitespace-pre-line">
+                         {labelLines}
+                    </h3>
+                </div>
+            </div>
 
       <div className="p-5">
         <h4 className="font-semibold text-gray-900 mb-2 text-base line-clamp-2 min-h-[40px]">
