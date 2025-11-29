@@ -45,7 +45,7 @@ const CourseCard = ({ course }) => {
 
     return (
         <Link
-            to={`/courses/detail/${course.slug}`} 
+            to={`/courses/${course.slug}`} 
             className="rounded-2xl shadow-md overflow-hidden bg-white hover:shadow-xl transition-shadow duration-300 transform hover:-translate-y-1 cursor-pointer"
         >
             <div
@@ -133,10 +133,6 @@ export default function CourseList() {
                             >
                                 <i className="fas fa-play-circle mr-2"></i> Bắt đầu học ngay
                             </button>
-<Link to="/advisory" className="px-8 py-3 bg-white bg-opacity-0 border-2 border-white text-white font-semibold rounded-full hover:bg-opacity-10 transition cursor-pointer inline-block">
-  Tư vấn lộ trình
-</Link>
-
                         </div>
                     </div>
                 </div>

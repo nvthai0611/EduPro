@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from "react";
+import { courseData } from "../../data/courseData";
+import { useState, useMemo } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 // Đảm bảo đường dẫn import courseData đúng với cấu trúc của bạn
-import { courseData } from "../../data/courseData";
 
 // Component cho từng bài học trong danh sách bên phải
 const LessonItem = ({ item, isCurrent, onClick }) => (
@@ -74,11 +74,12 @@ const CourseSection = ({ section, currentVideoId, onLessonClick }) => {
   );
 };
 
-export default function CourseDetail() {
+export default function CourseLearnDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
 
   // Tìm khóa học dựa trên slug từ courseData
+  // TODO: Thay bằng API call thực tế
   const course = useMemo(() => {
     return courseData.find((c) => c.slug === slug);
   }, [slug]);
@@ -120,7 +121,7 @@ export default function CourseDetail() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6 text-center">
         <h1 className="text-3xl font-bold text-gray-800 mb-4">
-          Khóa học với slug "**{slug}**" không tìm thấy!
+          Khóa học với slug ${slug} không tìm thấy!
         </h1>
         <p className="text-lg text-gray-600 mb-6">
           Có vẻ như khóa học bạn đang tìm kiếm không tồn tại hoặc đã bị gỡ.
@@ -223,7 +224,7 @@ export default function CourseDetail() {
       </div>
 
       {/* Right - Course Content List */}
-      <div className="w-full lg:w-[350px] flex-shrink-0 bg-white border-l overflow-y-auto p-4 shadow-inner">
+      <div className="w-full lg:w-[500px] flex-shrink-0 bg-white border-l overflow-y-auto p-4 shadow-inner">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-bold text-gray-800">Nội dung khóa học</h3>
           <div className="flex items-center text-gray-600 text-sm">

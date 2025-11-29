@@ -15,6 +15,7 @@ const Navbar = () => {
     { path: '/', label: 'Trang chủ' },
     { path: '/courses', label: 'Khóa học' },
     { path: '/about', label: 'Giới thiệu' },
+    { path: '/advisory', label: 'Lộ trình' },
   ];
 
   const userMenuItems = [
