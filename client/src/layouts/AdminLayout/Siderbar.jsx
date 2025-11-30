@@ -98,6 +98,19 @@ export default function DashboardSidebar() {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
+                  tooltip="Courses"
+                  isActive={activeMenu == "courses"}
+                  onClick={() => setActiveMenu("courses")}
+                >
+                  <Link to={"/admin/approve-courses"}>
+                    <Package />
+                    <span>Xét Duyệt Khóa học</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
                   tooltip="Users"
                   isActive={activeMenu == "users"}
                   onClick={() => setActiveMenu("users")}

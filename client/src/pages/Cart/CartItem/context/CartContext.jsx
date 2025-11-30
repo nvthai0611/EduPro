@@ -95,7 +95,8 @@ export const CartProvider = ({ children }) => {
                         products = res.data
                     }
                 } catch (e) {
-                    console.error("Failed to fetch products for cart:", e)
+                    console.warn("Failed to fetch products for cart (API may not exist):", e)
+                    // Không throw error, chỉ để products = []
                 }
                 const savedCartData = loadCartFromStorage()
                 const cartItems = savedCartData

@@ -4,9 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { toast } from 'react-toastify';
+import SubmitApprovalModal from '../../../components/Course/SubmitApprovalModal';
+import AdminNoteModal from '../../../components/Course/AdminNoteModal';
 import {
   Plus,
   Search,
@@ -21,7 +26,13 @@ import {
   DollarSign,
   BookOpen,
   TrendingUp,
-  MoreHorizontal
+  MoreHorizontal,
+  MessageSquare,
+  Minus,
+  Info,
+  CheckSquare,
+  AlertCircle,
+  UserCheck
 } from 'lucide-react';
 import { courseService } from '../../../services/admin/courseService';
 
@@ -33,6 +44,8 @@ const CourseManagement = () => {
   const [levelFilter, setLevelFilter] = useState('all');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [showAdminNoteModal, setShowAdminNoteModal] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [newCourse, setNewCourse] = useState({
     title: '',
@@ -43,6 +56,7 @@ const CourseManagement = () => {
     price: 0,
     status: 'draft'
   });
+  const [activeTab, setActiveTab] = useState('basic');
 
   useEffect(() => {
     fetchCourses();
@@ -78,11 +92,21 @@ const CourseManagement = () => {
       setLoading(false);
     }
   };
+  const getStatusBadge = (status) => {
+    const statusConfig = {
+      published: { label: "Đã xuất bản", className: "bg-green-100 text-green-800" },
+      draft: { label: "Bản nháp", className: "bg-gray-100 text-gray-800" },
+      pending: { label: "Đang chờ duyệt", className: "bg-yellow-100 text-yellow-800" },
+      approved: { label: "Đã duyệt", className: "bg-blue-100 text-blue-800" },
+      rejected: { label: "Bị từ chối", className: "bg-red-100 text-red-800" },
+    };
+    return statusConfig[status] || statusConfig.draft;
+  };
+
 
   const handleCreateCourse = async () => {
     try {
-      const response = await courseService.createCourse(newCourse);
-      setCourses(prev => [response.data, ...prev]);
+      await courseService.createCourse(newCourse);
       setShowCreateDialog(false);
       setNewCourse({
         title: '',
@@ -93,19 +117,27 @@ const CourseManagement = () => {
         price: 0,
         status: 'draft'
       });
+      await fetchCourses();
     } catch (error) {
       console.error('Error creating course:', error);
     }
   };
-
+  const handleToggleDelete = async (course) => {
+    try {
+      const isDeleted = course?.isDeleted ? false : true;
+      const updatedCourse = { ...course, isDeleted: isDeleted };
+      await courseService.updateCourse(course._id, updatedCourse);
+      await fetchCourses();
+    } catch (error) {
+      console.error('Error updating course status:', error);
+    }
+  };
   const handleEditCourse = async () => {
     try {
-      const response = await courseService.updateCourse(selectedCourse._id, selectedCourse);
-      setCourses(prev => prev.map(course =>
-        course._id === selectedCourse._id ? response.data : course
-      ));
+      await courseService.updateCourse(selectedCourse._id, selectedCourse);
       setShowEditDialog(false);
       setSelectedCourse(null);
+      await fetchCourses();
     } catch (error) {
       console.error('Error updating course:', error);
     }
@@ -115,7 +147,7 @@ const CourseManagement = () => {
     if (window.confirm('Bạn có chắc chắn muốn xóa khóa học này?')) {
       try {
         await courseService.deleteCourse(courseId);
-        setCourses(prev => prev.filter(course => course._id !== courseId));
+        await fetchCourses();
       } catch (error) {
         console.error('Error deleting course:', error);
       }
@@ -124,14 +156,27 @@ const CourseManagement = () => {
 
   const handleToggleStatus = async (course) => {
     try {
-      const newStatus = course?.status === 'published' ? 'draft' : 'published';
+      let newStatus;
+
       const updatedCourse = { ...course, status: newStatus };
-      const response = await courseService.updateCourse(course._id, updatedCourse);
-      setCourses(prev => prev.map(c =>
-        c._id === course._id ? response.data : c
-      ));
+      await courseService.updateCourse(course._id, updatedCourse);
+      await fetchCourses();
     } catch (error) {
       console.error('Error updating course status:', error);
+    }
+  };
+
+  const handleSubmitForApproval = async (approvalMessage) => {
+    try {
+      await courseService.submitCourseForApproval(selectedCourse._id, approvalMessage);
+      toast.success('Your course has been submitted for approval.');
+      setShowSubmitModal(false);
+      setSelectedCourse(null);
+      await fetchCourses();
+    } catch (error) {
+      console.error('Error submitting course for approval:', error);
+      toast.error(error.response?.data?.message || 'Failed to submit course for approval.');
+      throw error;
     }
   };
 
@@ -150,6 +195,23 @@ const CourseManagement = () => {
       return `${hours}h ${mins}m`;
     }
     return `${mins}m`;
+  };
+
+    const handleArrayFieldChange = (field, index, value) => {
+    const newArray = [...(selectedCourse[field] || [])];
+    newArray[index] = value;
+    setSelectedCourse(prev => ({ ...prev, [field]: newArray }));
+  };
+
+  const handleAddArrayField = (field) => {
+    const newArray = [...(selectedCourse[field] || []), ''];
+    setSelectedCourse(prev => ({ ...prev, [field]: newArray }));
+  };
+
+  const handleRemoveArrayField = (field, index) => {
+    const newArray = [...(selectedCourse[field] || [])];
+    newArray.splice(index, 1);
+    setSelectedCourse(prev => ({ ...prev, [field]: newArray }));
   };
 
   return (
@@ -243,8 +305,10 @@ const CourseManagement = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tất cả trạng thái</SelectItem>
-                <SelectItem value="published">Đã xuất bản</SelectItem>
                 <SelectItem value="draft">Bản nháp</SelectItem>
+                <SelectItem value="pending">Đang chờ duyệt</SelectItem>
+                <SelectItem value="approved">Đã duyệt</SelectItem>
+                <SelectItem value="published">Đã xuất bản</SelectItem>
               </SelectContent>
             </Select>
 
@@ -338,11 +402,8 @@ const CourseManagement = () => {
                         </div>
                       </td>
                       <td className="p-4">
-                        <Badge
-                          variant={course?.status === "published" ? "default" : "secondary"}
-                          className={course?.status === "published" ? "bg-green-100 text-green-800" : ""}
-                        >
-                          {course?.status === "published" ? 'Đã xuất bản' : 'Bản nháp'}
+                        <Badge className={getStatusBadge(course?.status).className}>
+                          {getStatusBadge(course?.status).label}
                         </Badge>
                       </td>
                       <td className="p-4">
@@ -354,31 +415,73 @@ const CourseManagement = () => {
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedCourse(course);
-                              setShowEditDialog(true);
-                            }}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleToggleStatus(course)}
-                          >
-                            {course?.status === "published" ? 'Ẩn' : 'Xuất bản'}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteCourse(course?._id)}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          {course?.status !== 'pending' && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedCourse(course);
+                                setShowEditDialog(true);
+                              }}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          )}
+                          {course.status === 'draft' && (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedCourse(course);
+                                  setShowSubmitModal(true);
+                                }}
+                                className="text-blue-600 hover:text-blue-700"
+                              >
+                                Submit
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleToggleStatus(course)}
+                              >
+                                Xuất bản
+                              </Button>
+                            </>
+                          )}
+                          {(course.status === 'approved' || course.status === 'rejected') && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedCourse(course);
+                                setShowAdminNoteModal(true);
+                              }}
+                              className="text-purple-600 hover:text-purple-700"
+                              title="Xem phản hồi admin"
+                            >
+                              <MessageSquare className="w-4 h-4" />
+                            </Button>
+                          )}
+                          {course.status === 'published' && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleToggleDelete(course)}
+                            >
+                              Ẩn
+                            </Button>
+                          )}
+                          {course?.status !== 'pending' && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteCourse(course?._id)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -395,6 +498,9 @@ const CourseManagement = () => {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Tạo khóa học mới</DialogTitle>
+            <DialogDescription>
+              Điền thông tin để tạo khóa học mới trong hệ thống
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -492,109 +598,348 @@ const CourseManagement = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Course Dialog */}
+      {/* Edit Course Dialog - IMPROVED VERSION */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="max-w-4xl max-h-[85vh] p-0">
+          <DialogHeader className="px-6 pt-6">
             <DialogTitle>Chỉnh sửa khóa học</DialogTitle>
+            <DialogDescription>
+              Cập nhật thông tin khóa học của bạn
+            </DialogDescription>
           </DialogHeader>
+          
           {selectedCourse && (
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="edit-title">Tên khóa học</Label>
-                <Input
-                  id="edit-title"
-                  value={selectedCourse.title}
-                  onChange={(e) => setSelectedCourse(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="Nhập tên khóa học"
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit-description">Mô tả</Label>
-                <Textarea
-                  id="edit-description"
-                  value={selectedCourse.description}
-                  onChange={(e) => setSelectedCourse(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Nhập mô tả khóa học"
-                  rows={3}
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit-thumbnail">URL hình ảnh</Label>
-                <Input
-                  id="edit-thumbnail"
-                  value={selectedCourse.thumbnail}
-                  onChange={(e) => setSelectedCourse(prev => ({ ...prev, thumbnail: e.target.value }))}
-                  placeholder="https://example.com/image.jpg"
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit-category">Danh mục</Label>
-                <Select
-                  value={selectedCourse.category}
-                  onValueChange={(value) => setSelectedCourse(prev => ({ ...prev, category: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="frontend">Frontend</SelectItem>
-                    <SelectItem value="backend">Backend</SelectItem>
-                    <SelectItem value="mobile">Mobile</SelectItem>
-                    <SelectItem value="devops">DevOps</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="edit-level">Cấp độ</Label>
-                  <Select
-                    value={selectedCourse.level}
-                    onValueChange={(value) => setSelectedCourse(prev => ({ ...prev, level: value }))}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-4 px-6">
+                <TabsTrigger value="basic" className="flex items-center gap-2">
+                  <Info className="w-4 h-4" />
+                  Cơ bản
+                </TabsTrigger>
+                <TabsTrigger value="learning" className="flex items-center gap-2">
+                  <CheckSquare className="w-4 h-4" />
+                  Học được gì
+                </TabsTrigger>
+                <TabsTrigger value="requirements" className="flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" />
+                  Yêu cầu
+                </TabsTrigger>
+                <TabsTrigger value="audience" className="flex items-center gap-2">
+                  <UserCheck className="w-4 h-4" />
+                  Đối tượng
+                </TabsTrigger>
+              </TabsList>
+
+              <ScrollArea className="h-[calc(85vh-220px)] px-6">
+                {/* Tab 1: Basic Information */}
+                <TabsContent value="basic" className="space-y-4 mt-4">
+                  <div>
+                    <Label htmlFor="edit-title">Tên khóa học *</Label>
+                    <Input
+                      id="edit-title"
+                      value={selectedCourse.title}
+                      onChange={(e) => setSelectedCourse(prev => ({ ...prev, title: e.target.value }))}
+                      placeholder="Nhập tên khóa học"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-description">Mô tả *</Label>
+                    <Textarea
+                      id="edit-description"
+                      value={selectedCourse.description}
+                      onChange={(e) => setSelectedCourse(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Nhập mô tả khóa học"
+                      rows={4}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-thumbnail">URL hình ảnh</Label>
+                    <Input
+                      id="edit-thumbnail"
+                      value={selectedCourse.thumbnail}
+                      onChange={(e) => setSelectedCourse(prev => ({ ...prev, thumbnail: e.target.value }))}
+                      placeholder="https://example.com/image.jpg"
+                    />
+                    {selectedCourse.thumbnail && (
+                      <div className="mt-2">
+                        <img 
+                          src={selectedCourse.thumbnail} 
+                          alt="Preview" 
+                          className="w-40 h-24 object-cover rounded border"
+                          onError={(e) => e.target.src = 'https://via.placeholder.com/160x96'}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="edit-category">Danh mục</Label>
+                      <Select
+                        value={selectedCourse.category}
+                        onValueChange={(value) => setSelectedCourse(prev => ({ ...prev, category: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="frontend">Frontend</SelectItem>
+                          <SelectItem value="backend">Backend</SelectItem>
+                          <SelectItem value="mobile">Mobile</SelectItem>
+                          <SelectItem value="devops">DevOps</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="edit-level">Cấp độ</Label>
+                      <Select
+                        value={selectedCourse.level}
+                        onValueChange={(value) => setSelectedCourse(prev => ({ ...prev, level: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="beginner">Cơ bản</SelectItem>
+                          <SelectItem value="intermediate">Trung bình</SelectItem>
+                          <SelectItem value="advanced">Nâng cao</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="edit-price">Giá (VNĐ) *</Label>
+                      <Input
+                        id="edit-price"
+                        type="number"
+                        value={selectedCourse.price}
+                        onChange={(e) => setSelectedCourse(prev => ({ ...prev, price: parseInt(e.target.value) || 0 }))}
+                        placeholder="0"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-sale-price">Giá khuyến mãi (VNĐ)</Label>
+                      <Input
+                        id="edit-sale-price"
+                        type="number"
+                        value={selectedCourse.salePrice || ''}
+                        onChange={(e) => setSelectedCourse(prev => ({ ...prev, salePrice: parseInt(e.target.value) || 0 }))}
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+                </TabsContent>
+
+                {/* Tab 2: What You Will Learn */}
+                <TabsContent value="learning" className="space-y-4 mt-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-medium">Bạn sẽ học được gì</h3>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Liệt kê những kiến thức và kỹ năng học viên sẽ đạt được
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleAddArrayField('whatYouWillLearn')}
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Thêm mục
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {(selectedCourse.whatYouWillLearn || []).map((item, index) => (
+                      <div key={index} className="flex gap-2 items-start">
+                        <div className="flex-1">
+                          <Input
+                            value={item}
+                            onChange={(e) => handleArrayFieldChange('whatYouWillLearn', index, e.target.value)}
+                            placeholder="Ví dụ: Hiểu rõ về React hooks và cách sử dụng"
+                            className="w-full"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveArrayField('whatYouWillLearn', index)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    {(!selectedCourse.whatYouWillLearn || selectedCourse.whatYouWillLearn.length === 0) && (
+                      <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                        <CheckSquare className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                        <p className="text-sm text-gray-500">
+                          Chưa có nội dung. Click "Thêm mục" để bắt đầu.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+
+                {/* Tab 3: Requirements */}
+                <TabsContent value="requirements" className="space-y-4 mt-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-medium">Yêu cầu đầu vào</h3>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Kiến thức cần thiết trước khi bắt đầu khóa học
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleAddArrayField('requirements')}
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Thêm mục
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {(selectedCourse.requirements || []).map((item, index) => (
+                      <div key={index} className="flex gap-2 items-start">
+                        <div className="flex-1">
+                          <Input
+                            value={item}
+                            onChange={(e) => handleArrayFieldChange('requirements', index, e.target.value)}
+                            placeholder="Ví dụ: Kiến thức HTML/CSS cơ bản"
+                            className="w-full"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveArrayField('requirements', index)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    {(!selectedCourse.requirements || selectedCourse.requirements.length === 0) && (
+                      <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                        <AlertCircle className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                        <p className="text-sm text-gray-500">
+                          Chưa có yêu cầu. Click "Thêm mục" để bắt đầu.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+
+                {/* Tab 4: Target Audience */}
+                <TabsContent value="audience" className="space-y-4 mt-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-medium">Khóa học dành cho</h3>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Đối tượng phù hợp với khóa học này
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleAddArrayField('targetAudience')}
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Thêm mục
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {(selectedCourse.targetAudience || []).map((item, index) => (
+                      <div key={index} className="flex gap-2 items-start">
+                        <div className="flex-1">
+                          <Input
+                            value={item}
+                            onChange={(e) => handleArrayFieldChange('targetAudience', index, e.target.value)}
+                            placeholder="Ví dụ: Sinh viên mới bắt đầu học lập trình web"
+                            className="w-full"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveArrayField('targetAudience', index)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    {(!selectedCourse.targetAudience || selectedCourse.targetAudience.length === 0) && (
+                      <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                        <UserCheck className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                        <p className="text-sm text-gray-500">
+                          Chưa có đối tượng. Click "Thêm mục" để bắt đầu.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+              </ScrollArea>
+
+              <DialogFooter className="px-6 pb-6 pt-4 border-t">
+                <div className="flex justify-between w-full">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setShowEditDialog(false);
+                      setActiveTab('basic');
+                    }}
                   >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="beginner">Cơ bản</SelectItem>
-                      <SelectItem value="intermediate">Trung bình</SelectItem>
-                      <SelectItem value="advanced">Nâng cao</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    Hủy
+                  </Button>
+                  <Button onClick={handleEditCourse}>
+                    <CheckSquare className="w-4 h-4 mr-2" />
+                    Cập nhật khóa học
+                  </Button>
                 </div>
-                <div>
-                  <Label htmlFor="edit-price">Giá (VNĐ)</Label>
-                  <Input
-                    id="edit-price"
-                    type="number"
-                    value={selectedCourse.price}
-                    onChange={(e) => setSelectedCourse(prev => ({ ...prev, price: parseInt(e.target.value) || 0 }))}
-                    placeholder="0"
-                  />
-                </div>
-              </div>
-              <div className="flex items-center space-x-4">
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={selectedCourse.status === 'published'}
-                    onChange={(e) => setSelectedCourse(prev => ({ ...prev, status: e.target.checked ? 'published' : 'draft' }))}
-                  />
-                  <span>Xuất bản</span>
-                </label>
-              </div>
-            </div>
+              </DialogFooter>
+            </Tabs>
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
-              Hủy
-            </Button>
-            <Button onClick={handleEditCourse}>
-              Cập nhật
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Submit Approval Modal */}
+      <SubmitApprovalModal
+        isOpen={showSubmitModal}
+        onClose={() => {
+          setShowSubmitModal(false);
+          setSelectedCourse(null);
+        }}
+        onSubmit={handleSubmitForApproval}
+        courseTitle={selectedCourse?.title}
+      />
+
+      {/* Admin Note Modal */}
+      <AdminNoteModal
+        isOpen={showAdminNoteModal}
+        onClose={() => {
+          setShowAdminNoteModal(false);
+          setSelectedCourse(null);
+        }}
+        courseTitle={selectedCourse?.title}
+        status={selectedCourse?.status}
+        adminNote={selectedCourse?.adminNote}
+        approvalMessage={selectedCourse?.approvalMessage}
+        reviewedAt={selectedCourse?.reviewAt}
+      />
     </div>
   );
 };

@@ -24,9 +24,9 @@ export const courseService = {
   },
 
   // Lấy danh sách khóa học
-  getCourses: async () => {
+  getCourses: async (params) => {
     try {
-      const response = await apiClient.get('/courses');
+      const response = await apiClient.get('/courses', { params });
       return response.data;
     } catch (error) {
       console.error('Error fetching courses:', error);
@@ -98,6 +98,42 @@ export const courseService = {
       return response.data;
     } catch (error) {
       console.error('Error searching courses:', error);
+      throw error;
+    }
+  },
+
+  // Submit course for approval
+  submitCourseForApproval: async (id, approvalMessage) => {
+    try {
+      const response = await apiClient.post(`/courses/${id}/submit`, { approvalMessage });
+      return response.data;
+    } catch (error) {
+      console.error('Error submitting course for approval:', error);
+      throw error;
+    }
+  },
+
+  // Delete course (soft delete)
+  deleteCourse: async (id) => {
+    try {
+      const response = await apiClient.delete(`/courses/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting course:', error);
+      throw error;
+    }
+  },
+
+  // Approve or reject course
+  reviewCourse: async (id, action, adminNote) => {
+    try {
+      const response = await apiClient.patch(`/courses/${id}/review`, { 
+        action, 
+        adminNote 
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error reviewing course:', error);
       throw error;
     }
   }
