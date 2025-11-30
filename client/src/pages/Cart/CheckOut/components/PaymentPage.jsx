@@ -18,6 +18,12 @@ const PaymentPage = () => {
     const query = useQuery();
     const courseId = query.get("course");
 
+    const bankInfo = {
+        bankName: "MBBank",
+        accountName: "NGUYEN QUANG THUAN",
+        accountNumber: "0961378056",
+    };
+
     // Lấy thông tin khóa học
     useEffect(() => {
         const fetchCourseDetail = async () => {
@@ -32,29 +38,17 @@ const PaymentPage = () => {
         if (courseId) fetchCourseDetail();
     }, [courseId]);
 
-    // Giả lập socket
     useEffect(() => {
         setPaymentStatus("Đang xác nhận...")
-        // const timer = setTimeout(() => setPaymentStatus("Thanh toán thành công!"), 20000);
 
-        return () => {
-            // clearTimeout(timer);
-        };
-    }, []);
-
-    useEffect(() => {
         // Kết nối với socket server
         SocketService.connect();
 
         // Lắng nghe sự kiện từ server
         SocketService.on("payment-webhook", (data) => {
-            console.log("Received webhook data from server:", data);
-
-            setTimeout(() => {
+            if (data.status === "completed") {
                 setPaymentStatus("Thanh toán thành công!");
-                SocketService.emit("payment-status", "Thanh toán thành công!");
-            }, 10000);
-
+            }
         });
 
         // Cleanup khi component unmount
@@ -78,7 +72,8 @@ const PaymentPage = () => {
 
                     const newOrder = await orderService.createOrder(data);
                     setOrder(newOrder.order);
-                    setQr(`${import.meta.env.VITE_QRCODE_IMAGE}&amount=${course.salePrice}&des=${newOrder.order?._id}`);
+                    const encodedContent = encodeURIComponent(newOrder.order?._id);
+                    setQr(`${import.meta.env.VITE_QRCODE_IMAGE}&amount=${course.salePrice}&des=${encodedContent}`);
 
                 } catch (error) {
                     console.error("Error creating order:", error);
@@ -103,12 +98,7 @@ const PaymentPage = () => {
         }
     }, [paymentStatus, course, user]);
 
-    // Fake bank info
-    const bankInfo = {
-        bankName: "MBBank",
-        accountName: "NGUYEN QUANG THUAN",
-        accountNumber: "0961378056",
-    };
+    console.log(qr);
 
     if (!course) return <p>Đang tải thông tin khóa học...</p>;
 

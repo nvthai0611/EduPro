@@ -1,31 +1,3 @@
-// // socket.ts
-// import { Server } from "socket.io";
-
-// export const socketService = (io: Server) => {
-//   io.on("connection", (socket) => {
-//     console.log(`Client connected: ${socket.id}`);
-
-//     // Phát sự kiện khi có kết nối
-//     socket.emit('payment-webhook', {
-//       orderId: '12345',
-//       amount: 500000,
-//       status: 'Success',
-//       message: 'Payment successful!'
-//     });
-
-//     // Lắng nghe sự kiện từ client
-//     socket.on('payment-status', (data) => {
-//       console.log('Received payment status from client:', data);
-//     });
-
-//     socket.on("disconnect", () => {
-//       console.log(`Client disconnected: ${socket.id}`);
-//     });
-//   });
-// };
-
-
-// src/utils/socketService.ts
 import { Server, Socket } from 'socket.io';
 
 class SocketService {
@@ -39,19 +11,6 @@ class SocketService {
   listen() {
     this.io.on('connection', (socket: Socket) => {
       console.log(`Client connected: ${socket.id}`);
-
-      // Phát sự kiện khi có kết nối
-      socket.emit('payment-webhook', {
-        orderId: '12345',
-        amount: 500000,
-        status: 'Success',
-        message: 'Payment successful!'
-      });
-
-      // Lắng nghe sự kiện từ client
-      socket.on('payment-status', (data) => {
-        console.log('Received payment status from client:', data);
-      });
 
       socket.on('disconnect', () => {
         console.log(`Client disconnected: ${socket.id}`);

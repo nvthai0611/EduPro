@@ -6,31 +6,34 @@ import { roleRoutes } from "./v1/roles.routes";
 import { userRoutes } from "./v1/users.routes";
 import { courseRoutes } from "./v1/course/course.routes";
 import { orderRoutes } from "./v1/order.route";
-import { paymentRoutes }  from "./v1/payment.routes";
+import { paymentRoutes } from "./v1/payment.routes";
 import { courseAdminRoutes } from "./v1/admin/course.routes";
+import { Server } from "socket.io";
 
-// Authentication routes
-router.use("/auth", authRoutes);
+export const apiRouter = (io?: Server) => {
+  // Authentication routes
+  router.use("/auth", authRoutes);
 
-// Category routes
-router.use("/category", categoryRoutes);
+  // Category routes
+  router.use("/category", categoryRoutes);
 
-// Course routes
-router.use("/courses", courseRoutes);
+  // Course routes
+  router.use("/courses", courseRoutes);
 
-// Order routes
-router.use("/orders", orderRoutes);
+  // Order routes
+  router.use("/orders", orderRoutes);
 
-// Payment routes
-router.use("/payment", paymentRoutes);
+  // Payment routes
+  router.use("/payment", paymentRoutes(io));
 
-// Role routes
-router.use("/admin/role", roleRoutes);
+  // Role routes
+  router.use("/admin/role", roleRoutes);
 
-// User routes
-router.use("/admin/user", userRoutes);
+  // User routes
+  router.use("/admin/user", userRoutes);
 
-// Course routes
-router.use("/admin/course", courseAdminRoutes);
+  // Course routes
+  router.use("/admin/course", courseAdminRoutes);
 
-export const apiRouter: Router = router;
+  return router;
+};

@@ -1,19 +1,24 @@
 import { Request, Response } from 'express';
 import { PaymentService } from './payment.service';
 import { Server } from 'socket.io';
+import SocketService from "../../utils/socket/socket"
 
 export class PaymentController {
   private paymentService: PaymentService;
+  private socketService: SocketService;
 
   constructor(io: Server) {
     this.paymentService = new PaymentService(io);
+    this.socketService = new SocketService(io);
   }
 
   // Webhook nhận thông báo từ Sepay
   async handleWebhook(req: Request, res: Response): Promise<void> {
     try {
       const result = await this.paymentService.handleWebhook(req.body);
-      console.log(result);
+
+      this.socketService.emit('payment-webhook', result);
+
       res.status(200).json(result);
     } catch (error) {
       console.error('Error handling webhook:', error);

@@ -4,15 +4,14 @@ import { Server } from 'socket.io';
 
 const router = Router();
 
-// Khởi tạo server socket.io
-let io: Server; 
+export const paymentRoutes = (io: Server) => {
+  const paymentController = new PaymentController(io);
 
-const paymentController = new PaymentController(io);
+  // Webhook nhận giao dịch từ Sepay
+  router.post('/webhook', paymentController.handleWebhook.bind(paymentController));
 
-// Webhook nhận giao dịch từ Sepay
-router.post('/webhook', paymentController.handleWebhook.bind(paymentController));
+  // Kiểm tra trạng thái giao dịch
+  router.get('/verify/:orderCode', paymentController.verifyTransaction.bind(paymentController));
 
-// Kiểm tra trạng thái giao dịch
-router.get('/verify/:orderCode', paymentController.verifyTransaction.bind(paymentController));
-
-export const paymentRoutes: Router = router;
+  return router;
+};
