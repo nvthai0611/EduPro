@@ -4,6 +4,7 @@ import { useAuth } from "../../../../hooks/useAuth";
 import * as orderService from "../../../../services/user/orderService";
 import { useLocation } from "react-router-dom";
 import { courseService } from "../../../../services/courseService";
+import SocketService from "../../../../utils/socket"
 
 export const useQuery = () => new URLSearchParams(useLocation().search);
 
@@ -41,8 +42,27 @@ const PaymentPage = () => {
         };
     }, []);
 
-    console.log(qr);
-    
+    useEffect(() => {
+        // Kết nối với socket server
+        SocketService.connect();
+
+        // Lắng nghe sự kiện từ server
+        SocketService.on("payment-webhook", (data) => {
+            console.log("Received webhook data from server:", data);
+
+            setTimeout(() => {
+                setPaymentStatus("Thanh toán thành công!");
+                SocketService.emit("payment-status", "Thanh toán thành công!");
+            }, 10000);
+
+        });
+
+        // Cleanup khi component unmount
+        return () => {
+            SocketService.off("payment-webhook", () => { });
+            SocketService.disconnect();
+        };
+    }, []);
 
     useEffect(() => {
         if (paymentStatus === "Đang xác nhận..." && course && user) {

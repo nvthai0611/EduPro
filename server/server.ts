@@ -3,7 +3,7 @@ import http from "http";
 
 import morgan from "morgan";
 import { Server } from "socket.io";
-import { socketService } from "./src/utils/socket/socket";
+import SocketService  from "./src/utils/socket/socket";
 import PayOS from "@payos/node";
 import axios from "axios";
 import fs from "fs";
@@ -193,7 +193,9 @@ const updateNgrokWebhookUrl = async () => {
 // ================= Start Server =================
 const server = http.createServer(app);
 const io = new Server(server, { cors: corsOptions });
-socketService(io);
+
+const socketService = new SocketService(io);
+socketService.listen();
 
 const PORT = process.env.PORT || 9999;
 
