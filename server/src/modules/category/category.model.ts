@@ -60,7 +60,6 @@ const categorySchema = new mongoose.Schema({
 });
 
 // Indexes
-categorySchema.index({ slug: 1 });
 categorySchema.index({ isActive: 1, order: 1 });
 
 // Virtual for course count (will be updated when courses are added/removed)

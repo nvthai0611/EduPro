@@ -133,10 +133,6 @@ export default function CourseList() {
                             >
                                 <i className="fas fa-play-circle mr-2"></i> Bắt đầu học ngay
                             </button>
-<Link to="/advisory" className="px-8 py-3 bg-white bg-opacity-0 border-2 border-white text-white font-semibold rounded-full hover:bg-opacity-10 transition cursor-pointer inline-block">
-  Tư vấn lộ trình
-</Link>
-
                         </div>
                     </div>
                 </div>

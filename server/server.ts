@@ -3,7 +3,7 @@ import http from "http";
 
 import morgan from "morgan";
 import { Server } from "socket.io";
-import socketService from "./src/utils/socket/socket";
+import SocketService  from "./src/utils/socket/socket";
 import PayOS from "@payos/node";
 import axios from "axios";
 import fs from "fs";
@@ -13,8 +13,7 @@ import session from "express-session";
 import connectFlash from "connect-flash";
 import cors from "cors";
 import connectDB from "./src/config/db";
-// coding ádfajsdfgasdfjasdfa
-// coding chuyên nghiệp
+
 // //Test bull
 // const { ExpressAdapter } = require('@bull-board/express');
 // const { createBullBoard } = require('@bull-board/api');
@@ -24,6 +23,7 @@ dotenv.config();
 import passport from "passport";
 import "./src/passports/passport.google";
 import { apiRouter } from "./src/routes/api";
+import { paymentRoutes } from "./src/routes/v1/payment.routes";
 // const User = require("./src/models/user.model");
 
 // // Cron
@@ -141,22 +141,6 @@ app.use((req, res, next) => {
 // const specs = swaggerJsdoc(swaggerOptions);
 // app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs, { explorer: true }));
 
-// ================= API Routes =================
-app.use("/api/v1", apiRouter);
-
-// ================= 404 & Error Handler =================
-app.use((req, res, next) => {
-  res.status(404).json({ error: "Không tìm thấy trang" });
-});
-
-app.use((err: any, req: any, res: any, next: any) => {
-  console.error(err.stack);
-  res.status(err.status || 500).json({
-    error: true,
-    message: err.message || "Internal Server Error",
-  });
-});
-
 // ================= MongoDB Connect =================
 connectDB();
 
@@ -194,7 +178,25 @@ const updateNgrokWebhookUrl = async () => {
 // ================= Start Server =================
 const server = http.createServer(app);
 const io = new Server(server, { cors: corsOptions });
-socketService(io);
+
+const socketService = new SocketService(io);
+socketService.listen();
+
+// ================= API Routes =================
+app.use("/api/v1", apiRouter(io));
+
+// ================= 404 & Error Handler =================
+app.use((req, res, next) => {
+  res.status(404).json({ error: "Không tìm thấy trang" });
+});
+
+app.use((err: any, req: any, res: any, next: any) => {
+  console.error(err.stack);
+  res.status(err.status || 500).json({
+    error: true,
+    message: err.message || "Internal Server Error",
+  });
+});
 
 const PORT = process.env.PORT || 9999;
 
