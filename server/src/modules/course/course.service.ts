@@ -95,8 +95,41 @@ class CourseService {
     if (!course) {
       throw new Error("Course not found");
     }
-    // TODO: Populate modules and lessons when those services are ready
     return course;
+  }
+
+  // Submit course for approval
+  async submitCourseForApproval(
+    courseId: string, 
+    userId: string, 
+    approvalMessage: string
+  ): Promise<any> {
+    const course = await CourseRepository.getCourseById(courseId);
+    
+    if (!course) {
+      throw new Error("Course not found");
+    }
+
+    // Handle both populated and non-populated instructorId
+    const instructorId = course.instructorId._id || course.instructorId;
+    if (instructorId.toString() !== userId.toString()) {
+      throw new Error("You are not authorized to submit this course");
+    }
+
+    // BR-02: Only draft courses can be submitted
+    if (course.status !== "draft") {
+      throw new Error(`Cannot submit course with status: ${course.status}. Only draft courses can be submitted.`);
+    }
+
+    // BR-05: Update course with approval data
+    const updatedCourse = await CourseRepository.updateCourse(courseId, {
+      status: "pending",
+      approvalMessage: approvalMessage,
+      submittedAt: new Date(),
+      submittedBy: userId,
+    });
+
+    return updatedCourse;
   }
 }
 

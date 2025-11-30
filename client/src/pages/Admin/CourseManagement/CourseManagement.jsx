@@ -4,9 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { toast } from 'react-toastify';
+import SubmitApprovalModal from '../../../components/Course/SubmitApprovalModal';
 import {
   Plus,
   Search,
@@ -33,6 +35,7 @@ const CourseManagement = () => {
   const [levelFilter, setLevelFilter] = useState('all');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [newCourse, setNewCourse] = useState({
     title: '',
@@ -78,11 +81,21 @@ const CourseManagement = () => {
       setLoading(false);
     }
   };
+  const getStatusBadge = (status) => {
+    const statusConfig = {
+      published: { label: "Đã xuất bản", className: "bg-green-100 text-green-800" },
+      draft: { label: "Bản nháp", className: "bg-gray-100 text-gray-800" },
+      pending: { label: "Đang chờ duyệt", className: "bg-yellow-100 text-yellow-800" },
+      approved: { label: "Đã duyệt", className: "bg-blue-100 text-blue-800" },
+      rejected: { label: "Bị từ chối", className: "bg-red-100 text-red-800" },
+    };
+    return statusConfig[status] || statusConfig.draft;
+  };
+
 
   const handleCreateCourse = async () => {
     try {
-      const response = await courseService.createCourse(newCourse);
-      setCourses(prev => [response.data, ...prev]);
+      await courseService.createCourse(newCourse);
       setShowCreateDialog(false);
       setNewCourse({
         title: '',
@@ -93,19 +106,27 @@ const CourseManagement = () => {
         price: 0,
         status: 'draft'
       });
+      await fetchCourses();
     } catch (error) {
       console.error('Error creating course:', error);
     }
   };
-
+  const handleToggleDelete = async (course) => {
+    try {
+      const isDeleted = course?.isDeleted ? false : true;
+      const updatedCourse = { ...course, isDeleted: isDeleted };
+      await courseService.updateCourse(course._id, updatedCourse);
+      await fetchCourses();
+    } catch (error) {
+      console.error('Error updating course status:', error);
+    }
+  };
   const handleEditCourse = async () => {
     try {
-      const response = await courseService.updateCourse(selectedCourse._id, selectedCourse);
-      setCourses(prev => prev.map(course =>
-        course._id === selectedCourse._id ? response.data : course
-      ));
+      await courseService.updateCourse(selectedCourse._id, selectedCourse);
       setShowEditDialog(false);
       setSelectedCourse(null);
+      await fetchCourses();
     } catch (error) {
       console.error('Error updating course:', error);
     }
@@ -115,7 +136,7 @@ const CourseManagement = () => {
     if (window.confirm('Bạn có chắc chắn muốn xóa khóa học này?')) {
       try {
         await courseService.deleteCourse(courseId);
-        setCourses(prev => prev.filter(course => course._id !== courseId));
+        await fetchCourses();
       } catch (error) {
         console.error('Error deleting course:', error);
       }
@@ -124,14 +145,27 @@ const CourseManagement = () => {
 
   const handleToggleStatus = async (course) => {
     try {
-      const newStatus = course?.status === 'published' ? 'draft' : 'published';
+      let newStatus;
+
       const updatedCourse = { ...course, status: newStatus };
-      const response = await courseService.updateCourse(course._id, updatedCourse);
-      setCourses(prev => prev.map(c =>
-        c._id === course._id ? response.data : c
-      ));
+      await courseService.updateCourse(course._id, updatedCourse);
+      await fetchCourses();
     } catch (error) {
       console.error('Error updating course status:', error);
+    }
+  };
+
+  const handleSubmitForApproval = async (approvalMessage) => {
+    try {
+      await courseService.submitCourseForApproval(selectedCourse._id, approvalMessage);
+      toast.success('Your course has been submitted for approval.');
+      setShowSubmitModal(false);
+      setSelectedCourse(null);
+      await fetchCourses();
+    } catch (error) {
+      console.error('Error submitting course for approval:', error);
+      toast.error(error.response?.data?.message || 'Failed to submit course for approval.');
+      throw error;
     }
   };
 
@@ -243,8 +277,10 @@ const CourseManagement = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tất cả trạng thái</SelectItem>
-                <SelectItem value="published">Đã xuất bản</SelectItem>
                 <SelectItem value="draft">Bản nháp</SelectItem>
+                <SelectItem value="pending">Đang chờ duyệt</SelectItem>
+                <SelectItem value="approved">Đã duyệt</SelectItem>
+                <SelectItem value="published">Đã xuất bản</SelectItem>
               </SelectContent>
             </Select>
 
@@ -338,11 +374,8 @@ const CourseManagement = () => {
                         </div>
                       </td>
                       <td className="p-4">
-                        <Badge
-                          variant={course?.status === "published" ? "default" : "secondary"}
-                          className={course?.status === "published" ? "bg-green-100 text-green-800" : ""}
-                        >
-                          {course?.status === "published" ? 'Đã xuất bản' : 'Bản nháp'}
+                        <Badge className={getStatusBadge(course?.status).className}>
+                          {getStatusBadge(course?.status).label}
                         </Badge>
                       </td>
                       <td className="p-4">
@@ -354,31 +387,59 @@ const CourseManagement = () => {
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedCourse(course);
-                              setShowEditDialog(true);
-                            }}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleToggleStatus(course)}
-                          >
-                            {course?.status === "published" ? 'Ẩn' : 'Xuất bản'}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteCourse(course?._id)}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          {course?.status !== 'pending' && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedCourse(course);
+                                setShowEditDialog(true);
+                              }}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          )}
+                          {course.status === 'draft' && (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedCourse(course);
+                                  setShowSubmitModal(true);
+                                }}
+                                className="text-blue-600 hover:text-blue-700"
+                              >
+                                Submit
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleToggleStatus(course)}
+                              >
+                                Xuất bản
+                              </Button>
+                            </>
+                          )}
+                          {course.status === 'published' && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleToggleDelete(course)}
+                            >
+                              Ẩn
+                            </Button>
+                          )}
+                          {course?.status !== 'pending' && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteCourse(course?._id)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -395,6 +456,9 @@ const CourseManagement = () => {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Tạo khóa học mới</DialogTitle>
+            <DialogDescription>
+              Điền thông tin để tạo khóa học mới trong hệ thống
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -497,6 +561,9 @@ const CourseManagement = () => {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Chỉnh sửa khóa học</DialogTitle>
+            <DialogDescription>
+              Cập nhật thông tin khóa học
+            </DialogDescription>
           </DialogHeader>
           {selectedCourse && (
             <div className="space-y-4">
@@ -577,7 +644,7 @@ const CourseManagement = () => {
                 <label className="flex items-center space-x-2">
                   <input
                     type="checkbox"
-                    checked={selectedCourse.status === 'published'}
+                    checked={selectedCourse.status === 'draft' ? false : true}
                     onChange={(e) => setSelectedCourse(prev => ({ ...prev, status: e.target.checked ? 'published' : 'draft' }))}
                   />
                   <span>Xuất bản</span>
@@ -595,6 +662,17 @@ const CourseManagement = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Submit Approval Modal */}
+      <SubmitApprovalModal
+        isOpen={showSubmitModal}
+        onClose={() => {
+          setShowSubmitModal(false);
+          setSelectedCourse(null);
+        }}
+        onSubmit={handleSubmitForApproval}
+        courseTitle={selectedCourse?.title}
+      />
     </div>
   );
 };

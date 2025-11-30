@@ -19,6 +19,7 @@ import LearningPage from "../pages/Learning/LearningPage";
 import CourseManagement from "../pages/Admin/CourseManagement/CourseManagement";
 import StudentProgress from "../pages/Admin/StudentProgress/StudentProgress";
 import LearningPlatformDashboard from "../pages/Admin/LearningDashboard/LearningDashboard";
+import CourseApprover from "../pages/Admin/CourseManagement/CourseApprover";
 
 // được bảo mật, phải có quyền mới vào được, và phải đăng nhập
 export const privateRoutes = (
@@ -57,6 +58,7 @@ export const privateRoutes = (
       <Route path="manager-promotion" element={<PagePromotionManagement />} />
       <Route path="customer-care" element={<CustomerCare />} />
       <Route path="setting" element={<SettingPage />} />
+      <Route path="approve-courses" element={<CourseApprover />} />
     </Route>
       
   </>

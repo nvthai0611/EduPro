@@ -3,7 +3,7 @@ import courseService from "./course.service";
 // POST /courses
 export const createCourse = async (req: any, res: any) => {
   try {
-    const instructorId = req.user?._id || req.body.instructorId;
+    const instructorId = req.user?.id || req.body.instructorId;
     if (!instructorId) {
       return res.status(401).json({ success: false, message: "Unauthorized - No instructor ID" });
     }
@@ -21,14 +21,22 @@ export const createCourse = async (req: any, res: any) => {
 // GET /courses
 export const getAllCourses = async (req: any, res: any) => {
   try {
+    // console.log('getAllCourses - req.query:', req.query);
+    
+    // Handle nested params if they exist (params[status] from axios)
+    const queryParams = req.query.params || req.query;
+    
     const filters = {
-      search: req.query.search,
-      status: req.query.status,
-      level: req.query.level,
-      category: req.query.category,
-      price: req.query.price,
-      isFeatured: req.query.isFeatured,
+      search: queryParams.search,
+      status: queryParams.status,
+      level: queryParams.level,
+      category: queryParams.category,
+      price: queryParams.price,
+      isFeatured: queryParams.isFeatured,
     };
+    
+    // console.log('Filters applied:', filters);
+    
     const courses = await courseService.getAllCourses(filters);
     res.status(200).json({ success: true, data: courses });
   } catch (error: any) {
@@ -112,17 +120,43 @@ export const deleteCourse = async (req: any, res: any) => {
   }
 };
 
-// PATCH /courses/:id/submit
-export const submitCourseForReview = async (req: any, res: any) => {
+// POST /courses/:id/submit - Submit course for approval (BR-02 to BR-05)
+export const submitCourseForApproval = async (req: any, res: any) => {
   try {
     const courseId = req.params.id;
-    await courseService.updateCourseService(courseId, { 
-      status: "pending", 
-      reviewAt: new Date() 
+    const { approvalMessage } = req.body;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ 
+        success: false, 
+        message: "Unauthorized - User not authenticated" 
+      });
+    }
+
+    // BR-03: approvalMessage is required and min 10 characters
+    if (!approvalMessage || approvalMessage.trim().length < 10) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Approval message is required and must be at least 10 characters" 
+      });
+    }
+
+    const result = await courseService.submitCourseForApproval(
+      courseId, 
+      userId, 
+      approvalMessage.trim()
+    );
+    
+    res.status(200).json({ 
+      success: true, 
+      message: "Course submitted for approval successfully",
+      data: result
     });
-    res.status(200).json({ success: true, message: "Course submitted for review" });
   } catch (error: any) {
-    res.status(400).json({ success: false, message: error.message });
+    const statusCode = error.message.includes("not found") ? 404 : 
+                      error.message.includes("not authorized") ? 403 : 400;
+    res.status(statusCode).json({ success: false, message: error.message });
   }
 };
 

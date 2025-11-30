@@ -27,7 +27,10 @@ const CourseSchema = new mongoose.Schema({
             resources: [{ type: String }]
         }]
     }],
-    status: { type: String, enum: ['draft', 'published', 'pending'], default: 'draft' },
+    status: { type: String, enum: ['draft', 'pending', 'approved', 'published'], default: 'draft' },
+    approvalMessage: { type: String },
+    submittedAt: { type: Date },
+    submittedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     isDeleted: { type: Boolean, default: false },
     created_at: { type: Date, default: Date.now },
     updated_at: { type: Date, default: Date.now }
@@ -39,11 +42,11 @@ CourseSchema.pre('save', function(next) {
         this.slug = this.title
             .toLowerCase()
             .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+            .replace(/[\u0300-\u036f]/g, '') 
             .replace(/đ/g, 'd')
-            .replace(/[^a-z0-9\s-]/g, '') // Remove special chars
-            .replace(/\s+/g, '-') // Replace spaces with -
-            .replace(/-+/g, '-') // Replace multiple - with single -
+            .replace(/[^a-z0-9\s-]/g, '') 
+            .replace(/\s+/g, '-') 
+            .replace(/-+/g, '-') 
             .trim();
     }
     next();
