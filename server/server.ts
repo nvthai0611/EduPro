@@ -3,7 +3,7 @@ import http from "http";
 
 import morgan from "morgan";
 import { Server } from "socket.io";
-import socketService from "./src/utils/socket/socket";
+import { socketService } from "./src/utils/socket/socket";
 import PayOS from "@payos/node";
 import axios from "axios";
 import fs from "fs";
@@ -13,8 +13,7 @@ import session from "express-session";
 import connectFlash from "connect-flash";
 import cors from "cors";
 import connectDB from "./src/config/db";
-// coding ádfajsdfgasdfjasdfa
-// coding chuyên nghiệp
+
 // //Test bull
 // const { ExpressAdapter } = require('@bull-board/express');
 // const { createBullBoard } = require('@bull-board/api');

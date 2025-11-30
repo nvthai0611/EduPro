@@ -19,6 +19,8 @@ import LearningPage from "../pages/Learning/LearningPage";
 import CourseManagement from "../pages/Admin/CourseManagement/CourseManagement";
 import StudentProgress from "../pages/Admin/StudentProgress/StudentProgress";
 import LearningPlatformDashboard from "../pages/Admin/LearningDashboard/LearningDashboard";
+import CourseLearnDetail from "../pages/Courses/CourseLearnDetail";
+import PaymentPage from "../pages/Cart/CheckOut/components/PaymentPage";
 
 // được bảo mật, phải có quyền mới vào được, và phải đăng nhập
 export const privateRoutes = (
@@ -34,6 +36,8 @@ export const privateRoutes = (
       <Route path="/my-learning" element={<MyCourses />} />
       <Route path="/learn/:courseId/:lessonId" element={<LearningPage />} />
       <Route path="/tai-khoan" element={<Profile />} />
+      <Route path="/checkout" element={<PaymentPage />} />
+      <Route path="/courses/learn/:slug" element={<CourseLearnDetail />} />
     </Route>
 
     {/* Admin */}

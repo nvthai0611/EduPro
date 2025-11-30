@@ -2,10 +2,10 @@
 export const courseData = [
   {
     id: 1,
-    title: "Kiến Thức Nhập Môn IT",
-    slug: "kien-thuc-nhap-mon-it",
+    title: "ReactJS Fundamentals",
+    slug: "reactjs-fundamentals",
     category: "frontend", // <-- Frontend
-    label: "Kiến Thức Nền Tảng\n(Kiến thức nhập môn)",
+    label: "ReactJS Fundamentals Basic",
     color: "from-red-500 to-red-800",
     students: 137668,
     lessons: 9,
@@ -76,10 +76,10 @@ export const courseData = [
   },
   {
     id: 2,
-    title: "Lập trình C++ cơ bản, nâng cao",
-    slug: "lap-trinh-cpp-co-ban-nang-cao",
-    category: "backend", // <-- Backend
-    label: "C++ cơ bản\nđến nâng cao",
+    title: "Advanced React Hooks",
+    slug: "advanced-react-hooks",
+    category: "frontend",
+    label: "Advanced React Hooks",
     color: "from-cyan-400 to-teal-400",
     students: 38187,
     lessons: 55,
@@ -116,10 +116,10 @@ export const courseData = [
   },
   {
     id: 3,
-    title: "HTML CSS từ Zero đến Hero",
-    slug: "html-css-zero-to-hero",
-    category: "frontend", // <-- Frontend
-    label: "HTML, CSS\ntừ zero đến hero",
+    title: "Node.js API Development",
+    slug: "nodejs-api-development",
+    category: "backend",
+    label: "Node.js API Development từ zero đến hero",
     color: "from-blue-500 to-blue-700",
     students: 216557,
     lessons: 117,

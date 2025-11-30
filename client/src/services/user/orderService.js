@@ -1,14 +1,13 @@
 import { apiClient } from "../../utils/clientAxios";
 
-export const getUserCheckouts = async () => {
-  return await apiClient.get(`/users/orders`);
+export const createOrder = async (data) => {
+  return await apiClient.post(`/orders`, data);
 };
 
-export const reviewProduct = async (checkoutId, reviews) => {
-  return await apiClient.post(`/users/orders/review-product`, { checkoutId, reviews });
+export const checkPurchase = async (userId, courseId) => {
+  return await apiClient.get(`/orders/check?userId=${userId}&courseId=${courseId}`);
 }
 
-
-export const reviewProductInCheckout = async (checkoutId) => {
-  return await apiClient.get(`/users/orders/review/${checkoutId}`);
+export const markAsPaid = async (orderId) => {
+  return await apiClient.post(`/orders/mark-paid`, {orderId: orderId});
 }
