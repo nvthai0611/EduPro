@@ -7,7 +7,7 @@ export interface IPurchasedItem {
   bundleId?: Types.ObjectId;
   purchasedAt: Date;
   price: number;
-  paymentId: string;
+  orderId: Types.ObjectId;
 }
 
 export interface IUser {
@@ -30,8 +30,8 @@ export interface IUserDocument extends IUser, Document {
   comparePassword(candidatePassword: string): Promise<boolean>;
   hasPurchasedCourse(courseId: Types.ObjectId | string): boolean;
   hasPurchasedBundle(bundleId: Types.ObjectId | string): boolean;
-  addPurchasedCourse(courseId: Types.ObjectId | string, price: number, paymentId: string): Promise<IUserDocument>;
-  addPurchasedBundle(bundleId: Types.ObjectId | string, price: number, paymentId: string): Promise<IUserDocument>;
+  addPurchasedCourse(courseId: Types.ObjectId | string, price: number, orderId: Types.ObjectId | string): Promise<IUserDocument>;
+  addPurchasedBundle(bundleId: Types.ObjectId | string, price: number, orderId: Types.ObjectId | string): Promise<IUserDocument>;
   getPurchasedCourseIds(): string[];
   getPurchasedBundleIds(): string[];
   totalCoursesPurchased?: number;
@@ -43,7 +43,7 @@ const purchasedCourseSchema = new Schema<IPurchasedItem>(
     courseId: { type: Schema.Types.ObjectId, ref: "Course" },
     purchasedAt: { type: Date, required: true },
     price: { type: Number, required: true },
-    paymentId: { type: String, required: true },
+    orderId: { type: Schema.Types.ObjectId, ref: "Order" },
   },
   { _id: false }
 );
@@ -53,7 +53,7 @@ const purchasedBundleSchema = new Schema<IPurchasedItem>(
     bundleId: { type: Schema.Types.ObjectId, ref: "Bundle" },
     purchasedAt: { type: Date, required: true },
     price: { type: Number, required: true },
-    paymentId: { type: String, required: true },
+    orderId: { type: Schema.Types.ObjectId, ref: "Order" },
   },
   { _id: false }
 );
@@ -67,6 +67,7 @@ const userSchema = new Schema<IUserDocument>(
     },
     email: {
       type: String,
+      unique: true,
       required: function (this: IUserDocument) {
         return !this.isGuest;
       },
@@ -97,6 +98,7 @@ const userSchema = new Schema<IUserDocument>(
     phoneNumber: {
       type: String,
       trim: true,
+      unique: true,
       validate: {
         validator: function (value: string) {
           if (!value) return true; // optional
@@ -127,9 +129,6 @@ const userSchema = new Schema<IUserDocument>(
   },
   { collection: "Users", timestamps: true }
 );
-
-// Index googleId for uniqueness (sparse allows multiple docs without googleId)
-userSchema.index({ googleId: 1 }, { unique: true, sparse: true });
 
 // PRE-SAVE: Hash password if modified
 userSchema.pre<IUserDocument>("save", async function (next) {
@@ -181,13 +180,17 @@ userSchema.methods.addPurchasedCourse = async function (
   this: IUserDocument,
   courseId: Types.ObjectId | string,
   price: number,
-  paymentId: string
+  orderId: Types.ObjectId | string,
 ) {
+  if (this.hasPurchasedCourse(courseId)) {
+    throw new Error("Course already purchased");
+  }
+
   this.purchasedCourses.push({
     courseId: new mongoose.Types.ObjectId(courseId),
     purchasedAt: new Date(),
     price,
-    paymentId,
+    orderId: new mongoose.Types.ObjectId(orderId),
   });
   return this.save();
 };
@@ -196,13 +199,17 @@ userSchema.methods.addPurchasedBundle = async function (
   this: IUserDocument,
   bundleId: Types.ObjectId | string,
   price: number,
-  paymentId: string
+  orderId: Types.ObjectId | string,
 ) {
+  if (this.hasPurchasedBundle(bundleId)) {
+    throw new Error("Bundle already purchased");
+  }
+
   this.purchasedBundles.push({
     bundleId: new mongoose.Types.ObjectId(bundleId),
     purchasedAt: new Date(),
     price,
-    paymentId,
+    orderId: new mongoose.Types.ObjectId(orderId),
   });
   return this.save();
 };

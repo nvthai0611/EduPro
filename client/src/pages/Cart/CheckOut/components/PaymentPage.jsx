@@ -48,6 +48,8 @@ const PaymentPage = () => {
         SocketService.on("payment-webhook", (data) => {
             if (data.status === "completed") {
                 setPaymentStatus("Thanh toán thành công!");
+            } else {
+                setPaymentStatus("Thanh toán thất bại!");
             }
         });
 
@@ -97,8 +99,6 @@ const PaymentPage = () => {
             markAsPaid();
         }
     }, [paymentStatus, course, user]);
-
-    console.log(qr);
 
     if (!course) return <p>Đang tải thông tin khóa học...</p>;
 
