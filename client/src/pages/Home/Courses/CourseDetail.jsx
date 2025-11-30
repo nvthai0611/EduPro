@@ -386,7 +386,7 @@ const CourseDetail = () => {
           <div className="space-y-6">
 
             {/* Purchase Card */}
-            <Card className="sticky top-8">
+            <Card className="top-8">
               <CardContent className="p-6">
                 {!isPurchased && (
                   <>
@@ -468,11 +468,11 @@ const CourseDetail = () => {
               <CardContent>
                 <div className="text-center">
                   <img
-                    src={course.instructor?.image || 'https://via.placeholder.com/100x100'}
+                    src={course.instructorId?.image || 'https://via.placeholder.com/100x100'}
                     alt="Hoàng An IT"
                     className="w-20 h-20 rounded-full mx-auto mb-4"
                   />
-                  <h4 className="font-semibold text-lg">Hoàng An IT</h4>
+                  <h4 className="font-semibold text-lg">{course.instructorId?.fullName}</h4>
                   <p className="text-gray-600 text-sm mb-4">
                     Fullstack Developer & Instructor
                   </p>

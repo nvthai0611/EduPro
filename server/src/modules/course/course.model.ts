@@ -130,14 +130,14 @@ const courseSchema = new Schema<ICourseDocument>(
     rating: { type: Number, default: 5, min: 1, max: 5 },
     reviewCount: { type: Number, default: 0 },
     
-    modules: [{
-      type: Schema.Types.ObjectId,
-      ref: "Module",
-    }],
-    previewLessons: [{
-      type: Schema.Types.ObjectId,
-      ref: "Lesson",
-    }],
+    // modules: [{
+    //   type: Schema.Types.ObjectId,
+    //   ref: "Module",
+    // }],
+    // previewLessons: [{
+    //   type: Schema.Types.ObjectId,
+    //   ref: "Lesson",
+    // }],
     requirements: [{ type: String, trim: true }],
     whatYouWillLearn: [{ type: String, trim: true }],
     targetAudience: [{ type: String, trim: true }],
