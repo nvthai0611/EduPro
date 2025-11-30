@@ -15,6 +15,8 @@ function extractOrderId(content: string) {
   return match ? match[0] : null;
 }
 
+const BASE_URL = process.env.NODE_ENV === 'development' ? "http://localhost:9999" : "https://edu-pro-delta.vercel.app/";
+
 export class PaymentService {
   private io: Server;
   private baseURL: string;
@@ -22,7 +24,6 @@ export class PaymentService {
   private accountNumber: string;
   private bankCode: string;
   private bankAccountName: string;
-  private orderService: any;
 
   constructor(io: Server) {
     this.io = io;
@@ -31,7 +32,6 @@ export class PaymentService {
     this.accountNumber = process.env.SE_PAY_ACCOUNT_VA;
     this.bankCode = process.env.SE_PAY_BANK_CODE;
     this.bankAccountName = process.env.SE_PAY_BANK_ACCOUNT_NAME;
-    this.orderService = new OrderService();
   }
 
   // Xử lý webhook
@@ -42,12 +42,21 @@ export class PaymentService {
     const amount = webhookData.transferAmount;
     const orderId = extractOrderId(content);
 
-    const order = await this.orderService.getOrderById(orderId);
+    const order = await OrderService.getOrderById(orderId);
 
     let paymentStatus: string;
 
     if (order.notes === orderId && order.price === amount) {
       paymentStatus = "completed";
+      await axios.post(
+        `${BASE_URL}/api/v1/admin/user/purchase/course`,
+        {
+          userId: order.userId,
+          courseId: order.courseId,
+          price: order.price,
+          orderId: order._id
+        }
+      );
     } else {
       paymentStatus = "failed";
     }

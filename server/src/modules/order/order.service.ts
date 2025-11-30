@@ -2,7 +2,7 @@
 import OrderRepository from "./order.repository";
 import { Types } from "mongoose";
 
-export default class OrderService {
+class OrderService {
   async createOrder(payload: {
     userId: string;
     courseId: string;
@@ -33,3 +33,5 @@ export default class OrderService {
     return OrderRepository.hasUserPurchasedCourse(userId, courseId);
   }
 }
+
+export default new OrderService();
