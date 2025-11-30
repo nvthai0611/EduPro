@@ -17,23 +17,37 @@ import {
   BookOpen,
   Award,
   Target,
+<<<<<<< HEAD
   Users2,
 } from "lucide-react";
 // import { useAuth } from '../../hooks/useAuth';
 import { courseService } from "../../../services/courseService";
 import { useParams } from "react-router-dom";
+=======
+  Users2
+} from 'lucide-react';
+import { useAuth } from '../../../hooks/useAuth';
+import { courseService } from '../../../services/courseService';
+import * as orderService from "../../../services/user/orderService";
+import { useParams } from 'react-router-dom';
+>>>>>>> e63a4f961f307ccfa539b82b748a3d33802450f8
 
 const CourseDetail = () => {
   const { slug } = useParams();
-  // const { user } = useAuth();
+  const { user } = useAuth();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
+<<<<<<< HEAD
   const [isPurchased, setIsPurchased] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
+=======
+  const [isPurchased, setIsPurchased] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
+>>>>>>> e63a4f961f307ccfa539b82b748a3d33802450f8
 
   useEffect(() => {
     fetchCourseDetail();
-  }, [slug]);
+  }, [slug, user]);
 
   const fetchCourseDetail = async () => {
     try {
@@ -43,10 +57,18 @@ const CourseDetail = () => {
       setCourse(response.data);
 
       // Check if user has purchased this course
+<<<<<<< HEAD
       // if (user) {
       //   const hasPurchased = await courseService.checkPurchase(response.data._id);
       //   setIsPurchased(hasPurchased);
       // }
+=======
+      if (user) {
+        const hasPurchased = await orderService.checkPurchase(user?.userId, response.data._id);
+        setIsPurchased(hasPurchased.purchased);
+      }
+
+>>>>>>> e63a4f961f307ccfa539b82b748a3d33802450f8
     } catch (error) {
       console.error("Error fetching course detail:", error);
     } finally {
@@ -55,11 +77,11 @@ const CourseDetail = () => {
   };
 
   const handlePurchase = () => {
-    // if (!user) {
-    //   // Redirect to login
-    //   window.location.href = '/dang-nhap';
-    //   return;
-    // }
+    if (!user) {
+      // Redirect to login
+      window.location.href = '/dang-nhap';
+      return;
+    }
 
     // Redirect to checkout
     window.location.href = `/checkout?course=${course._id}`;
@@ -167,6 +189,10 @@ const CourseDetail = () => {
                   <span className="text-blue-200">
                     ({course.reviewCount || 0} đánh giá)
                   </span>
+<<<<<<< HEAD
+=======
+                  <span className="text-blue-200">({course.totalReviews || 0} đánh giá)</span>
+>>>>>>> e63a4f961f307ccfa539b82b748a3d33802450f8
                 </div>
                 <div className="flex items-center space-x-2">
                   <Users className="w-5 h-5" />
@@ -335,8 +361,12 @@ const CourseDetail = () => {
                 <CardHeader>
                   <h3 className="text-xl font-semibold">Nội dung khóa học</h3>
                   <p className="text-gray-600">
+<<<<<<< HEAD
                     {getTotalLessons()} bài học •{" "}
                     {formatDuration(course.totalDuration || 0)}
+=======
+                    {course.totalLessons} bài học • {formatDuration(course.totalDuration || 0)}
+>>>>>>> e63a4f961f307ccfa539b82b748a3d33802450f8
                   </p>
                 </CardHeader>
                 <CardContent>
@@ -428,9 +458,11 @@ const CourseDetail = () => {
 
           {/* Sidebar */}
           <div className="space-y-6">
+
             {/* Purchase Card */}
             <Card className="sticky top-8">
               <CardContent className="p-6">
+<<<<<<< HEAD
                 <div className="text-center mb-4">
                   {course.salePrice > 0 && course.salePrice < course.price ? (
                     <div className="space-y-2">
@@ -448,13 +480,31 @@ const CourseDetail = () => {
                         )}
                         %
                       </Badge>
+=======
+                {!isPurchased && (
+                  <>
+                    <div className="text-center mb-4">
+                      {course.salePrice > 0 && course.salePrice < course.price ? (
+                        <div className="space-y-2">
+                          <div className="text-3xl font-bold text-red-600">
+                            {formatPrice(course.salePrice)}
+                          </div>
+                          <div className="text-lg text-gray-500 line-through">
+                            {formatPrice(course.price)}
+                          </div>
+                          <Badge className="bg-red-100 text-red-800">
+                            Tiết kiệm {Math.round(((course.price - course.salePrice) / course.price) * 100)}%
+                          </Badge>
+                        </div>
+                      ) : (
+                        <div className="text-3xl font-bold text-blue-600">
+                          {formatPrice(course.price || 0)}
+                        </div>
+                      )}
+>>>>>>> e63a4f961f307ccfa539b82b748a3d33802450f8
                     </div>
-                  ) : (
-                    <div className="text-3xl font-bold text-blue-600">
-                      {formatPrice(course.price || 0)}
-                    </div>
-                  )}
-                </div>
+                  </>
+                )}
 
                 <Button
                   className="w-full mb-4"
@@ -469,10 +519,13 @@ const CourseDetail = () => {
                     : "Mua khóa học"}
                 </Button>
 
-                <div className="text-center text-sm text-gray-600 mb-4">
-                  Hoặc
-                </div>
+                {!isPurchased && (
+                  <>
+                    <div className="text-center text-sm text-gray-600 mb-4">
+                      Hoặc
+                    </div>
 
+<<<<<<< HEAD
                 <Button
                   variant="outline"
                   className="w-full mb-4"
@@ -482,6 +535,17 @@ const CourseDetail = () => {
                 >
                   Thêm vào giỏ hàng
                 </Button>
+=======
+                    <Button
+                      variant="outline"
+                      className="w-full mb-4"
+                      onClick={() => window.location.href = '/checkout?course=' + course._id}
+                    >
+                      Thêm vào giỏ hàng
+                    </Button>
+                  </>
+                )}
+>>>>>>> e63a4f961f307ccfa539b82b748a3d33802450f8
 
                 <Separator className="my-4" />
 

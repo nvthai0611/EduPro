@@ -1,248 +1,223 @@
-"use client"
-import Breadcrumb from "./Breadcrumb"
-import DeliveryInformation from "./DeliveryInformation"
-import DeliveryTime from "./DeliveryTime"
-import OrderNotes from "./OrderNotes"
-import ProductList from "./ProductList"
-import OrderSummary from "./OrderSummary"
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
-} from "@/components/ui/dialog"
-import { formatPrice } from "../../../../utils/format"
-import { orderData } from "../data/mock-data"
-import { useState } from "react"
-import { useCart } from "../../../../pages/Cart/CartItem/context/CartContext"
-import { checkoutSelectedItems, createPayosPaymentLink } from "../../../../services/user/cartService"
-import { toast, ToastContainer } from "react-toastify"
-import { Button } from "@/components/ui/button"
-import { isValidName, isValidPhone, isValidEmail } from "../../../../utils/validation"
-import { useNavigate } from "react-router-dom"
-import socket from "../../../../utils/socket"
+import React, { useState, useEffect } from "react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { useAuth } from "../../../../hooks/useAuth";
+import * as orderService from "../../../../services/user/orderService";
+import { useLocation } from "react-router-dom";
+import { courseService } from "../../../../services/courseService";
+import SocketService from "../../../../utils/socket"
 
-const LOCAL_STORAGE_KEY = 'UserInformationCheckOut';
-export default function PaymentPage() {
-    const { cart, isAuthenticated } = useCart()
-    // lay nhu cai da selected trong cart
-    const cartSelect = cart.items.filter((item) => item.selected === true)
-    const [paymentMethod, setPaymentMethod] = useState("cod")
-    const [showLoginModal, setShowLoginModal] = useState(false)
-    const navigate = useNavigate()
+export const useQuery = () => new URLSearchParams(useLocation().search);
 
-    const [error, setError] = useState({
-        fullName: "",
-        phone: "",
-        email: "",
-        province: "",
-        district: "",
-        ward: "",
-        address: "",
-    })
-    const [formData, setFormData] = useState({
-        fullName: "",
-        phone: "",
-        email: "",
-        province: "",
-        district: "",
-        ward: "",
-        address: "",
-        shippingFee: 30000,
-        deliveryTime: "standard",
-        note: "",
-    })
+const PaymentPage = () => {
+    const [paymentStatus, setPaymentStatus] = useState("Chờ thanh toán...");
+    const { user } = useAuth();
+    const [course, setCourse] = useState(null);
+    const [order, setOrder] = useState(null);
+    const [qr, setQr] = useState(`${import.meta.env.VITE_QRCODE_IMAGE}`);
 
-    const [isSubmitting, setIsSubmitting] = useState(false)
-    const handleInputChange = (field, value) => {
-        setFormData((prev) => ({
-            ...prev,
-            [field]: value,
-        }))
-        setError((prev) => ({
-            ...prev,
-            [field]: "",
-        }))
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ ...formData, [field]: value }))
-    }
+    const query = useQuery();
+    const courseId = query.get("course");
 
-    const handleSubmit = async () => {
-        if (!isAuthenticated) {
-            setShowLoginModal(true)
-            return
-        }
+    const bankInfo = {
+        bankName: "MBBank",
+        accountName: "NGUYEN QUANG THUAN",
+        accountNumber: "0961378056",
+    };
 
-        // Validate từng trường
-        let newError = {
-            fullName: "",
-            phone: "",
-            email: "",
-            province: "",
-            district: "",
-            ward: "",
-            address: "",
-        }
-        let hasError = false;
-        if (!formData.fullName) {
-            newError.fullName = "Vui lòng nhập tên";
-            hasError = true;
-        } else if (!isValidName(formData.fullName)) {
-            newError.fullName = "Tên không hợp lệ";
-            hasError = true;
-        }
-        if (!formData.phone) {
-            newError.phone = "Vui lòng nhập số điện thoại";
-            hasError = true;
-        } else if (!isValidPhone(formData.phone)) {
-            newError.phone = "Số điện thoại không hợp lệ";
-            hasError = true;
-        }
-        if (!formData.email) {
-            newError.email = "Vui lòng nhập email";
-            hasError = true;
-        } else if (!isValidEmail(formData.email)) {
-            newError.email = "Email không hợp lệ";
-            hasError = true;
-        }
-        if (!formData.province) {
-            newError.province = "Vui lòng chọn tỉnh thành";
-            hasError = true;
-        }
-        if (!formData.district) {
-            newError.district = "Vui lòng chọn quận huyện";
-            hasError = true;
-        }
-        if (!formData.ward) {
-            newError.ward = "Vui lòng chọn phường xã";
-            hasError = true;
-        }
-        if (!formData.address) {
-            newError.address = "Vui lòng nhập địa chỉ";
-            hasError = true;
-        }
-        if (hasError) {
-            setError(newError)
-            toast.error("Vui lòng điền đầy đủ thông tin hợp lệ")
-            return
-        }
-        setIsSubmitting(true)
-        // Simulate API call
-        const newFormdata = {
-            ...formData,
-            shippingAddress: `${formData.address}, ${formData.ward}, ${formData.district}, ${formData.province}`,
-            items: cartSelect.map((item) => ({
-                product: item.product._id,
-                quantity: item.quantity,
-                price: item.price,
-            })),
-        }
-        const totalAmount = cartSelect.reduce((acc, item) => acc + item.price * item.quantity, 0);
-        // await new Promise((resolve) => setTimeout(resolve, 2000))
-        try {
-            if (paymentMethod === "cod") {
-                const response = await checkoutSelectedItems(newFormdata)
-                if (!response.success) {
-                    toast.error("Đặt hàng thất bại")
-                    setIsSubmitting(false)
-                }
-                if (response.success) {
-                    setIsSubmitting(false)
-                    toast.success("Đặt hàng thành công")
-
-                    setTimeout(() => {
-                        window.location.replace(`/shop/success?code=01&id=${response.data._id}&cancel=false&status=PENDING&orderCode=${response.data.orderCode}`)
-                    }, 1000)
-                }
+    // Lấy thông tin khóa học
+    useEffect(() => {
+        const fetchCourseDetail = async () => {
+            try {
+                const response = await courseService.getCourseById(courseId);
+                setCourse(response.data);
+            } catch (error) {
+                console.error("Error fetching course detail:", error);
             }
+        };
 
-            if (paymentMethod === "onl") {
-                // const response = await apiClient.post("/payos/payment");
-                const response = await createPayosPaymentLink(newFormdata, 'product')
-                if (!response.success) {
-                    setIsSubmitting(false)
-                    toast.error("Đặt hàng thất bại")
-                }
-                if (response.success) {
-                    window.location.href = response.data;
-                }
+        if (courseId) fetchCourseDetail();
+    }, [courseId]);
+
+    useEffect(() => {
+        setPaymentStatus("Đang xác nhận...")
+
+        // Kết nối với socket server
+        SocketService.connect();
+
+        // Lắng nghe sự kiện từ server
+        SocketService.on("payment-webhook", (data) => {
+            if (data.status === "completed") {
+                setPaymentStatus("Thanh toán thành công!");
             }
-        } catch (error) {
-            setIsSubmitting(false)
-            console.log(error)
-            toast.error(error.message)
+        });
+
+        // Cleanup khi component unmount
+        return () => {
+            SocketService.off("payment-webhook", () => { });
+            SocketService.disconnect();
+        };
+    }, []);
+
+    useEffect(() => {
+        if (paymentStatus === "Đang xác nhận..." && course && user) {
+            const createOrder = async () => {
+                try {
+                    const data = {
+                        userId: user.userId,
+                        courseId: course._id,
+                        courseTitle: course.title,
+                        price: course.salePrice,
+                        paymentMethod: "sepay"
+                    };
+
+                    const newOrder = await orderService.createOrder(data);
+                    setOrder(newOrder.order);
+                    const encodedContent = encodeURIComponent(newOrder.order?._id);
+                    setQr(`${import.meta.env.VITE_QRCODE_IMAGE}&amount=${course.salePrice}&des=${encodedContent}`);
+
+                } catch (error) {
+                    console.error("Error creating order:", error);
+                }
+            };
+
+            createOrder();
         }
-    }
+        if (paymentStatus === "Thanh toán thành công!" && course && user) {
+            const markAsPaid = async () => {
+                try {
+
+                    await orderService.markAsPaid(`${order?._id}`);
+
+                    window.location.href = `/courses/${course.slug}`;
+                } catch (error) {
+                    console.error("Error markAsPaid:", error);
+                }
+            };
+
+            markAsPaid();
+        }
+    }, [paymentStatus, course, user]);
+
+    console.log(qr);
+
+    if (!course) return <p>Đang tải thông tin khóa học...</p>;
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <ToastContainer
-                position="top-right"
-                autoClose={5000}
-                hideProgressBar={false}
-                newestOnTop={false}
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-            />
-            <Breadcrumb />
+        <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+            <Card className="w-full shadow-lg">
+                <CardHeader>
+                    <CardTitle className="text-2xl">Thanh toán khóa học</CardTitle>
+                </CardHeader>
 
-            <div className="max-w-7xl mx-auto px-4 py-8">
-                <h1 className="text-2xl font-bold text-gray-900 mb-8">THANH TOÁN</h1>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Left Column - Forms */}
-                    <div className="lg:col-span-2 space-y-6">
-                        <DeliveryInformation formData={formData} onInputChange={handleInputChange} error={error} />
-
-                        <DeliveryTime formData={formData} onInputChange={handleInputChange} />
-
-                        <OrderNotes formData={formData} onInputChange={handleInputChange} />
-
-                        <ProductList products={cartSelect} formatPrice={formatPrice} />
-                    </div>
-
-                    {/* Right Column - Order Summary */}
-                    <div className="lg:col-span-1">
-                        <OrderSummary
-                            orderData={cartSelect}
-                            formatPrice={formatPrice}
-                            onSubmit={handleSubmit}
-                            isSubmitting={isSubmitting}
-                            formData={formData}
-                            isAuthenticated={isAuthenticated}
-                            paymentMethod={paymentMethod}
-                            setPaymentMethod={setPaymentMethod}
+                <CardContent className="space-y-6">
+                    {/* Thông tin khóa học */}
+                    <div className="flex flex-col md:flex-row bg-gray-50 rounded-lg p-4 items-center md:items-start">
+                        <img
+                            src={course.thumbnail}
+                            alt={course.title}
+                            className="w-full md:w-48 h-32 md:h-40 object-cover rounded-lg mr-4 mb-4 md:mb-0"
                         />
+
+                        <div className="flex-1 space-y-2">
+                            <h2 className="text-xl font-semibold">{course.title}</h2>
+                            <p className="text-blue-600">{course.description}</p>
+                            <p className="text-lg text-gray-500 line-through">
+                                {course.price.toLocaleString()} VND
+                            </p>
+                            <p className="text-3xl font-bold text-red-500">
+                                {course.salePrice.toLocaleString()} VND
+                            </p>
+                        </div>
                     </div>
-                </div>
-            </div>
-            <Dialog open={showLoginModal} onOpenChange={() => setShowLoginModal(false)}>
-                <DialogContent className="sm:max-w-md animate-fade-in rounded-xl shadow-xl">
-                    <DialogHeader>
-                        <DialogTitle className="text-center text-blue-600 text-xl font-semibold">
-                            Bạn chưa đăng nhập
-                        </DialogTitle>
-                    </DialogHeader>
-                    <div className="text-center text-gray-600 mb-4">
-                        Vui lòng đăng nhập để tiếp tục thanh toán.
+
+                    {/* Thông tin chuyển khoản */}
+                    <div className="bg-white p-6 rounded-lg space-y-4">
+                        <h3 className="font-semibold text-gray-700 text-lg">Thông tin chuyển khoản</h3>
+
+                        <div className="space-y-1">
+                            <p><span className="font-medium">Ngân hàng:</span> {bankInfo.bankName}</p>
+                            <p><span className="font-medium">Chủ tài khoản:</span> {bankInfo.accountName}</p>
+                            <p><span className="font-medium">Số tài khoản:</span> {bankInfo.accountNumber}</p>
+                            <p>
+                                Vui lòng chuyển đúng số tiền:
+                                <span className="font-bold"> {course.salePrice.toLocaleString()} VND</span>
+                            </p>
+                            <p>
+                                Ghi rõ nội dung: <span className="font-bold">{`${order?._id}`}</span>
+                            </p>
+                        </div>
+
+                        <div className="my-10 p-6 bg-white flex flex-col md:flex-row items-center">
+                            {/* Bên trái: QR Code */}
+                            <div className="flex flex-col items-center justify-cente p-6">
+                                <h2 className="text-xl font-semibold mb-4 text-center">Quét mã QR để thanh toán</h2>
+
+                                <img
+                                    src={qr}
+                                    alt="QR Code"
+                                    className="w-64 h-64 object-contain"
+                                />
+
+                                <p className="text-gray-600 mb-4 text-center">
+                                    Sử dụng ứng dụng ngân hàng của bạn để quét mã QR này
+                                </p>
+                            </div>
+
+                            {/* Bên phải: Chi tiết thanh toán */}
+                            <div className="flex-1 bg-white rounded-lg p-6 max-w-[800px] mx-auto items-center">
+                                <h2 className="text-lg font-semibold mb-4">Chi tiết thanh toán</h2>
+
+                                {/* Header ngân hàng */}
+                                <div className="flex items-center mb-4">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/2/25/Logo_MB_new.png" alt="{bankInfo.bankName}" className="w-10 h-10 mr-3 object-contain" />
+                                    <div>
+                                        <p className="font-medium">{bankInfo.bankName}</p>
+                                        <p className="text-sm text-gray-500">Chuyển khoản ngân hàng</p>
+                                    </div>
+                                </div>
+
+                                {/* Nội dung chi tiết */}
+                                <div className="space-y-2 text-gray-700">
+                                    <div className="flex justify-between">
+                                        <span>Chủ tài khoản :</span>
+                                        <span>{bankInfo.accountName}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span>Số tài khoản :</span>
+                                        <span>{bankInfo.accountNumber}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span>Số tiền :</span>
+                                        <span>{course.salePrice.toLocaleString()} VND</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span>Nội dung chuyển khoản :</span>
+                                        <span className="break-all">{`${order?._id}`}</span>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        {/* Hướng dẫn + trạng thái */}
+                        <div className="bg-gray-50 p-3 rounded-md text-gray-700 text-sm space-y-2">
+                            <p>Hướng dẫn:</p>
+                            <ol className="list-decimal list-inside space-y-1">
+                                <li>Chuyển khoản đúng số tiền và nội dung.</li>
+                                <li>Chờ xác nhận thanh toán từ hệ thống.</li>
+                            </ol>
+
+                            <p className="text-blue-600 font-semibold mt-2">
+                                Trạng thái thanh toán: {paymentStatus}
+                            </p>
+                        </div>
                     </div>
-                    <DialogFooter className="flex justify-center gap-4">
-                        <Button variant="outline" onClick={() => setShowLoginModal(false)}>
-                            Để sau
-                        </Button>
-                        <Button className="bg-blue-600 hover:bg-blue-700 text-white"
-                            onClick={() => {
-                                localStorage.setItem("redirect_url", window.location.pathname)
-                                window.location.href = import.meta.env.VITE_SERVER_API_V1 + "/auth/google"
-                            }}>
-                            Đăng nhập
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                </CardContent>
+            </Card>
         </div>
-    )
-}
+    );
+};
+
+export default PaymentPage;

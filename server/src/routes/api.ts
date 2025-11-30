@@ -5,24 +5,35 @@ import { categoryRoutes } from "./v1/categories.routes";
 import { roleRoutes } from "./v1/roles.routes";
 import { userRoutes } from "./v1/users.routes";
 import { courseRoutes } from "./v1/course/course.routes";
+import { orderRoutes } from "./v1/order.route";
+import { paymentRoutes } from "./v1/payment.routes";
 import { courseAdminRoutes } from "./v1/admin/course.routes";
+import { Server } from "socket.io";
 
-// Authentication routes
-router.use("/auth", authRoutes);
+export const apiRouter = (io?: Server) => {
+  // Authentication routes
+  router.use("/auth", authRoutes);
 
-// Category routes
-router.use("/category", categoryRoutes);
+  // Category routes
+  router.use("/category", categoryRoutes);
 
-// Course routes
-router.use("/courses", courseRoutes);
+  // Course routes
+  router.use("/courses", courseRoutes);
 
-// Role routes
-router.use("/admin/role", roleRoutes);
+  // Order routes
+  router.use("/orders", orderRoutes);
 
-// User routes
-router.use("/admin/user", userRoutes);
+  // Payment routes
+  router.use("/payment", paymentRoutes(io));
 
-// Course routes
-router.use("/admin/course", courseAdminRoutes);
+  // Role routes
+  router.use("/admin/role", roleRoutes);
 
-export const apiRouter: Router = router;
+  // User routes
+  router.use("/admin/user", userRoutes);
+
+  // Course routes
+  router.use("/admin/course", courseAdminRoutes);
+
+  return router;
+};
