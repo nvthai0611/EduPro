@@ -19,16 +19,17 @@ const RoleRedirectMiddleware = () => {
             const decoded = jwtDecode(token);
             const role = decoded.role;
             // Nếu là staff/admin thì redirect ngay
-            // if (role === TYPE_AUTH.ADMIN) {
-            //     setRedirectPath("/admin/dashboard");
-            // } else if (role === TYPE_AUTH.STAFF ) {
-            //     setRedirectPath("/staff/schedule");
-            // } else if(role === TYPE_AUTH.MANAGER){
-            //     setRedirectPath("/staff/dashboard");
-            // }
-            // else {
-            //     // user/customer cho đi tiếp (ở public pages)
-            
+            if (role === TYPE_AUTH.ADMIN) {
+                setRedirectPath("/admin/dashboard");
+            } else if (role === TYPE_AUTH.STAFF ) {
+                setRedirectPath("/staff/schedule");
+            } else if(role === TYPE_AUTH.MANAGER){
+                setRedirectPath("/staff/dashboard");
+            }
+            else {
+                // user/customer cho đi tiếp (ở public pages)
+                setRedirectPath(null);
+            }
         } catch (error) {
             // Token không hợp lệ -> xóa token hoặc redirect login
             setRedirectPath("/dang-nhap");

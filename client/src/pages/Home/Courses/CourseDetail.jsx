@@ -19,21 +19,22 @@ import {
   Target,
   Users2
 } from 'lucide-react';
-// import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../../hooks/useAuth';
 import { courseService } from '../../../services/courseService';
+import * as orderService from "../../../services/user/orderService";
 import { useParams } from 'react-router-dom';
 
 const CourseDetail = () => {
   const { slug } = useParams();
-  // const { user } = useAuth();
+  const { user } = useAuth();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isPurchased, setIsPurchased] = useState(true);
+  const [isPurchased, setIsPurchased] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
     fetchCourseDetail();
-  }, [slug]);
+  }, [slug, user]);
 
   const fetchCourseDetail = async () => {
     try {
@@ -43,10 +44,10 @@ const CourseDetail = () => {
       setCourse(response.data);
 
       // Check if user has purchased this course
-      // if (user) {
-      //   const hasPurchased = await courseService.checkPurchase(response.data._id);
-      //   setIsPurchased(hasPurchased);
-      // }
+      if (user) {
+        const hasPurchased = await orderService.checkPurchase(user?.userId, response.data._id);
+        setIsPurchased(hasPurchased.purchased);
+      }
 
     } catch (error) {
       console.error('Error fetching course detail:', error);
@@ -56,11 +57,11 @@ const CourseDetail = () => {
   };
 
   const handlePurchase = () => {
-    // if (!user) {
-    //   // Redirect to login
-    //   window.location.href = '/dang-nhap';
-    //   return;
-    // }
+    if (!user) {
+      // Redirect to login
+      window.location.href = '/dang-nhap';
+      return;
+    }
 
     // Redirect to checkout
     window.location.href = `/checkout?course=${course._id}`;
@@ -159,7 +160,7 @@ const CourseDetail = () => {
                   <span className="text-lg font-semibold">
                     {course.rating?.toFixed(1) || '5.0'}
                   </span>
-                  <span className="text-blue-200">({course.reviewCount || 0} đánh giá)</span>
+                  <span className="text-blue-200">({course.totalReviews || 0} đánh giá)</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Users className="w-5 h-5" />
@@ -304,7 +305,7 @@ const CourseDetail = () => {
                 <CardHeader>
                   <h3 className="text-xl font-semibold">Nội dung khóa học</h3>
                   <p className="text-gray-600">
-                    {getTotalLessons()} bài học • {formatDuration(course.totalDuration || 0)}
+                    {course.totalLessons} bài học • {formatDuration(course.totalDuration || 0)}
                   </p>
                 </CardHeader>
                 <CardContent>
@@ -383,28 +384,33 @@ const CourseDetail = () => {
 
           {/* Sidebar */}
           <div className="space-y-6">
+
             {/* Purchase Card */}
             <Card className="sticky top-8">
               <CardContent className="p-6">
-                <div className="text-center mb-4">
-                  {course.salePrice > 0 && course.salePrice < course.price ? (
-                    <div className="space-y-2">
-                      <div className="text-3xl font-bold text-red-600">
-                        {formatPrice(course.salePrice)}
-                      </div>
-                      <div className="text-lg text-gray-500 line-through">
-                        {formatPrice(course.price)}
-                      </div>
-                      <Badge className="bg-red-100 text-red-800">
-                        Tiết kiệm {Math.round(((course.price - course.salePrice) / course.price) * 100)}%
-                      </Badge>
+                {!isPurchased && (
+                  <>
+                    <div className="text-center mb-4">
+                      {course.salePrice > 0 && course.salePrice < course.price ? (
+                        <div className="space-y-2">
+                          <div className="text-3xl font-bold text-red-600">
+                            {formatPrice(course.salePrice)}
+                          </div>
+                          <div className="text-lg text-gray-500 line-through">
+                            {formatPrice(course.price)}
+                          </div>
+                          <Badge className="bg-red-100 text-red-800">
+                            Tiết kiệm {Math.round(((course.price - course.salePrice) / course.price) * 100)}%
+                          </Badge>
+                        </div>
+                      ) : (
+                        <div className="text-3xl font-bold text-blue-600">
+                          {formatPrice(course.price || 0)}
+                        </div>
+                      )}
                     </div>
-                  ) : (
-                    <div className="text-3xl font-bold text-blue-600">
-                      {formatPrice(course.price || 0)}
-                    </div>
-                  )}
-                </div>
+                  </>
+                )}
 
                 <Button
                   className="w-full mb-4"
@@ -415,17 +421,21 @@ const CourseDetail = () => {
                   {(course.price === 0 || course.price === undefined) || isPurchased ? 'Bắt đầu học' : 'Mua khóa học'}
                 </Button>
 
-                <div className="text-center text-sm text-gray-600 mb-4">
-                  Hoặc
-                </div>
+                {!isPurchased && (
+                  <>
+                    <div className="text-center text-sm text-gray-600 mb-4">
+                      Hoặc
+                    </div>
 
-                <Button
-                  variant="outline"
-                  className="w-full mb-4"
-                  onClick={() => window.location.href = '/checkout?course=' + course._id}
-                >
-                  Thêm vào giỏ hàng
-                </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full mb-4"
+                      onClick={() => window.location.href = '/checkout?course=' + course._id}
+                    >
+                      Thêm vào giỏ hàng
+                    </Button>
+                  </>
+                )}
 
                 <Separator className="my-4" />
 
