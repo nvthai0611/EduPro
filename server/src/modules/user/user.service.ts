@@ -32,10 +32,10 @@ class UserService {
     let user = await userRepository.findByEmail(email);
 
     if (!user) {
-      user = {
-        fullName: fullName,
-        email: email,
-        image: image,
+      await userRepository.create({
+        fullName,
+        email,
+        image,
         status: true,
         role: "customer",
         isActive: true,
@@ -43,10 +43,10 @@ class UserService {
         isGuest: false,
         purchasedCourses: [],
         purchasedBundles: [],
-      };
+      });
 
-      await userRepository.create(user);
-    } 
+      user = await userRepository.findByEmail(email);
+    }
 
     if (!user.status || !user.isActive || !user.confirmEmail) return null;
     if (user.role !== "customer" && user.role !== "admin") return null;
