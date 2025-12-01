@@ -27,9 +27,6 @@ export const apiRouter = (io?: Server) => {
   // User routes
   router.use("/users", userRoutes);
 
-  // Course routes
-  router.use("/courses", courseRoutes);
-  router.use("/admin/course", courseAdminRoutes);
   // Payment routes
   router.use("/payment", paymentRoutes(io));
 
