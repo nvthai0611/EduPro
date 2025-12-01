@@ -23,7 +23,7 @@ dotenv.config();
 import passport from "passport";
 import "./src/passports/passport.google";
 import { apiRouter } from "./src/routes/api";
-import { paymentRoutes } from "./src/routes/v1/payment.routes";
+import { limitRequestsMiddleware } from "./src/middlewares/auth/limitRequest.middleware";
 // const User = require("./src/models/user.model");
 
 // // Cron
@@ -183,7 +183,7 @@ const socketService = new SocketService(io);
 socketService.listen();
 
 // ================= API Routes =================
-app.use("/api/v1", apiRouter(io));
+app.use("/api/v1", limitRequestsMiddleware, apiRouter(io));
 
 // ================= 404 & Error Handler =================
 app.use((req, res, next) => {
