@@ -42,6 +42,7 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
   "http://localhost:9999",
+  "https://muddiest-bob-veillike.ngrok-free.dev/",
   "https://edu-pro-delta.vercel.app/",
 ];
 const corsOptions = {
