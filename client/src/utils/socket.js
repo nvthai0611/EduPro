@@ -1,6 +1,6 @@
 // src/utils/socketService.js
 import { io } from "socket.io-client";
-const socketURL = import.meta.env.VITE_PROD === 'development' ? "http://localhost:9999" : "https://edu-pro-delta.vercel.app/";
+const socketURL = import.meta.env.VITE_PROD === 'development' ? "https://muddiest-bob-veillike.ngrok-free.dev/" : "https://edu-pro-delta.vercel.app/";
 
 class SocketService {
   socket = null;

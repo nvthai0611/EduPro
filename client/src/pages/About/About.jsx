@@ -1,179 +1,94 @@
 "use client"
-
-import { useEffect, useRef, useState } from "react"
-import { gsap } from "gsap"
-import { ScrollTrigger } from "gsap/ScrollTrigger"
-import { Star } from "lucide-react"
-import { getAverageRating } from '../../services/common/aboutService'
-
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger)
-}
+import { useNavigate } from "react-router-dom";
+import { useState } from "react"
+import { BookOpen, Award, Target } from "lucide-react"
 
 const About = () => {
-  const aboutSectionRef = useRef(null)
-  const imageRef = useRef(null)
-  const textRef = useRef(null)
-  const experienceRef = useRef(null)
-  const journeyRef = useRef(null)
-  const [averageRating, setAverageRating] = useState(0)
-  const [reviewCount, setReviewCount] = useState(0)
+  const [stats] = useState({
+    students: 50000,
+    courses: 200,
+    rating: 4.8,
+    reviews: 15000
+  })
 
-  useEffect(() => {
-    getAverageRating()
-      .then(data => {
-        setAverageRating(data.averageRating || 0)
-        setReviewCount(data.count || 0)
-      })
-      .catch(() => {
-        setAverageRating(0)
-        setReviewCount(0)
-      })
+  const navigate = useNavigate();
 
-    // About section animations
-    gsap.from(imageRef.current, {
-      x: -100,
-      opacity: 0,
-      duration: 1,
-      ease: "power3.out",
-      scrollTrigger: {
-        trigger: aboutSectionRef.current,
-        start: "top 80%",
-      },
-    })
-
-    gsap.from(textRef.current, {
-      x: 100,
-      opacity: 0,
-      duration: 1,
-      ease: "power3.out",
-      scrollTrigger: {
-        trigger: aboutSectionRef.current,
-        start: "top 80%",
-      },
-    })
-
-    // Experience section animations
-    gsap.from(experienceRef.current?.children || [], {
-      y: 60,
-      opacity: 0,
-      duration: 1,
-      stagger: 0.3,
-      ease: "power3.out",
-      scrollTrigger: {
-        trigger: experienceRef.current,
-        start: "top 80%",
-      },
-    })
-
-    gsap.from(journeyRef.current?.children || [], {
-      y: 50,
-      opacity: 0,
-      duration: 0.8,
-      stagger: 0.2,
-      ease: "power3.out",
-      scrollTrigger: {
-        trigger: journeyRef.current,
-        start: "top 90%",
-      },
-    })
-
-    // Cleanup
-    return () => {
-      ScrollTrigger.getAll().forEach((trigger) => trigger.kill())
-    }
-  }, [])
 
   const journeySteps = [
     {
       step: "01",
-      title: "Tư vấn & Đánh giá",
-      description: "Chuyên gia sẽ tư vấn và đánh giá tình trạng da, cơ thể để đưa ra liệu trình phù hợp nhất",
+      title: "Chọn khóa học phù hợp",
+      description: "Khám phá danh mục khóa học đa dạng từ cơ bản đến nâng cao. Đội ngũ tư vấn sẽ giúp bạn lựa chọn lộ trình học tập phù hợp với mục tiêu và nền tảng của bạn",
     },
     {
       step: "02",
-      title: "Chuẩn bị & Thư giãn",
-      description: "Thay đồ trong phòng riêng tư, thưởng thức trà thảo mộc và thư giãn trong không gian yên tĩnh",
+      title: "Đăng ký & Bắt đầu học",
+      description: "Đăng ký dễ dàng chỉ trong vài bước. Truy cập ngay vào nền tảng học tập hiện đại với tài liệu đầy đủ và bài giảng chất lượng cao",
     },
     {
       step: "03",
-      title: "Trải nghiệm Liệu trình",
-      description: "Tận hưởng liệu trình được cá nhân hóa với sự chăm sóc tận tâm từ therapist chuyên nghiệp",
+      title: "Học tập & Thực hành",
+      description: "Học theo tiến độ linh hoạt với video bài giảng, bài tập thực hành và dự án thực tế. Được hỗ trợ 24/7 từ giảng viên và cộng đồng học viên",
     },
     {
       step: "04",
-      title: "Nghỉ ngơi & Tư vấn",
-      description: "Nghỉ ngơi sau liệu trình, nhận tư vấn chăm sóc tại nhà và lên lịch hẹn tiếp theo",
+      title: "Nhận chứng chỉ & Phát triển",
+      description: "Hoàn thành khóa học và nhận chứng chỉ được công nhận. Tiếp tục phát triển sự nghiệp với sự hỗ trợ việc làm và cập nhật kiến thức liên tục",
     },
   ]
 
   return (
     <div className="min-h-screen bg-white">
       {/* About Section */}
-      <section ref={aboutSectionRef} className="py-20 bg-white">
+      <section className="py-20 bg-white">
         <div className="container mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Image */}
-            <div ref={imageRef} className="relative">
+            <div className="relative">
               <div className="relative overflow-hidden rounded-lg shadow-2xl">
                 <img
-                  src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
-                  alt="SpaConnect Interior"
+                  src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
+                  alt="EduPro Learning Platform"
                   className="w-full h-[600px] object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/20 to-transparent"></div>
-              </div>
-
-              {/* Floating Stats Card */}
-              <div className="absolute -bottom-8 -right-8 bg-white p-6 shadow-2xl rounded-lg">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-blue-600 mb-1">{averageRating.toFixed(1)}</div>
-                  <div className="flex justify-center mb-2">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className={`w-4 h-4 ${i < Math.round(averageRating) ? "text-yellow-400 fill-current" : "text-gray-300"}`} />
-                    ))}
-                  </div>
-                  <div className="text-sm text-gray-600">Customer Rating ({reviewCount})</div>
-                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-blue-900/30 to-transparent"></div>
               </div>
             </div>
 
             {/* Content */}
-            <div ref={textRef} className="space-y-8">
+            <div className="space-y-8">
               <div>
-                <div className="text-blue-600 text-sm tracking-[0.3em] uppercase font-medium mb-4">About Us</div>
+                <div className="text-blue-600 text-sm tracking-[0.3em] uppercase font-medium mb-4">Về Chúng Tôi</div>
                 <h2 className="text-4xl md:text-5xl font-light text-slate-800 mb-6 leading-tight">
-                  Trải nghiệm spa
+                  Học lập trình tại
                   <br />
-                  <span className="text-blue-600">đẳng cấp quốc tế</span>
+                  <span className="text-blue-600">EduPro</span>
                 </h2>
               </div>
 
               <div className="space-y-6 text-gray-600 leading-relaxed">
                 <p className="text-lg">
-                  SpaConnect là điểm đến lý tưởng cho những ai tìm kiếm sự cân bằng hoàn hảo giữa thư giãn và chăm sóc sắc
-                  đẹp. Chúng tôi kết hợp tinh hoa của các liệu pháp truyền thống phương Đông với công nghệ hiện đại.
+                  EduPro là nền tảng học lập trình mang đến cho bạn cơ hội tiếp cận với các khóa học 
+                  chất lượng cao từ cơ bản đến nâng cao. Chúng tôi cam kết giúp bạn phát triển kỹ năng lập trình và 
+                  thăng tiến trong sự nghiệp.
                 </p>
 
                 <p>
-                  Không gian được thiết kế theo phong cách tối giản Nhật Bản, tạo ra một môi trường yên tĩnh và thanh
-                  khiết. Mỗi chi tiết đều được chăm chút kỹ lưỡng để mang đến trải nghiệm thư giãn tuyệt đối.
+                  Với đội ngũ giảng viên giàu kinh nghiệm và phương pháp giảng dạy hiện đại, chúng tôi tạo ra một môi 
+                  trường học tập tích cực và hiệu quả. Mỗi khóa học được thiết kế kỹ lưỡng với nội dung cập nhật và 
+                  bài tập thực hành phong phú.
                 </p>
 
                 <p>
-                  Đội ngũ therapist chuyên nghiệp của chúng tôi được đào tạo bài bản về các kỹ thuật massage và chăm sóc
-                  da tiên tiến, cam kết mang đến dịch vụ chất lượng cao nhất cho mỗi khách hàng.
-                </p>
-
-                <p>
-                  Tại SpaConnect, chúng tôi tin rằng việc chăm sóc bản thân không chỉ là một dịch vụ mà còn là một hành
-                  trình khám phá và nuôi dưỡng sự cân bằng giữa cơ thể, tâm trí và tinh thần.
+                  Tại EduPro, chúng tôi tin rằng việc học lập trình không chỉ là học code, mà còn là phát triển tư duy 
+                  logic, giải quyết vấn đề và sáng tạo. Đó là lý do chúng tôi xây dựng các khóa học toàn diện, kết hợp 
+                  lý thuyết vững chắc với thực hành dự án thực tế.
                 </p>
               </div>
 
               <div className="pt-4">
                 <div className="w-16 h-px bg-blue-400 mb-4"></div>
-                <p className="text-sm text-gray-500 italic">&quot;Nơi cơ thể và tâm hồn tìm thấy sự cân bằng hoàn hảo&quot;</p>
+                <p className="text-sm text-gray-500 italic">&quot; Thứ khiến ta đánh mất giấc mơ nhiều hơn đó là sự do dự, hơn là thất bại <br /> Vậy nên còn chần chờ gì nữa!!! &quot;</p>
               </div>
             </div>
           </div>
@@ -183,55 +98,70 @@ const About = () => {
       {/* Experience Section */}
       <section className="py-20 bg-slate-50">
         <div className="container mx-auto px-6">
-          {/* Section Header */}
           <div className="text-center mb-16">
-            <div className="text-blue-600 text-sm tracking-[0.3em] uppercase font-medium mb-4">Our Experience</div>
-            <h3 className="text-4xl font-light text-slate-800 mb-4">Trải nghiệm đẳng cấp</h3>
+            <div className="text-blue-600 text-sm tracking-[0.3em] uppercase font-medium mb-4">Trải Nghiệm Học Tập</div>
+            <h3 className="text-4xl font-light text-slate-800 mb-4">Phương pháp học hiệu quả</h3>
             <div className="w-16 h-px bg-blue-400 mx-auto"></div>
           </div>
 
-          <div ref={experienceRef} className="grid lg:grid-cols-2 gap-12">
-            {/* Không gian thư giãn */}
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Khóa học chất lượng */}
             <div className="text-center bg-white rounded-lg shadow-lg p-8 hover:shadow-xl transition-shadow duration-300">
               <div className="relative mb-8 overflow-hidden rounded-lg">
                 <img
-                  src="https://easysalon.vn/wp-content/uploads/2020/09/hinh-anh-trang-tri-spa-2.jpg"
-                  alt="SpaConnect Không gian thư giãn"
-                  className="w-full h-[300px] object-cover hover:scale-105 transition-transform duration-500"
+                  src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                  alt="Khóa học chất lượng cao"
+                  className="w-full h-[250px] object-cover hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/20 to-transparent"></div>
               </div>
 
-              <h4 className="text-3xl font-light text-slate-800 mb-6">Không gian thư giãn</h4>
-              <div className="w-16 h-px bg-blue-400 mx-auto mb-6"></div>
+              <h4 className="text-2xl font-light text-slate-800 mb-4">Khóa học chất lượng</h4>
+              <div className="w-16 h-px bg-blue-400 mx-auto mb-4"></div>
 
-              <p className="text-gray-600 leading-relaxed text-lg">
-                Mỗi giác quan của bạn sẽ được chăm sóc và xoa dịu: âm thanh của nước chảy róc rách, hương thơm của tinh
-                dầu thiên nhiên hay túi thảo dược ấm áp. Đôi mắt bạn sẽ đắm chìm trong không gian độc đáo, vị giác được
-                thưởng thức trà thảo mộc ấm nóng và cơ thể được chăm sóc bởi những chuyên gia massage tài năng nhất...
-                tất cả trong sự riêng tư và thoải mái của phòng trị liệu cá nhân.
+              <p className="text-gray-600 leading-relaxed">
+                Nội dung khóa học được cập nhật liên tục theo xu hướng công nghệ mới nhất. Video bài giảng Full HD, 
+                tài liệu đầy đủ và bài tập thực hành phong phú giúp bạn nắm vững kiến thức.
               </p>
             </div>
 
-            {/* Chuyên gia trị liệu */}
+            {/* Giảng viên giàu kinh nghiệm */}
             <div className="text-center bg-white rounded-lg shadow-lg p-8 hover:shadow-xl transition-shadow duration-300">
               <div className="relative mb-8 overflow-hidden rounded-lg">
                 <img
-                  src="https://images.unsplash.com/photo-1544161515-4ab6ce6db874?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                  alt="Chuyên gia trị liệu SpaConnect"
-                  className="w-full h-[300px] object-cover hover:scale-105 transition-transform duration-500"
+                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                  alt="Giảng viên chuyên nghiệp"
+                  className="w-full h-[250px] object-cover hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/20 to-transparent"></div>
               </div>
 
-              <h4 className="text-3xl font-light text-slate-800 mb-6">Chuyên gia trị liệu</h4>
-              <div className="w-16 h-px bg-blue-400 mx-auto mb-6"></div>
+              <h4 className="text-2xl font-light text-slate-800 mb-4">Giảng viên chuyên nghiệp</h4>
+              <div className="w-16 h-px bg-blue-400 mx-auto mb-4"></div>
 
-              <p className="text-gray-600 leading-relaxed text-lg">
-                Mỗi chuyên gia massage của chúng tôi đều được đào tạo chuyên nghiệp và có kinh nghiệm dày dặn. Sau khi
-                hoàn thành khóa đào tạo lý thuyết và thực hành kéo dài 300 giờ, mỗi chuyên gia đều được cấp chứng chỉ
-                bởi Bộ Y tế. Tất cả các liệu trình đều sử dụng kỹ thuật chuẩn hóa để đảm bảo chất lượng massage cao nhất
-                với hiệu quả giảm stress được đảm bảo.
+              <p className="text-gray-600 leading-relaxed">
+                Đội ngũ giảng viên  có nhiều năm kinh nghiệm thực tế tại các công ty công nghệ. 
+                Họ không chỉ dạy lý thuyết mà còn chia sẻ kinh nghiệm thực tế quý báu.
+              </p>
+            </div>
+
+            {/* Hỗ trợ 24/7 */}
+            <div className="text-center bg-white rounded-lg shadow-lg p-8 hover:shadow-xl transition-shadow duration-300">
+              <div className="relative mb-8 overflow-hidden rounded-lg">
+                <img
+                  src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                  alt="Hỗ trợ học viên"
+                  className="w-full h-[250px] object-cover hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/20 to-transparent"></div>
+              </div>
+
+              <h4 className="text-2xl font-light text-slate-800 mb-4">Hỗ trợ 24/7</h4>
+              <div className="w-16 h-px bg-blue-400 mx-auto mb-4"></div>
+
+              <p className="text-gray-600 leading-relaxed">
+                Cộng đồng học viên sôi động và đội ngũ mentor luôn sẵn sàng hỗ trợ bạn mọi lúc mọi nơi. 
+                Giải đáp thắc mắc nhanh chóng, review code và hướng dẫn chi tiết.
               </p>
             </div>
           </div>
@@ -242,20 +172,20 @@ const About = () => {
       <section className="py-20 bg-white">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <div className="text-blue-600 text-sm tracking-[0.3em] uppercase font-medium mb-4">Your Journey</div>
-            <h3 className="text-4xl font-light text-slate-800 mb-4">Hành trình trải nghiệm tại SpaConnect</h3>
+            <div className="text-blue-600 text-sm tracking-[0.3em] uppercase font-medium mb-4">Hành Trình Học Tập</div>
+            <h3 className="text-4xl font-light text-slate-800 mb-4">4 bước để trở thành lập trình viên</h3>
             <div className="w-16 h-px bg-blue-400 mx-auto"></div>
           </div>
 
-          <div ref={journeyRef} className="max-w-4xl mx-auto">
+          <div className="max-w-4xl mx-auto">
             {journeySteps.map((step, index) => (
               <div key={index} className="flex items-start mb-12 last:mb-0">
                 <div className="flex-shrink-0 mr-8">
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-teal-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     {step.step}
                   </div>
                 </div>
-                <div className="flex-grow">
+                <div className="flex-grow pt-2">
                   <h4 className="text-2xl font-semibold text-slate-800 mb-3">{step.title}</h4>
                   <p className="text-gray-600 leading-relaxed text-lg">{step.description}</p>
                 </div>
@@ -269,45 +199,63 @@ const About = () => {
       <section className="py-20 bg-slate-50">
         <div className="container mx-auto px-6">
           <div className="max-w-4xl mx-auto text-center">
-            <div className="text-blue-600 text-sm tracking-[0.3em] uppercase font-medium mb-4">Our Philosophy</div>
-            <h3 className="text-4xl font-light text-slate-800 mb-8">Triết lý chăm sóc toàn diện</h3>
+            <div className="text-blue-600 text-sm tracking-[0.3em] uppercase font-medium mb-4">Triết Lý Giáo Dục</div>
+            <h3 className="text-4xl font-light text-slate-800 mb-8">Phát triển toàn diện kỹ năng lập trình</h3>
 
             <div className="grid md:grid-cols-3 gap-8 mt-12">
               <div className="text-center bg-white rounded-lg p-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
-                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-100 to-teal-100 rounded-full flex items-center justify-center">
-                  <div className="w-8 h-8 bg-blue-600 rounded-full"></div>
+                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-100 to-blue-50 rounded-full flex items-center justify-center">
+                  <BookOpen className="w-10 h-10 text-blue-600" />
                 </div>
-                <h4 className="text-xl font-medium text-slate-800 mb-3">Cân bằng</h4>
+                <h4 className="text-xl font-medium text-slate-800 mb-3">Học không giới hạn</h4>
                 <p className="text-gray-600 leading-relaxed">
-                  Tạo sự hài hòa giữa cơ thể, tâm trí và tinh thần thông qua các liệu pháp chuyên sâu
+                  Truy cập trọn đời tất cả khóa học đã đăng ký. Học mọi lúc mọi nơi với tốc độ phù hợp với bạn
                 </p>
               </div>
 
               <div className="text-center bg-white rounded-lg p-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
-                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-100 to-teal-100 rounded-full flex items-center justify-center">
-                  <div className="w-8 h-8 bg-teal-600 rounded-full"></div>
+                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-100 to-blue-50 rounded-full flex items-center justify-center">
+                  <Target className="w-10 h-10 text-blue-600" />
                 </div>
-                <h4 className="text-xl font-medium text-slate-800 mb-3">Tái tạo</h4>
+                <h4 className="text-xl font-medium text-slate-800 mb-3">Thực hành thực tế</h4>
                 <p className="text-gray-600 leading-relaxed">
-                  Phục hồi năng lượng và sức sống tự nhiên bằng các phương pháp trị liệu hiện đại
+                  Làm việc với dự án thực tế, xây dựng portfolio ấn tượng để sẵn sàng cho thị trường việc làm
                 </p>
               </div>
 
               <div className="text-center bg-white rounded-lg p-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
-                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-100 to-teal-100 rounded-full flex items-center justify-center">
-                  <div className="w-8 h-8 bg-cyan-600 rounded-full"></div>
+                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-100 to-blue-50 rounded-full flex items-center justify-center">
+                  <Award className="w-10 h-10 text-blue-600" />
                 </div>
-                <h4 className="text-xl font-medium text-slate-800 mb-3">Thăng hoa</h4>
+                <h4 className="text-xl font-medium text-slate-800 mb-3">Chứng chỉ công nhận</h4>
                 <p className="text-gray-600 leading-relaxed">
-                  Nâng tầm trải nghiệm chăm sóc bản thân lên một đẳng cấp hoàn toàn mới
+                  Nhận chứng chỉ hoàn thành khóa học được các doanh nghiệp công nhận và đánh giá cao
                 </p>
               </div>
             </div>
           </div>
         </div>
       </section>
+
+<section className="py-20 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+      <div className="container mx-auto px-6 text-center">
+        <h3 className="text-4xl font-light mb-6">Sẵn sàng bắt đầu hành trình của bạn?</h3>
+        <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+          Tham gia cùng hàng chục nghìn học viên đang học tập và phát triển tại EduPro
+        </p>
+        <button
+          onClick={() => {
+  navigate("/courses");
+  window.scrollTo(0, 0);
+}}
+          className="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-blue-50 transition-colors duration-300 shadow-lg"
+        >
+          Khám phá khóa học ngay
+        </button>
+      </div>
+    </section>
     </div>
   )
 }
 
-export default About
+export default About 
