@@ -1,15 +1,44 @@
-import mongoose from "mongoose";
+import mongoose, { Document } from "mongoose";
 
-const lessonSchema = new mongoose.Schema(
+export interface ILesson {
+
+  sectionId: mongoose.Types.ObjectId;
+  courseId: mongoose.Types.ObjectId;
+  title: string;
+  description?: string;
+
+  type: "video" | "article" | "quiz";
+
+  order: number;
+
+  // video specific
+  videoUrl?: string;
+  videoDuration?: number; // in seconds
+  isPreviewed?: boolean;
+  isFree?: boolean;
+
+  isPublished?: boolean;
+  isDeleted?: boolean;
+
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface ILessonDocument extends ILesson, Document {
+  // custom methods (if any)
+  isAccessible(userPurchasedCourses: string[]): boolean;
+  formattedDuration(): string;
+}
+const lessonSchema = new mongoose.Schema<ILessonDocument>(
   {
-    moduleId: {
+    sectionId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Module",
+      ref: "Sections",
       required: true,
     },
     courseId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Course",
+      ref: "Courses",
       required: true,
     },
     title: { type: String, required: true, trim: true },
@@ -18,19 +47,17 @@ const lessonSchema = new mongoose.Schema(
     videoUrl: { type: String, required: true },
     videoDuration: { type: Number, required: true, min: 0 }, // giây
     isFree: { type: Boolean, default: false },
-    resources: [
-      {
-        name: { type: String, required: true },
-        url: { type: String, required: true },
-        type: {
-          type: String,
-          enum: ["pdf", "code", "slides", "other"],
-          default: "other",
-        },
-      },
-    ],
+
+    type: {
+      type: String,
+      enum: ["video", "article", "quiz"],
+      required: true,
+    },
+    isPublished: { type: Boolean, default: false },
+    isDeleted: { type: Boolean, default: false },
+    isPreviewed: { type: Boolean, default: false },
   },
-  { collection: "Lessons", timestamps: true }
+  { collection: "Lesson", timestamps: true }
 );
 
 // Indexes

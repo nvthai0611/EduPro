@@ -449,6 +449,17 @@ const CourseManagement = () => {
                               </Button>
                             </>
                           )}
+                          
+                          {(course.status === 'published' || course.status === 'approved') && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleToggleDelete(course)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              Ẩn
+                            </Button>
+                          ) }
                           {(course.status === 'approved' || course.status === 'rejected') && (
                             <Button
                               variant="ghost"
@@ -463,16 +474,7 @@ const CourseManagement = () => {
                               <MessageSquare className="w-4 h-4" />
                             </Button>
                           )}
-                          {course.status === 'published' && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleToggleDelete(course)}
-                            >
-                              Ẩn
-                            </Button>
-                          )}
-                          {course?.status !== 'pending' && (
+                          {/* {course?.status !== 'pending' && (
                             <Button
                               variant="ghost"
                               size="sm"
@@ -481,7 +483,7 @@ const CourseManagement = () => {
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
-                          )}
+                          )} */}
                         </div>
                       </td>
                     </tr>

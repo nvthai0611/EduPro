@@ -16,4 +16,8 @@ router.post("/", createCourse);
 router.get("/:id", getCourseById);
 router.get("/manager/:managerId", getCoursesByManager);
 
+
+// Section Management
+
+
 export const courseAdminRoutes: Router = router;
