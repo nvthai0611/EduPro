@@ -1,25 +1,9 @@
 import { Router, Request, Response } from "express";
 import passport from "passport";
 
-import * as authController from "../../../controllers/v1/auth/auth.controller";
-import {
-  createAccessToken,
-  decodeToken,
-  refreshAccessToken,
-} from "../../../utils/jwt";
-import UserTransformer from "../../../modules/user/user.transformers";
+import {createAccessToken} from "../../../utils/jwt";
 
 const router: Router = Router();
-
-// ===============================
-//        FORGOT PASSWORD
-// ===============================
-router.post("/forgot-password-email", authController.sendLinkResetPassword);
-
-router.post(
-  "/confirm-reset-password",
-  authController.confirmEmailResetPassword
-);
 
 // ===============================
 //        GOOGLE AUTH
@@ -55,13 +39,6 @@ router.get(
         role: (req.user as any).role || "customer",
         image: (req.user as any).image,
       });
-
-      const refreshToken = await refreshAccessToken();
-
-      // FIX: Truyền user vào transformer
-      const user_parse = new UserTransformer(req.user).response(
-        req.user as any
-      );
 
       const isProduction = process.env.NODE_ENV === "production";
 

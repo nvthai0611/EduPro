@@ -4,8 +4,8 @@ const changePassword = async (oldPassword, newPassword) => {
     return apiClient.put('/users/change-password', { oldPassword, newPassword });
 }
 
-const getUserProfile = async () => {
-    return apiClient.get('/users/user-profile');
+const getUserProfile = async (id) => {
+    return apiClient.get(`/users/user-profile/${id}`);
 }
 
 const changeImageProfile = async (image) => {
