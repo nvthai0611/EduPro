@@ -1,17 +1,8 @@
 import { Router } from 'express';
 import { userController } from '../../modules/user/user.controller';
-import authenticateToken from '../../middlewares/auth/authenticateToken';
-import { roleController } from '../../modules/role/role.controller';
 
 const router = Router();
 
-router.use(authenticateToken);
-
-router.get('/', userController.getAllUsers);
-router.get('/:id', userController.getUserById);
-router.put('/:id', userController.updateUser);
-router.delete('/:id', userController.deleteUser);
-router.post('/addUser', userController.addUser);
-router.get('/role/getAll', roleController.getAllRoles);
+router.get('/user-profile/:id', userController.getUserById);
 
 export const userRoutes: Router = router;

@@ -1,20 +1,14 @@
 import UserService from "../../modules/user/user.service";
-// import { findOne } from "../../models/blacklist.model";
+import { Request, Response, NextFunction } from "express";
 import { decodeToken } from "../../utils/jwt";
 import { errorResponse } from "../../utils/response";
 
-const authenticateToken = async (req, res, next) => {
+const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const accessToken = req.cookies?.render_id;
     if (!accessToken) {
       return errorResponse(res, {}, 401, "Token không hợp lệ hoặc không được cung cấp");
     }
-
-    // Check if token is blacklisted
-    // const tokenBlackList = await findOne({ token: accessToken });
-    // if (tokenBlackList) {
-    //   return errorResponse(res, {}, 401, "Token đã bị vô hiệu hóa");
-    // }
 
     // Verify token
     const decode = await decodeToken(accessToken);

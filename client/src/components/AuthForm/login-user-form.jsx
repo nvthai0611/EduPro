@@ -47,7 +47,7 @@ export default function LoginUserForm() {
                     <div className="flex flex-col items-center text-center">
                       <h1 className="text-2xl font-bold">Chào mừng trở lại</h1>
                       <p className="text-balance text-muted-foreground">
-                        Đăng nhập vào tài khoản Haei Spa của bạn
+                        Đăng nhập vào tài khoản EduPro của bạn
                       </p>
                     </div>
 
@@ -148,8 +148,8 @@ export default function LoginUserForm() {
 
                 <div className="relative hidden bg-muted md:block">
                   <img
-                    src="https://tse1.mm.bing.net/th/id/OIP.sa4D3jdX-lCKsoZMLW9DuAHaFj?pid=Api&P=0&h=180"
-                    alt="Haei Spa"
+                    src="https://img.freepik.com/free-vector/student-graduation-cap-using-computer-desk_1262-21421.jpg?t=st=1764509112~exp=1764512712~hmac=c3a2315bfbc55fc5492c3e8f963355e23d3d3177e3699e3a8727f2a1d3900e84&w=1480"
+                    alt="EduPro"
                     className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
                   />
                 </div>

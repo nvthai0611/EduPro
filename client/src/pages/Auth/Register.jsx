@@ -585,7 +585,7 @@ export default function ModernRegisterForm() {
                     <CheckCircle className="w-16 h-16 text-green-500 mx-auto animate-bounce" />
                   </div>
                   <h2 className="text-2xl font-bold text-gray-800 mb-2">Đăng ký thành công!</h2>
-                  <p className="text-gray-600 mb-6">Chào mừng bạn đến với Haei Spa</p>
+                  <p className="text-gray-600 mb-6">Chào mừng bạn đến với EduPro</p>
                   <Button className="w-full bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white font-semibold py-3 rounded-xl transition-all duration-300 transform hover:scale-105">
                     <Link to="/dang-nhap" className="flex items-center justify-center gap-2">
                       <Sparkles className="w-4 h-4" />
@@ -608,7 +608,7 @@ export default function ModernRegisterForm() {
                     <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                       Tạo tài khoản mới
                     </h1>
-                    <p className="text-gray-600 mt-2">Đăng ký để trải nghiệm dịch vụ Haei Spa</p>
+                    <p className="text-gray-600 mt-2">Đăng ký để trải nghiệm các dịch vụ của EduPro</p>
                   </div>
 
                   <div className="space-y-6">

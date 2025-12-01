@@ -17,10 +17,15 @@ export interface ICourse {
   discountPrice?: number;
   currency?: string;
   
-  status: "draft" | "published" | "approved" | "pending" | "rejected";
+  status: "draft" | "pending" | "approved" | "published" | "rejected";
   isPublished?: boolean;
   isPublic?: boolean;
   isFeatured?: boolean;
+  
+  // Approval workflow fields
+  approvalMessage?: string;
+  submittedAt?: Date;
+  submittedBy?: Types.ObjectId;
   
   language?: string;
   duration?: number;
@@ -97,22 +102,33 @@ const courseSchema = new Schema<ICourseDocument>(
     
     status: {
       type: String,
-      enum: ["draft", "published", "approved", "pending", "rejected"],
+      enum: ["draft", "pending", "approved", "published", "rejected"],
       default: "draft",
     },
+    
+    // Approval workflow fields
+    approvalMessage: { type: String, trim: true },
+    submittedAt: { type: Date },
+    submittedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+    
     // isPublished: { type: Boolean, default: false },
     // isPublic: { type: Boolean, default: true },
     // isFeatured: { type: Boolean, default: false },
+
+    isFeatured: { type: Boolean, default: false },
     
-    // language: { type: String, default: "Vietnamese" },
-    // duration: { type: Number, default: 0 },
-    // totalDuration: { type: Number, default: 0 },
-    // totalLessons: { type: Number, default: 0 },
-    // totalStudents: { type: Number, default: 0 },
-    // totalReviews: { type: Number, default: 0 },
-    // averageRating: { type: Number, default: 0, min: 0, max: 5 },
-    // rating: { type: Number, default: 5, min: 1, max: 5 },
-    // reviewCount: { type: Number, default: 0 },
+    language: { type: String, default: "vi" },
+    duration: { type: Number, default: 0 },
+    totalDuration: { type: Number, default: 0 },
+    totalLessons: { type: Number, default: 0 },
+    totalStudents: { type: Number, default: 0 },
+    totalReviews: { type: Number, default: 0 },
+    averageRating: { type: Number, default: 0, min: 0, max: 5 },
+    rating: { type: Number, default: 5, min: 1, max: 5 },
+    reviewCount: { type: Number, default: 0 },
     
     // modules: [{
     //   type: Schema.Types.ObjectId,
@@ -122,12 +138,12 @@ const courseSchema = new Schema<ICourseDocument>(
     //   type: Schema.Types.ObjectId,
     //   ref: "Lesson",
     // }],
-    // requirements: [{ type: String, trim: true }],
-    // whatYouWillLearn: [{ type: String, trim: true }],
-    // targetAudience: [{ type: String, trim: true }],
+    requirements: [{ type: String, trim: true }],
+    whatYouWillLearn: [{ type: String, trim: true }],
+    targetAudience: [{ type: String, trim: true }],
     
-    // tags: [{ type: String, trim: true }],
-    // certificateAvailable: { type: Boolean, default: false },
+    tags: [{ type: String, trim: true }],
+    certificateAvailable: { type: Boolean, default: false },
     
     reviewNote: { type: String, trim: true },
     adminNote: { type: String, trim: true },
@@ -167,7 +183,6 @@ courseSchema.pre("save", async function (next) {
 });
 
 // Indexes
-courseSchema.index({ slug: 1 });
 courseSchema.index({ instructorId: 1 });
 courseSchema.index({ category: 1, status: 1 });
 courseSchema.index({ isFeatured: 1, status: 1 });

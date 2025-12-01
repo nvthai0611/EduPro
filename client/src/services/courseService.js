@@ -2,10 +2,10 @@ import { apiClient } from '../utils/clientAxios';
 
 export const courseService = {
   // Lấy danh sách khóa học
-  getCourses: async () => {
+  getCourses: async (params) => {
     try {
       // apiClient.get(url, params) - params là tham số thứ 2
-      const response = await apiClient.get('/courses');
+      const response = await apiClient.get('/courses', { params });
       console.log('getCourses response:', response);
       return response;
     } catch (error) {

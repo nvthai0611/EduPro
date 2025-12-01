@@ -7,11 +7,12 @@ import {
   getCoursesByManager,
   updateCourse,
   deleteCourse,
-  submitCourseForReview,
+  submitCourseForApproval,
   reviewCourse,
   getCourseDetails,
 } from "../../../modules/course/course.controller";
 import { Router } from "express";
+import authenticateToken from "../../../middlewares/auth/authenticateToken";
 
 const router: Router = Router();
 
@@ -23,15 +24,15 @@ router.get("/slug/:slug", getCourseBySlug);
 router.get("/instructor/:instructorId", getAllCoursesByInstructor);
 router.get("/manager/:managerId", getCoursesByManager);
 
-// Protected routes (add auth middleware later)
-router.post("/", createCourse);
+// Protected routes (require authentication)
+router.post("/", authenticateToken, createCourse);
+router.patch("/:id", authenticateToken, updateCourse);
+router.delete("/:id", authenticateToken, deleteCourse);
+router.post("/:id/submit", authenticateToken, submitCourseForApproval);
+router.patch("/:id/review", authenticateToken, reviewCourse);
 
 // Dynamic routes (must be last)
 router.get("/:id", getCourseById);
 router.get("/:id/details", getCourseDetails);
-router.patch("/:id", updateCourse);
-router.delete("/:id", deleteCourse);
-router.patch("/:id/submit", submitCourseForReview);
-router.patch("/:id/review", reviewCourse);
 
 export const courseRoutes: Router = router;

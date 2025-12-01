@@ -33,14 +33,11 @@ export const publicRoutes = (
       <Route element={<DefaultLayout />}>
         <Route path="/" element={<CourseList />} />
         <Route path="/about" element={<About />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/tai-khoan" element={<Profile />} />
         <Route path="/advisory" element={<AdvisoryPage />} />
         {/* Course Routes */}
         <Route path="/courses">
           <Route index element={<CourseList />} />
           <Route path="category/:categorySlug" element={<CourseList />} />
-          <Route path="learn/:slug" element={<CourseLearnDetail />} />
           <Route path=":slug" element={<CourseDetail />} />
         </Route>
       </Route>

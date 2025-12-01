@@ -1,8 +1,8 @@
 // src/routes/role.routes.ts
 
 import { Router } from 'express';
-import { roleController } from '../../modules/role/role.controller';
-import authenticateToken from '../../middlewares/auth/authenticateToken';
+import { roleController } from '../../../modules/role/role.controller';
+import authenticateToken from '../../../middlewares/auth/authenticateToken';
 
 const router = Router();
 
@@ -16,4 +16,4 @@ router.post('/', roleController.createRole);
 router.put('/:id', roleController.updateRole);
 router.delete('/:id', roleController.deleteRole);
 
-export const roleRoutes: Router = router;
+export const roleAdminRoutes: Router = router;

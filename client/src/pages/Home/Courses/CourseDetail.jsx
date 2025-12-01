@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
 import {
   Star,
   Users,
@@ -17,23 +17,72 @@ import {
   BookOpen,
   Award,
   Target,
-  Users2
-} from 'lucide-react';
-// import { useAuth } from '../../hooks/useAuth';
-import { courseService } from '../../../services/courseService';
-import { useParams } from 'react-router-dom';
+  Users2,
+} from "lucide-react";
+import { useAuth } from "../../../hooks/useAuth";
+import { courseService } from "../../../services/courseService";
+import * as orderService from "../../../services/user/orderService";
+import { useParams } from "react-router-dom";
+import { id } from "date-fns/locale";
 
 const CourseDetail = () => {
   const { slug } = useParams();
-  // const { user } = useAuth();
+  const { user } = useAuth();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isPurchased, setIsPurchased] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [isPurchased, setIsPurchased] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
+
+  // Chuyển từ data fix cứng thành state
+  const [reviews, setReview] = useState([
+    {
+      id: 1,
+      userName: "Nguyễn Văn A",
+      avatar: "https://i.pravatar.cc/150?img=1",
+      rating: 5,
+      comment: "Khóa học rất hay, giảng viên giảng rất dễ hiểu",
+      date: "30-11-2025",
+    },
+    {
+      id: 2,
+      userName: "Nguyễn Thị B",
+      avatar: "https://i.pravatar.cc/150?img=2",
+      rating: 4,
+      comment: "Nội dung đầy đủ, nhưng tốc độ còn nhanh",
+      date: "28-11-2025",
+    },
+  ]);
+
+  // State cho form nhập liệu
+  const [userName, setUserName] = useState("");
+  const [comment, setComment] = useState("");
+  const [rating, setRating] = useState(0);
+
+  // Submit function
+  const handleSubmit = () => {
+    if (!userName || !comment || rating === 0) {
+      alert("Vui lòng nhập đầy đủ thông tin");
+      return;
+    }
+
+    const newReview = {
+      id: reviews.length + 1,
+      userName,
+      avatar: "https://i.pravatar.cc/150?img=" + Math.floor(Math.random() * 70),
+      rating,
+      comment,
+      date: new Date().toLocaleDateString("vi-VN"),
+    };
+
+    setReview([...reviews, newReview]);
+    setUserName("");
+    setComment("");
+    setRating(0);
+  };
 
   useEffect(() => {
     fetchCourseDetail();
-  }, [slug]);
+  }, [slug, user]);
 
   const fetchCourseDetail = async () => {
     try {
@@ -43,24 +92,26 @@ const CourseDetail = () => {
       setCourse(response.data);
 
       // Check if user has purchased this course
-      // if (user) {
-      //   const hasPurchased = await courseService.checkPurchase(response.data._id);
-      //   setIsPurchased(hasPurchased);
-      // }
-
+      if (user) {
+        const hasPurchased = await orderService.checkPurchase(
+          user?.userId,
+          response.data._id
+        );
+        setIsPurchased(hasPurchased.purchased);
+      }
     } catch (error) {
-      console.error('Error fetching course detail:', error);
+      console.error("Error fetching course detail:", error);
     } finally {
       setLoading(false);
     }
   };
 
   const handlePurchase = () => {
-    // if (!user) {
-    //   // Redirect to login
-    //   window.location.href = '/dang-nhap';
-    //   return;
-    // }
+    if (!user) {
+      // Redirect to login
+      window.location.href = "/dang-nhap";
+      return;
+    }
 
     // Redirect to checkout
     window.location.href = `/checkout?course=${course._id}`;
@@ -81,10 +132,10 @@ const CourseDetail = () => {
   };
 
   const formatPrice = (price) => {
-    if (price === 0) return 'Miễn phí';
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
+    if (price === 0) return "Miễn phí";
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
     }).format(price);
   };
 
@@ -98,13 +149,20 @@ const CourseDetail = () => {
   };
 
   const getTotalLessons = () => {
-    return course?.modules?.reduce((total, module) => total + module.lessons.length, 0) || 0;
+    return (
+      course?.modules?.reduce(
+        (total, module) => total + module.lessons.length,
+        0
+      ) || 0
+    );
   };
 
   const getPreviewLessons = () => {
-    return course?.modules?.flatMap(module =>
-      module.lessons.filter(lesson => lesson.isFree)
-    ) || [];
+    return (
+      course?.modules?.flatMap((module) =>
+        module.lessons.filter((lesson) => lesson.isFree)
+      ) || []
+    );
   };
 
   if (loading) {
@@ -119,10 +177,10 @@ const CourseDetail = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Khóa học không tồn tại</h2>
-          <Button onClick={() => window.history.back()}>
-            Quay lại
-          </Button>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            Khóa học không tồn tại
+          </h2>
+          <Button onClick={() => window.history.back()}>Quay lại</Button>
         </div>
       </div>
     );
@@ -137,37 +195,45 @@ const CourseDetail = () => {
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <Badge variant="secondary" className="bg-white/20 text-white">
-                  {course.category?.name || 'Lập trình'}
+                  {course.category?.name || "Lập trình"}
                 </Badge>
                 <Badge variant="secondary" className="bg-white/20 text-white">
-                  {course.level === 'beginner' ? 'Cơ bản' :
-                    course.level === 'intermediate' ? 'Trung bình' : 'Nâng cao'}
+                  {course.level === "beginner"
+                    ? "Cơ bản"
+                    : course.level === "intermediate"
+                    ? "Trung bình"
+                    : "Nâng cao"}
                 </Badge>
               </div>
 
-              <h1 className="text-4xl font-bold mb-4">
-                {course.title}
-              </h1>
+              <h1 className="text-4xl font-bold mb-4">{course.title}</h1>
 
-              <p className="text-xl text-blue-100 mb-6">
-                {course.description}
-              </p>
+              <p className="text-xl text-blue-100 mb-6">{course.description}</p>
 
               <div className="flex items-center space-x-6 mb-6">
                 <div className="flex items-center space-x-2">
                   <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                   <span className="text-lg font-semibold">
-                    {course.rating?.toFixed(1) || '5.0'}
+                    {course.rating?.toFixed(1) || "5.0"}
                   </span>
-                  <span className="text-blue-200">({course.reviewCount || 0} đánh giá)</span>
+                  <span className="text-blue-200">
+                    ({course.reviewCount || 0} đánh giá)
+                  </span>
+                  <span className="text-blue-200">
+                    ({course.totalReviews || 0} đánh giá)
+                  </span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Users className="w-5 h-5" />
-                  <span className="text-lg">{course.totalStudents || 0} học viên</span>
+                  <span className="text-lg">
+                    {course.totalStudents || 0} học viên
+                  </span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Clock className="w-5 h-5" />
-                  <span className="text-lg">{formatDuration(course.totalDuration || 0)}</span>
+                  <span className="text-lg">
+                    {formatDuration(course.totalDuration || 0)}
+                  </span>
                 </div>
               </div>
 
@@ -178,15 +244,25 @@ const CourseDetail = () => {
                   onClick={handleStartLearning}
                 >
                   <Play className="w-5 h-5 mr-2" />
-                  {course.price === 0 || isPurchased ? 'Bắt đầu học' : 'Mua khóa học'}
+                  {course.price === 0 || isPurchased
+                    ? "Bắt đầu học"
+                    : "Mua khóa học"}
                 </Button>
 
-                <Button variant="outline" size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="bg-white text-blue-600 hover:bg-gray-100"
+                >
                   <Heart className="w-5 h-5 mr-2" />
                   Yêu thích
                 </Button>
 
-                <Button variant="outline" size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="bg-white text-blue-600 hover:bg-gray-100"
+                >
                   <Share2 className="w-5 h-5 mr-2" />
                   Chia sẻ
                 </Button>
@@ -195,7 +271,7 @@ const CourseDetail = () => {
 
             <div className="relative">
               <img
-                src={course.thumbnail || 'https://via.placeholder.com/600x400'}
+                src={course.thumbnail || "https://via.placeholder.com/600x400"}
                 alt={course.title}
                 className="w-full h-80 object-cover rounded-lg shadow-2xl"
               />
@@ -212,13 +288,13 @@ const CourseDetail = () => {
             {/* Tabs */}
             <div className="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg">
               {[
-                { id: 'overview', label: 'Tổng quan', icon: BookOpen },
-                { id: 'content', label: 'Nội dung', icon: Play },
-                { id: 'reviews', label: 'Đánh giá', icon: Star }
-              ].map(tab => (
+                { id: "overview", label: "Tổng quan", icon: BookOpen },
+                { id: "content", label: "Nội dung", icon: Play },
+                { id: "reviews", label: "Đánh giá", icon: Star },
+              ].map((tab) => (
                 <Button
                   key={tab.id}
-                  variant={activeTab === tab.id ? 'default' : 'ghost'}
+                  variant={activeTab === tab.id ? "default" : "ghost"}
                   className="flex-1"
                   onClick={() => setActiveTab(tab.id)}
                 >
@@ -229,29 +305,33 @@ const CourseDetail = () => {
             </div>
 
             {/* Tab Content */}
-            {activeTab === 'overview' && (
+            {activeTab === "overview" && (
               <div className="space-y-6">
                 {/* What You'll Learn */}
-                {course.whatYouWillLearn && course.whatYouWillLearn.length > 0 && (
-                  <Card>
-                    <CardHeader>
-                      <h3 className="text-xl font-semibold flex items-center">
-                        <Target className="w-5 h-5 mr-2 text-green-600" />
-                        Bạn sẽ học được gì
-                      </h3>
-                    </CardHeader>
-                    <CardContent>
-                      <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        {course.whatYouWillLearn.map((item, index) => (
-                          <li key={index} className="flex items-start space-x-2">
-                            <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                            <span className="text-gray-700">{item}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </CardContent>
-                  </Card>
-                )}
+                {course.whatYouWillLearn &&
+                  course.whatYouWillLearn.length > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <h3 className="text-xl font-semibold flex items-center">
+                          <Target className="w-5 h-5 mr-2 text-green-600" />
+                          Bạn sẽ học được gì
+                        </h3>
+                      </CardHeader>
+                      <CardContent>
+                        <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {course.whatYouWillLearn.map((item, index) => (
+                            <li
+                              key={index}
+                              className="flex items-start space-x-2"
+                            >
+                              <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                              <span className="text-gray-700">{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </CardContent>
+                    </Card>
+                  )}
 
                 {/* Requirements */}
                 {course.requirements && course.requirements.length > 0 && (
@@ -265,7 +345,10 @@ const CourseDetail = () => {
                     <CardContent>
                       <ul className="space-y-2">
                         {course.requirements.map((req, index) => (
-                          <li key={index} className="flex items-start space-x-2">
+                          <li
+                            key={index}
+                            className="flex items-start space-x-2"
+                          >
                             <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
                             <span className="text-gray-700">{req}</span>
                           </li>
@@ -287,7 +370,10 @@ const CourseDetail = () => {
                     <CardContent>
                       <ul className="space-y-2">
                         {course.targetAudience.map((audience, index) => (
-                          <li key={index} className="flex items-start space-x-2">
+                          <li
+                            key={index}
+                            className="flex items-start space-x-2"
+                          >
                             <div className="w-2 h-2 bg-purple-600 rounded-full mt-2 flex-shrink-0"></div>
                             <span className="text-gray-700">{audience}</span>
                           </li>
@@ -299,12 +385,13 @@ const CourseDetail = () => {
               </div>
             )}
 
-            {activeTab === 'content' && (
+            {activeTab === "content" && (
               <Card>
                 <CardHeader>
                   <h3 className="text-xl font-semibold">Nội dung khóa học</h3>
                   <p className="text-gray-600">
-                    {getTotalLessons()} bài học • {formatDuration(course.totalDuration || 0)}
+                    {course.totalLessons} bài học •{" "}
+                    {formatDuration(course.totalDuration || 0)}
                   </p>
                 </CardHeader>
                 <CardContent>
@@ -333,20 +420,29 @@ const CourseDetail = () => {
                                 ) : (
                                   <Lock className="w-4 h-4 text-gray-400" />
                                 )}
-                                <span className="text-gray-900">{lesson.title}</span>
+                                <span className="text-gray-900">
+                                  {lesson.title}
+                                </span>
                                 {lesson.isFree && (
-                                  <Badge variant="secondary" className="text-xs">
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-xs"
+                                  >
                                     Miễn phí
                                   </Badge>
                                 )}
                               </div>
                               <div className="flex items-center space-x-2">
                                 <span className="text-sm text-gray-500">
-                                  {Math.floor(lesson.videoDuration / 60)}:{(lesson.videoDuration % 60).toString().padStart(2, '0')}
+                                  {Math.floor(lesson.videoDuration / 60)}:
+                                  {(lesson.videoDuration % 60)
+                                    .toString()
+                                    .padStart(2, "0")}
                                 </span>
-                                {lesson.resources && lesson.resources.length > 0 && (
-                                  <Download className="w-4 h-4 text-gray-400" />
-                                )}
+                                {lesson.resources &&
+                                  lesson.resources.length > 0 && (
+                                    <Download className="w-4 h-4 text-gray-400" />
+                                  )}
                               </div>
                             </div>
                           ))}
@@ -358,23 +454,121 @@ const CourseDetail = () => {
               </Card>
             )}
 
-            {activeTab === 'reviews' && (
+            {/* Mục đánh giá */}
+            {activeTab === "reviews" && (
               <Card>
                 <CardHeader>
-                  <h3 className="text-xl font-semibold">Đánh giá từ học viên</h3>
+                  <h3 className="text-xl font-semibold">
+                    Đánh giá từ học viên
+                  </h3>
                   <div className="flex items-center space-x-4">
                     <div className="flex items-center space-x-1">
                       <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                      <span className="text-2xl font-bold">{course.rating?.toFixed(1) || '5.0'}</span>
+                      <span className="text-2xl font-bold">
+                        {course.rating?.toFixed(1) || "5.0"}
+                      </span>
                     </div>
                     <span className="text-gray-600">
                       ({course.reviewCount || 0} đánh giá)
                     </span>
                   </div>
                 </CardHeader>
+
+                {/* Hiển thị đánh giá của học viên - Data fix cứng, chỉ hiện thị ở UI, không lưu vào BackEnd */}
                 <CardContent>
-                  <div className="text-center py-8 text-gray-500">
-                    <p>Chức năng đánh giá đang được phát triển</p>
+                  {/* Hiển thị đánh giá của học viên */}
+                  <div className="space-y-6">
+                    {reviews.map((review) => {
+                      return (
+                        <div
+                          key={review.id}
+                          className="flex items-start space-x-4 border-b pb-4"
+                        >
+                          <img
+                            src={review.avatar}
+                            alt={review.userName}
+                            className="w-12 h-12 rounded-full object-cover"
+                          ></img>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-semibold">
+                                {" "}
+                                {review.userName}
+                              </h4>
+                              <span className="text-sm text-gray-500">
+                                {" "}
+                                {review.date}
+                              </span>
+                            </div>
+                            <div className="flex items-center mt-1">
+                              {[...Array(5)].map((_, index) => {
+                                return (
+                                  <Star
+                                    key={index}
+                                    className={
+                                      index < review.rating
+                                        ? "w-4 h-4 fill-yellow-400 text-yellow-400"
+                                        : "w-4 h-4 text-gray-300"
+                                    }
+                                  ></Star>
+                                );
+                              })}
+                            </div>
+                            <p className="text-gray-700 mt-2">
+                              {" "}
+                              {review.comment}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+
+                {/* UI người dùng nhập đánh giá */}
+                <CardContent>
+                  <div className="space-y-6"> 
+                    <h3 className="text-lg font-semibold"> Đánh giá khóa học</h3>
+
+                    {/* Input tên */}
+                    <input
+                      type="text"
+                      placeholder="Tên của bạn"
+                      className="w-full border p-3 rounded-lg"
+                      value={userName}
+                      onChange={(e) => setUserName(e.target.value)}
+                    />
+
+                    {/* Input comment */}
+                    <textarea
+                      placeholder="Nhập đánh giá của bạn..."
+                      className="w-full border p-3 rounded-lg"
+                      value={comment}
+                      onChange={ (e) => setComment(e.target.value)}
+                    />
+
+                    {/* Rating */}
+                    <div className="flex space-x-2">
+                      {[...Array(5)].map( (_, index) => {
+                        return (
+                            <Star
+                              key={index}
+                              className= {
+                                index < rating ? "w-5 h-5 cursor-pointer text-yellow-400 fill-yellow-400" : "w-5 h-5 cursor-pointer text-gray-300"
+                              }
+                              onClick={ () => setRating(index + 1)}
+                            />
+                        );
+                      })}
+                    </div>
+
+                    <button
+                      onClick={handleSubmit}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                    >
+                      Gửi đánh giá
+                    </button>
+
                   </div>
                 </CardContent>
               </Card>
@@ -384,27 +578,38 @@ const CourseDetail = () => {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Purchase Card */}
-            <Card className="sticky top-8">
+            <Card className="top-8">
               <CardContent className="p-6">
-                <div className="text-center mb-4">
-                  {course.salePrice > 0 && course.salePrice < course.price ? (
-                    <div className="space-y-2">
-                      <div className="text-3xl font-bold text-red-600">
-                        {formatPrice(course.salePrice)}
-                      </div>
-                      <div className="text-lg text-gray-500 line-through">
-                        {formatPrice(course.price)}
-                      </div>
-                      <Badge className="bg-red-100 text-red-800">
-                        Tiết kiệm {Math.round(((course.price - course.salePrice) / course.price) * 100)}%
-                      </Badge>
+                {!isPurchased && (
+                  <>
+                    <div className="text-center mb-4">
+                      {course.salePrice > 0 &&
+                      course.salePrice < course.price ? (
+                        <div className="space-y-2">
+                          <div className="text-3xl font-bold text-red-600">
+                            {formatPrice(course.salePrice)}
+                          </div>
+                          <div className="text-lg text-gray-500 line-through">
+                            {formatPrice(course.price)}
+                          </div>
+                          <Badge className="bg-red-100 text-red-800">
+                            Tiết kiệm{" "}
+                            {Math.round(
+                              ((course.price - course.salePrice) /
+                                course.price) *
+                                100
+                            )}
+                            %
+                          </Badge>
+                        </div>
+                      ) : (
+                        <div className="text-3xl font-bold text-blue-600">
+                          {formatPrice(course.price || 0)}
+                        </div>
+                      )}
                     </div>
-                  ) : (
-                    <div className="text-3xl font-bold text-blue-600">
-                      {formatPrice(course.price || 0)}
-                    </div>
-                  )}
-                </div>
+                  </>
+                )}
 
                 <Button
                   className="w-full mb-4"
@@ -412,20 +617,31 @@ const CourseDetail = () => {
                   onClick={handleStartLearning}
                 >
                   <Play className="w-5 h-5 mr-2" />
-                  {(course.price === 0 || course.price === undefined) || isPurchased ? 'Bắt đầu học' : 'Mua khóa học'}
+                  {course.price === 0 ||
+                  course.price === undefined ||
+                  isPurchased
+                    ? "Bắt đầu học"
+                    : "Mua khóa học"}
                 </Button>
 
-                <div className="text-center text-sm text-gray-600 mb-4">
-                  Hoặc
-                </div>
+                {!isPurchased && (
+                  <>
+                    <div className="text-center text-sm text-gray-600 mb-4">
+                      Hoặc
+                    </div>
 
-                <Button
-                  variant="outline"
-                  className="w-full mb-4"
-                  onClick={() => window.location.href = '/checkout?course=' + course._id}
-                >
-                  Thêm vào giỏ hàng
-                </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full mb-4"
+                      onClick={() =>
+                        (window.location.href =
+                          "/checkout?course=" + course._id)
+                      }
+                    >
+                      Thêm vào giỏ hàng
+                    </Button>
+                  </>
+                )}
 
                 <Separator className="my-4" />
 
@@ -458,11 +674,11 @@ const CourseDetail = () => {
               <CardContent>
                 <div className="text-center">
                   <img
-                    src={course.instructor?.image || 'https://via.placeholder.com/100x100'}
+                    src={course.instructorId?.image || 'https://via.placeholder.com/100x100'}
                     alt="Hoàng An IT"
                     className="w-20 h-20 rounded-full mx-auto mb-4"
                   />
-                  <h4 className="font-semibold text-lg">Hoàng An IT</h4>
+                  <h4 className="font-semibold text-lg">{course.instructorId?.fullName}</h4>
                   <p className="text-gray-600 text-sm mb-4">
                     Fullstack Developer & Instructor
                   </p>
