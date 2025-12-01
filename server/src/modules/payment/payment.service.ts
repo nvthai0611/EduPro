@@ -15,7 +15,7 @@ function extractOrderId(content: string) {
   return match ? match[0] : null;
 }
 
-const BASE_URL = process.env.NODE_ENV === 'development' ? "http://localhost:9999" : "https://edu-pro-delta.vercel.app/";
+const BASE_URL = process.env.NODE_ENV === 'development' ? "https://muddiest-bob-veillike.ngrok-free.dev/" : "https://edu-pro-delta.vercel.app/";
 
 export class PaymentService {
   private io: Server;
@@ -49,7 +49,7 @@ export class PaymentService {
     if (order.notes === orderId && order.price === amount) {
       paymentStatus = "completed";
       await axios.post(
-        `${BASE_URL}/api/v1/admin/user/purchase/course`,
+        `${BASE_URL}api/v1/admin/user/purchase/course`,
         {
           userId: order.userId,
           courseId: order.courseId,
