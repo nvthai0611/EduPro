@@ -49,7 +49,7 @@ export class PaymentService {
     if (order.notes === orderId && order.price === amount) {
       paymentStatus = "completed";
       await axios.post(
-        `${BASE_URL}/api/v1/admin/user/purchase/course`,
+        `${BASE_URL}api/v1/admin/user/purchase/course`,
         {
           userId: order.userId,
           courseId: order.courseId,
