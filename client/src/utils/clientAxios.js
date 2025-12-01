@@ -187,6 +187,15 @@ client.interceptors.response.use(
         error: err,
       });
     }
+    if (response?.status === 404) {
+      // 404 không nên reload page hoặc logout
+      console.warn("🚨 Resource not found:", err.config?.url);
+      return Promise.reject({
+        status: 404,
+        message: response.data?.message || "Không tìm thấy tài nguyên",
+        error: err,
+      });
+    }
     if (response?.status === 400) {
       return Promise.reject({
         status: 400,

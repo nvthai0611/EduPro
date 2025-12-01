@@ -17,10 +17,15 @@ export interface ICourse {
   discountPrice?: number;
   currency?: string;
   
-  status: "draft" | "published" | "approved" | "pending" | "rejected";
+  status: "draft" | "pending" | "approved" | "published" | "rejected";
   isPublished?: boolean;
   isPublic?: boolean;
   isFeatured?: boolean;
+  
+  // Approval workflow fields
+  approvalMessage?: string;
+  submittedAt?: Date;
+  submittedBy?: Types.ObjectId;
   
   language?: string;
   duration?: number;
@@ -97,9 +102,21 @@ const courseSchema = new Schema<ICourseDocument>(
     
     status: {
       type: String,
-      enum: ["draft", "published", "approved", "pending", "rejected"],
+      enum: ["draft", "pending", "approved", "published", "rejected"],
       default: "draft",
     },
+    
+    // Approval workflow fields
+    approvalMessage: { type: String, trim: true },
+    submittedAt: { type: Date },
+    submittedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+    
+    // isPublished: { type: Boolean, default: false },
+    // isPublic: { type: Boolean, default: true },
+    // isFeatured: { type: Boolean, default: false },
 
     isFeatured: { type: Boolean, default: false },
     
@@ -113,14 +130,14 @@ const courseSchema = new Schema<ICourseDocument>(
     rating: { type: Number, default: 5, min: 1, max: 5 },
     reviewCount: { type: Number, default: 0 },
     
-    modules: [{
-      type: Schema.Types.ObjectId,
-      ref: "Module",
-    }],
-    previewLessons: [{
-      type: Schema.Types.ObjectId,
-      ref: "Lesson",
-    }],
+    // modules: [{
+    //   type: Schema.Types.ObjectId,
+    //   ref: "Module",
+    // }],
+    // previewLessons: [{
+    //   type: Schema.Types.ObjectId,
+    //   ref: "Lesson",
+    // }],
     requirements: [{ type: String, trim: true }],
     whatYouWillLearn: [{ type: String, trim: true }],
     targetAudience: [{ type: String, trim: true }],
