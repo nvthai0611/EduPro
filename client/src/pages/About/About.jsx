@@ -1,15 +1,8 @@
 "use client"
 import { useNavigate } from "react-router-dom";
-import { useState } from "react"
 import { BookOpen, Award, Target } from "lucide-react"
 
 const About = () => {
-  const [stats] = useState({
-    students: 50000,
-    courses: 200,
-    rating: 4.8,
-    reviews: 15000
-  })
 
   const navigate = useNavigate();
 
@@ -245,9 +238,9 @@ const About = () => {
         </p>
         <button
           onClick={() => {
-  navigate("/courses");
-  window.scrollTo(0, 0);
-}}
+            navigate("/courses");
+            window.scrollTo(0, 0);
+          }}
           className="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-blue-50 transition-colors duration-300 shadow-lg"
         >
           Khám phá khóa học ngay

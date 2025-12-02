@@ -27,6 +27,13 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
       return errorResponse(res, {}, 401, "Tài khoản chưa được kích hoạt");
     }
 
+    if (user.sessionToken === undefined || user.sessionToken !== accessToken) {
+      return errorResponse(res, {}, 401, "Token đã bị đăng xuất hoặc không hợp lệ");
+    }
+    
+    if (user.sessionTokenExpiresAt === null || user.sessionTokenExpiresAt < new Date()) {
+      return errorResponse(res, {}, 401, "Token đã hết hạn, vui lòng đăng nhập lại");
+    }
     // Attach user to request
     req.user = {
       id: user["_id"],

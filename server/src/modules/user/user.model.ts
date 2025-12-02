@@ -24,6 +24,8 @@ export interface IUser {
   confirmEmail?: boolean;
   isActive?: boolean;
   isGuest?: boolean;
+  sessionToken?: string;
+  sessionTokenExpiresAt?: Date;
 }
 
 export interface IUserDocument extends IUser, Document {
@@ -126,6 +128,8 @@ const userSchema = new Schema<IUserDocument>(
       type: Boolean,
       default: false,
     },
+    sessionToken: { type: String },
+    sessionTokenExpiresAt: { type: Date },
   },
   { collection: "Users", timestamps: true }
 );

@@ -16,6 +16,9 @@ import {
   ShoppingBasket,
   Percent,
   Gem,
+  ClipboardCheck,
+  Unlock,
+  HelpCircleIcon,
 } from "lucide-react";
 
 import {
@@ -99,11 +102,11 @@ export default function DashboardSidebar() {
                 <SidebarMenuButton
                   asChild
                   tooltip="Courses"
-                  isActive={activeMenu == "courses"}
-                  onClick={() => setActiveMenu("courses")}
+                  isActive={activeMenu == "approve-courses"}
+                  onClick={() => setActiveMenu("approve-courses")}
                 >
                   <Link to={"/admin/approve-courses"}>
-                    <Package />
+                    <ClipboardCheck />
                     <span>Xét Duyệt Khóa học</span>
                   </Link>
                 </SidebarMenuButton>
@@ -124,13 +127,26 @@ export default function DashboardSidebar() {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
+                  tooltip="assign-course"
+                  isActive={activeMenu == "assign-course"}
+                  onClick={() => setActiveMenu("assign-course")}
+                >
+                  <Link to={"/admin/assign-course"}>
+                    <Unlock />
+                    <span>Cấp Khóa Học</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
                   tooltip="Customer-care"
                   isActive={activeMenu == "customer-care"}
                   onClick={() => setActiveMenu("customer-care")}
                 >
-                  <Link to={"/admin/customer-care"}>
-                    <Gem />
-                    <span>Chăm sóc khách hàng</span>
+                  <Link to={"/admin/student-question"}>
+                    <HelpCircleIcon />
+                    <span>Câu hỏi học viên</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

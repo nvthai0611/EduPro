@@ -13,6 +13,7 @@ import session from "express-session";
 import connectFlash from "connect-flash";
 import cors from "cors";
 import connectDB from "./src/config/db";
+import "./src/utils/cron/clearExpiredSessions";
 
 // //Test bull
 // const { ExpressAdapter } = require('@bull-board/express');
