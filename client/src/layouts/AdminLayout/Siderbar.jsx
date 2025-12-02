@@ -128,9 +128,9 @@ export default function DashboardSidebar() {
                   isActive={activeMenu == "customer-care"}
                   onClick={() => setActiveMenu("customer-care")}
                 >
-                  <Link to={"/admin/customer-care"}>
+                  <Link to={"/admin/student-question"}>
                     <Gem />
-                    <span>Chăm sóc khách hàng</span>
+                    <span>Câu hỏi học viên</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
