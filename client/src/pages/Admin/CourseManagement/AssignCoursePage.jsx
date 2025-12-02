@@ -7,6 +7,7 @@ import { courseService } from "../../../services/admin/courseService";
 import { orderService } from "../../../services/admin/orderService";
 import { getAllUsers } from "../../../services/admin/userService";
 import { Input } from "@/components/ui/input";
+import DeleteConfirmDialog from "./DeleteConfirmDialog";
 
 const CourseAssign = () => {
   const [selectedUser, setSelectedUser] = useState(null);
@@ -16,6 +17,8 @@ const CourseAssign = () => {
   const [paidCouse, setPaidCouse] = useState([]);
   const [searchCourseTerm, setSearchCourseTerm] = useState('');
   const [searchUserTerm, setSearchUserTerm] = useState('');
+  const [dataDelete, setDataDelete] = useState(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
   useEffect(() => {
     fetchData();
@@ -85,6 +88,11 @@ const CourseAssign = () => {
       currency: 'VND'
     }).format(price);
   };
+
+  const confirmDelete = () => {
+    console.log(dataDelete);
+    setIsDeleteDialogOpen(false);
+  }
 
   const filteredPaidCourses = paidCouse.filter((course) => {
     const text = `${course?.courseId?.title} ${course?.courseId?.description} ${course?.userId?.fullName} ${course?.userId?.email}`.toLowerCase();
@@ -244,6 +252,10 @@ const CourseAssign = () => {
                           size="sm"
                           className="text-red-600 hover:text-red-700 hover:bg-red-50"
                           title="Thu hồi khóa học"
+                          onClick={() => {
+                            setDataDelete(course);
+                            setIsDeleteDialogOpen(true);
+                          }}
                         >
                           <CircleX className="w-4 h-4" />
                         </Button>
@@ -256,6 +268,13 @@ const CourseAssign = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Dialog xác nhận xóa */}
+      <DeleteConfirmDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onConfirm={confirmDelete}
+      />
 
     </div>
   );

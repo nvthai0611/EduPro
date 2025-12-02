@@ -1,8 +1,9 @@
 import { Router } from "express";
 import orderController from "../../../modules/order/order.controller";
+import authenticateToken from "../../../middlewares/auth/authenticateToken";
 
 const router = Router();
 
-router.get("/", orderController.getOrders);
+router.get("/", authenticateToken, orderController.getOrders);
 
 export const orderAdminRoutes: Router = router;

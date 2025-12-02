@@ -51,8 +51,12 @@ router.get(
       });
 
       // Cập nhật sessionToken cho người dùng
-      existingUser.sessionToken = accessToken;
-      await userService.updateUser(user._id, { sessionToken: accessToken });
+      await userService.updateUser(user._id,
+        {
+          sessionToken: accessToken,
+          sessionTokenExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
+        }
+      );
 
       const isProduction = process.env.NODE_ENV === "production";
 
@@ -61,6 +65,7 @@ router.get(
         secure: isProduction,
         httpOnly: false,
         domain: isProduction ? "edu-pro-delta.vercel.app" : undefined,
+        maxAge: 24 * 60 * 60 * 1000, // 1 day
       };
 
       res.cookie("render_id", accessToken, cookieOptions as any);
@@ -80,7 +85,7 @@ router.get("/logout", async (req: Request, res: Response) => {
   try {
     const decoded: any = await decodeToken(token);
 
-    await userService.updateUser(decoded.userId, { $unset: { sessionToken: "" } } as any);
+    await userService.updateUser(decoded.userId, { $unset: { sessionToken: "" }, $set: { sessionTokenExpiresAt: "" }, } as any);
 
     // Xóa token khỏi cookie
     res.clearCookie("render_id");

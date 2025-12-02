@@ -25,6 +25,7 @@ export interface IUser {
   isActive?: boolean;
   isGuest?: boolean;
   sessionToken?: string;
+  sessionTokenExpiresAt?: Date;
 }
 
 export interface IUserDocument extends IUser, Document {
@@ -128,6 +129,7 @@ const userSchema = new Schema<IUserDocument>(
       default: false,
     },
     sessionToken: { type: String },
+    sessionTokenExpiresAt: { type: Date },
   },
   { collection: "Users", timestamps: true }
 );
