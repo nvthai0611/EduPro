@@ -49,12 +49,12 @@ export default function DashboardHeader() {
     socket.connect();
 
     socket.on("connect", () => {
-      console.log("Admin socket connected in Header:", socket.id);
+      // console.log("Admin socket connected in Header:", socket.id);
       socket.emit("joinRoom", { role: "admin" });
     });
 
     socket.on("admin_new_order", (orderData) => {
-      console.log("🎉 Admin received new order notification in Header:", orderData);
+      // console.log("🎉 Admin received new order notification in Header:", orderData);
 
       const newNotification = {
         id: orderData.orderCode || Date.now(),

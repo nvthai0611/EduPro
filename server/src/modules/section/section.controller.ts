@@ -88,5 +88,37 @@ export const removeLessonFromSection = async (req: any, res: any) => {
   }
 };
 
+// Reorder sections in course
+export const reorderSections = async (req: any, res: any) => {
+  try {
+    const courseId = req.params.courseId;
+    const { sectionIds } = req.body; // Array of section IDs in new order
+    
+    if (!Array.isArray(sectionIds) || sectionIds.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "sectionIds must be a non-empty array" 
+      });
+    }
 
-// todo: reorder lessons in section, reorder sections in course, etc.
+    const updatedSections = await SectionService.reorderSections(courseId, sectionIds);
+    res.status(200).json({ 
+      success: true, 
+      data: updatedSections,
+      message: "Sections reordered successfully"
+    });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+// Get sections with populated lessons
+export const getSectionsWithLessons = async (req: any, res: any) => {
+  try {
+    const courseId = req.params.courseId;
+    const sections = await SectionService.getSectionsWithLessons(courseId);
+    res.status(200).json({ success: true, data: sections });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
