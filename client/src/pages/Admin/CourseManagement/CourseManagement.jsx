@@ -83,7 +83,6 @@ const CourseManagement = () => {
         coursesData = [];
       }
       
-      console.log('Final coursesData:', coursesData);
       setCourses(coursesData);
     } catch (error) {
       console.error('Error fetching courses:', error);
@@ -92,6 +91,7 @@ const CourseManagement = () => {
       setLoading(false);
     }
   };
+
   const getStatusBadge = (status) => {
     const statusConfig = {
       published: { label: "Đã xuất bản", className: "bg-green-100 text-green-800" },
@@ -353,7 +353,8 @@ const CourseManagement = () => {
                   <tr className="border-b">
                     <th className="text-left p-4">Khóa học</th>
                     <th className="text-left p-4">Cấp độ</th>
-                    <th className="text-left p-4">Giá</th>
+                    <th className="text-left p-4">Giá gốc</th>
+                    <th className="text-left p-4">Giá khuyến mãi</th>
                     <th className="text-left p-4">Học viên</th>
                     <th className="text-left p-4">Đánh giá</th>
                     <th className="text-left p-4">Trạng thái</th>
@@ -387,6 +388,11 @@ const CourseManagement = () => {
                       <td className="p-4">
                         <span className="font-medium">
                           {formatPrice(course?.price)}
+                        </span>
+                      </td>
+                      <td className="p-4">
+                        <span className="font-medium">
+                          {formatPrice(course?.salePrice ? course.salePrice : 0)}
                         </span>
                       </td>
                       <td className="p-4">
