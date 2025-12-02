@@ -171,16 +171,18 @@ const Profile = () => {
       return false;
     }
     
-    // Validate phone (nếu có nhập)
-    if (profileData.phone?.trim()) {
-      // Chấp nhận: +84xxxxxxxxx, 84xxxxxxxxx, 0xxxxxxxxx (9-11 số)
-      const phoneRegex = /^(\+84|84|0)(3|5|7|8|9)[0-9]{8}$/;
-      if (!phoneRegex.test(profileData.phone.replace(/\s/g, ''))) {
-        setError("Số điện thoại không hợp lệ. Vui lòng nhập số Việt Nam (vd: 0987654321 hoặc +84987654321)");
-        return false;
-      }
-    }
-    
+// Validate phone (nếu có nhập)
+if (profileData.phone?.trim()) {
+
+  // Chỉ cần kiểm tra toàn là số, cho phép độ dài tùy ý (ít nhất 3–20 số để tránh nhập linh tinh)
+  const phoneRegex = /^[0-9]{10}$/;
+
+  if (!phoneRegex.test(profileData.phone.replace(/\s/g, ''))) {
+    setError("Số điện thoại không hợp lệ. Vui lòng nhập chỉ gồm các chữ số.");
+    return false;
+  }
+}
+
     if (profileData.bio.length > 500) {
       setError("Giới thiệu không được vượt quá 500 ký tự");
       return false;
@@ -346,7 +348,6 @@ const Profile = () => {
                   placeholder="user@example.com"
                 />
                 <p className="text-xs text-gray-400 mt-1">
-                  Định dạng: user@example.com
                 </p>
               </div>
 
@@ -364,7 +365,6 @@ const Profile = () => {
                   placeholder="0987654321"
                 />
                 <p className="text-xs text-gray-400 mt-1">
-                  Định dạng: 0987654321 hoặc +84987654321
                 </p>
               </div>
 
