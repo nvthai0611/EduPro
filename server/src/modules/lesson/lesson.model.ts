@@ -14,6 +14,15 @@ export interface ILesson {
   // video specific
   videoUrl?: string;
   videoDuration?: number; // in seconds
+  
+  // article specific
+  content?: string; // HTML content for article
+  readingTime?: number; // in minutes
+  
+  // quiz specific (upcoming)
+  // quizId?: mongoose.Types.ObjectId;
+  // passingScore?: number;
+  
   isPreviewed?: boolean;
   isFree?: boolean;
 
@@ -44,8 +53,15 @@ const lessonSchema = new mongoose.Schema<ILessonDocument>(
     title: { type: String, required: true, trim: true },
     description: { type: String, trim: true },
     order: { type: Number, required: true, min: 1 },
-    videoUrl: { type: String, required: true },
-    videoDuration: { type: Number, required: true, min: 0 }, // giây
+    
+    // Video fields (optional - only for video type)
+    videoUrl: { type: String },
+    videoDuration: { type: Number, min: 0 },
+    
+    // Article fields (optional - only for article type)
+    content: { type: String },
+    readingTime: { type: Number, min: 0 },
+    
     isFree: { type: Boolean, default: false },
 
     type: {

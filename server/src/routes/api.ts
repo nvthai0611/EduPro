@@ -10,6 +10,8 @@ import { orderRoutes } from "./v1/order.route";
 import { paymentRoutes } from "./v1/payment.routes";
 import { courseAdminRoutes } from "./v1/admin/course.routes";
 import { userRoutes } from "./v1/users.routes";
+import { sectionRoutes } from "./v1/admin/section.routes";
+import { lessonRoutes } from "./v1/admin/lesson.routes";
 
 export const apiRouter = (io?: Server) => {
   // Authentication routes
@@ -38,6 +40,12 @@ export const apiRouter = (io?: Server) => {
 
   // Course routes
   router.use("/admin/course", courseAdminRoutes);
+
+  // Section routes
+  router.use("/admin/sections", sectionRoutes);
+
+  // Lesson routes
+  router.use("/admin/lessons", lessonRoutes);
 
   return router;
 };

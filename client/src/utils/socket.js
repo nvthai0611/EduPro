@@ -13,11 +13,11 @@ class SocketService {
       });
 
       this.socket.on("connect", () => {
-        console.log("Connected:", this.socket.id);
+        // console.log("Connected:", this.socket.id);
       });
 
       this.socket.on("disconnect", () => {
-        console.log("Disconnected");
+        // console.log("Disconnected");
       });
     }
   }
