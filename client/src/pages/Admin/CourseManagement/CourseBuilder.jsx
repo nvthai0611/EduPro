@@ -785,7 +785,7 @@ const CourseBuilder = () => {
 
               {/* Conditional Content Based on Type */}
               {lessonForm.type === 'video' && (
-                <div className="space-y-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="space-y-4 p-4 border border-blue-200 rounded-lg">
                   <div className="flex items-center gap-2 text-blue-700 font-medium">
                     <Video className="w-5 h-5" />
                     <span>Nội dung Video</span>
@@ -966,7 +966,7 @@ const CourseBuilder = () => {
                     className={`
                       p-4 rounded-lg border-2 transition-all duration-200
                       ${lessonForm.type === 'video' 
-                        ? 'border-blue-500 bg-blue-50' 
+                        ? '' 
                         : 'border-gray-200 hover:border-blue-300 bg-white'
                       }
                     `}
@@ -987,7 +987,7 @@ const CourseBuilder = () => {
                     className={`
                       p-4 rounded-lg border-2 transition-all duration-200
                       ${lessonForm.type === 'article' 
-                        ? 'border-green-500 bg-green-50' 
+                        ? '' 
                         : 'border-gray-200 hover:border-green-300 bg-white'
                       }
                     `}
@@ -1008,7 +1008,7 @@ const CourseBuilder = () => {
                     className={`
                       p-4 rounded-lg border-2 transition-all duration-200
                       ${lessonForm.type === 'quiz' 
-                        ? 'border-purple-500 bg-purple-50' 
+                        ? '' 
                         : 'border-gray-200 hover:border-purple-300 bg-white'
                       }
                     `}
@@ -1029,7 +1029,7 @@ const CourseBuilder = () => {
 
               {/* Video Content Section */}
               {lessonForm.type === 'video' && (
-                <div className="space-y-4 p-4 rounded-lg border-2 border-blue-200 bg-blue-50/30">
+                <div className="space-y-4 p-4 rounded-lg border-2 ">
                   <div className="flex items-center gap-2 mb-3">
                     <Video className="w-5 h-5 text-blue-500" />
                     <h4 className="font-medium text-blue-900">Nội dung Video</h4>
@@ -1077,7 +1077,7 @@ const CourseBuilder = () => {
 
               {/* Article Content Section */}
               {lessonForm.type === 'article' && (
-                <div className="space-y-4 p-4 rounded-lg border-2 border-green-200 bg-green-50/30">
+                <div className="space-y-4 p-4 rounded-lg border-2">
                   <div className="flex items-center gap-2 mb-3">
                     <BookOpen className="w-5 h-5 text-green-500" />
                     <h4 className="font-medium text-green-900">Nội dung Bài viết</h4>
@@ -1115,18 +1115,18 @@ const CourseBuilder = () => {
                     />
                   </div>
 
-                  <div className="flex items-start gap-2 p-3 bg-green-100 rounded-md">
+                  {/* <div className="flex items-start gap-2 p-3 bg-green-100 rounded-md">
                     <Type className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
                     <p className="text-xs text-green-800">
                       Hỗ trợ định dạng Markdown cơ bản. Trình soạn thảo WYSIWYG sẽ được thêm vào trong phiên bản tiếp theo.
                     </p>
-                  </div>
+                  </div> */}
                 </div>
               )}
 
               {/* Quiz Content Section */}
-              {lessonForm.type === 'quiz' && (
-                <div className="space-y-4 p-6 rounded-lg border-2 border-purple-200 bg-purple-50/30 text-center">
+              {/* {lessonForm.type === 'quiz' && (
+                <div className="space-y-4 p-6 rounded-lg border-2 border-purple-200 text-center">
                   <div className="flex flex-col items-center gap-3">
                     <HelpCircle className="w-12 h-12 text-purple-400" />
                     <h4 className="font-semibold text-purple-900 text-lg">Tính năng Quiz</h4>
@@ -1134,11 +1134,11 @@ const CourseBuilder = () => {
                       Chức năng tạo bài quiz đang được phát triển và sẽ ra mắt trong phiên bản tiếp theo.
                     </p>
                     <Badge variant="secondary" className="bg-purple-100 text-purple-700 hover:bg-purple-100">
-                      Coming Soon 🚀
+                      Coming Soon 
                     </Badge>
                   </div>
                 </div>
-              )}
+              )} */}
 
               <Separator />
 
