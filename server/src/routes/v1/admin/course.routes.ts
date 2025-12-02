@@ -12,10 +12,10 @@ const router: Router = Router();
 router.get("/", (req, res) => {
   res.send("Course API is working");
 });
-router.get("/all", getAllCourses);
+router.get("/all", authenticateToken, getAllCourses);
 router.post("/", authenticateToken, createCourse);
-router.get("/:id", getCourseById);
-router.get("/manager/:managerId", getCoursesByManager);
+router.get("/:id", authenticateToken, getCourseById);
+router.get("/manager/:managerId", authenticateToken, getCoursesByManager);
 
 
 // Section Management

@@ -173,20 +173,23 @@ client.interceptors.response.use(
   },
   (err) => {
     const { response } = err;
+    // Trong interceptor response lỗi 401
     if (response?.status === 401) {
       console.warn("🚨 Unauthorized - Token expired or invalid");
       // Xóa token khỏi cả localStorage và cookie
       setToken(null);
       removeCookie(TOKEN_KEY);
-      removeCookie("user_data");
-      //reload lại trang
-      window.location.reload();
+      removeCookie("render_id");
+
+      // Redirect về login
+      window.location.href = "/"; // hoặc route login đầy đủ
       return Promise.reject({
         status: 401,
         message: "Token hết hạn hoặc không hợp lệ",
         error: err,
       });
     }
+
     if (response?.status === 404) {
       // 404 không nên reload page hoặc logout
       console.warn("🚨 Resource not found:", err.config?.url);
