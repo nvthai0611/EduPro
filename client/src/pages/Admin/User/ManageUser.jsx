@@ -85,7 +85,7 @@ export default function UserManagement() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await getAllUsers() // Gọi API lấy tất cả người dùng
+        const response = await getAllUsers(); // Gọi API lấy tất cả người dùng
 
         const roleResponse = await getAllRole(); // Gọi API lấy tất cả vai trò
 

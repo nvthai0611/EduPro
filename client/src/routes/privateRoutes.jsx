@@ -22,6 +22,7 @@ import LearningPlatformDashboard from "../pages/Admin/LearningDashboard/Learning
 import CourseApprover from "../pages/Admin/CourseManagement/CourseApprover";
 import CourseLearnDetail from "../pages/Courses/CourseLearnDetail";
 import PaymentPage from "../pages/Cart/CheckOut/components/PaymentPage";
+import CourseAssign from "../pages/Admin/CourseManagement/AssignCoursePage";
 
 // được bảo mật, phải có quyền mới vào được, và phải đăng nhập
 export const privateRoutes = (
@@ -63,6 +64,7 @@ export const privateRoutes = (
       <Route path="customer-care" element={<CustomerCare />} />
       <Route path="setting" element={<SettingPage />} />
       <Route path="approve-courses" element={<CourseApprover />} />
+      <Route path="assign-course" element={<CourseAssign />} />
     </Route>
       
   </>

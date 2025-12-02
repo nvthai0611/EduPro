@@ -6,6 +6,9 @@ const router = Router();
 // Tạo đơn hàng (khi user bấm thanh toán)
 router.post("/", orderController.createOrder);
 
+// Tạo đơn hàng đã thanh toán ngay (dành cho admin cấp khóa học trực tiếp)
+router.post("/paid-order", orderController.createPaidOrder);
+
 // Kiểm tra user đã mua khóa học hay chưa
 router.get("/check", orderController.checkPurchased);
 

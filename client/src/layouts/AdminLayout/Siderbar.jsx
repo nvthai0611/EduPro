@@ -16,6 +16,8 @@ import {
   ShoppingBasket,
   Percent,
   Gem,
+  ClipboardCheck,
+  Unlock,
 } from "lucide-react";
 
 import {
@@ -99,11 +101,11 @@ export default function DashboardSidebar() {
                 <SidebarMenuButton
                   asChild
                   tooltip="Courses"
-                  isActive={activeMenu == "courses"}
-                  onClick={() => setActiveMenu("courses")}
+                  isActive={activeMenu == "approve-courses"}
+                  onClick={() => setActiveMenu("approve-courses")}
                 >
                   <Link to={"/admin/approve-courses"}>
-                    <Package />
+                    <ClipboardCheck />
                     <span>Xét Duyệt Khóa học</span>
                   </Link>
                 </SidebarMenuButton>
@@ -118,6 +120,19 @@ export default function DashboardSidebar() {
                   <Link to={"/admin/manager-user"}>
                     <Users />
                     <span>Quản lý người dùng</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  tooltip="assign-course"
+                  isActive={activeMenu == "assign-course"}
+                  onClick={() => setActiveMenu("assign-course")}
+                >
+                  <Link to={"/admin/assign-course"}>
+                    <Unlock />
+                    <span>Cấp Khóa Học</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

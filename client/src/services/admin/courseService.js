@@ -92,8 +92,8 @@ export const courseService = {
   // Tìm kiếm khóa học
   searchCourses: async (query) => {
     try {
-      const response = await apiClient.get('/admin/course/search', { 
-        params: { q: query } 
+      const response = await apiClient.get('/admin/course/search', {
+        params: { q: query }
       });
       return response.data;
     } catch (error) {
@@ -127,14 +127,24 @@ export const courseService = {
   // Approve or reject course
   reviewCourse: async (id, action, adminNote) => {
     try {
-      const response = await apiClient.patch(`/courses/${id}/review`, { 
-        action, 
-        adminNote 
+      const response = await apiClient.patch(`/courses/${id}/review`, {
+        action,
+        adminNote
       });
       return response.data;
     } catch (error) {
       console.error('Error reviewing course:', error);
       throw error;
     }
-  }
+  },
+
+  addPaidCourse: async (data) => {
+    try {
+      const response = await apiClient.post('/orders/paid-order', data);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating course:', error);
+      throw error;
+    }
+  },
 };
