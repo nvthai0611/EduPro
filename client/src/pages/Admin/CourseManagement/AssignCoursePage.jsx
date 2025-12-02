@@ -62,7 +62,7 @@ const CourseAssign = () => {
 
   const handleAssignCourse = async () => {
     if (!selectedUser || !selectedCourse) {
-      toast.error("Vui lòng chọn người dùng và khóa học!");
+      toast.error("Vui lòng chọn học viên và khóa học!");
       return;
     }
 
@@ -105,13 +105,13 @@ const CourseAssign = () => {
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-3xl font-bold">Cấp Khóa Học</h1>
-      <p className="text-gray-600">Chọn người dùng và khóa học để cấp</p>
+      <p className="text-gray-600">Chọn học viên và khóa học để cấp</p>
 
       <div className="flex w-full gap-6">
         {/* Chọn User */}
         <Card className="w-full">
           <CardHeader>
-            <h3 className="text-lg font-semibold">Chọn Người Dùng</h3>
+            <h3 className="text-lg font-semibold">Chọn Học Viên</h3>
           </CardHeader>
           <CardContent>
             <select
@@ -122,7 +122,7 @@ const CourseAssign = () => {
                 setSelectedUser(user);
               }}
             >
-              <option value="">Chọn người dùng</option>
+              <option value="">Chọn học viên</option>
               {users.map((u) => (
                 <option key={u._id} value={u._id}>
                   {u.fullName} - {u.email}

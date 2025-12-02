@@ -18,6 +18,7 @@ import {
   Gem,
   ClipboardCheck,
   Unlock,
+  HelpCircleIcon,
 } from "lucide-react";
 
 import {
@@ -143,9 +144,9 @@ export default function DashboardSidebar() {
                   isActive={activeMenu == "customer-care"}
                   onClick={() => setActiveMenu("customer-care")}
                 >
-                  <Link to={"/admin/customer-care"}>
-                    <Gem />
-                    <span>Chăm sóc khách hàng</span>
+                  <Link to={"/admin/student-question"}>
+                    <HelpCircleIcon />
+                    <span>Câu hỏi học viên</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
