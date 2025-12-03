@@ -18,12 +18,12 @@ import {
   Award,
   Target,
   Users2,
+  PlayCircle,
 } from "lucide-react";
 import { useAuth } from "../../../hooks/useAuth";
 import { courseService } from "../../../services/courseService";
 import * as orderService from "../../../services/user/orderService";
-import { useParams } from "react-router-dom";
-import { id } from "date-fns/locale";
+import { Link, useParams } from "react-router-dom";
 
 const CourseDetail = () => {
   const { slug } = useParams();
@@ -32,6 +32,91 @@ const CourseDetail = () => {
   const [loading, setLoading] = useState(true);
   const [isPurchased, setIsPurchased] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [relatedCourses, setRelatedCourses] = useState([]);
+
+  useEffect(() => {
+    fetchRelatedCourse();
+  }, [slug, course]);
+
+  const fetchRelatedCourse = async () => {
+    try {
+
+      const response = await courseService.getCourses();
+      const related = response.data.filter(c => c.slug !== slug && c.category === course?.category);
+      setRelatedCourses(related.slice(0, 4)); // Lấy tối đa 4 khóa học liên quan
+
+    } catch (error) {
+      console.error("Error fetching course detail:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Component Course Card
+  const CourseCard = ({ course }) => {
+    const labelToUse = course.title;
+    const labelLines = labelToUse
+      .split("\n")
+      .map((line, index) => <span key={index}>{line}</span>);
+
+    const students = course?.totalStudents || 0;
+    const lessons = course?.totalLessons || 0;
+    const duration = course?.duration || "N/A";
+    const star = course?.averageRating;
+    const color = course.color || "from-gray-300 to-gray-500";
+
+    return (
+      <Link
+        to={`/courses/${course.slug}`}
+        className="rounded-2xl shadow-md overflow-hidden bg-white hover:shadow-xl transition-shadow duration-300 transform hover:-translate-y-1 cursor-pointer"
+      >
+        <div
+          className={`h-48 bg-gradient-to-br ${color} flex items-center justify-center text-white text-lg font-semibold p-4 text-center`}
+          style={{ lineHeight: '1.2' }}
+        >
+          <div className="flex flex-col">
+            <h3 className="text-2xl font-bold mb-2 whitespace-pre-line">
+              {labelLines}
+            </h3>
+          </div>
+        </div>
+
+        <div className="p-5">
+          <h4 className="font-semibold text-gray-900 mb-2 text-base line-clamp-2 min-h-[40px]">
+            {course.title}
+          </h4>
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-orange-500 font-medium">{formatPrice(course.salePrice ? course.salePrice : course.price)}</p>
+            <div>
+              <span className="text-lg font-semibold flex items-center justify-between gap-1">
+                {star.toFixed(1) || "5.0"} <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+              </span>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="flex items-center justify-between text-sm text-gray-600">
+            <div className="flex items-center gap-1">
+              <Users className="w-4 h-4 text-blue-500" />
+              <span>
+                {typeof students === "number"
+                  ? students.toLocaleString("en-US")
+                  : students}
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              <PlayCircle className="w-4 h-4 text-green-500" />
+              <span>{lessons}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Clock className="w-4 h-4 text-orange-500" />
+              <span>{duration}</span>
+            </div>
+          </div>
+        </div>
+      </Link>
+    );
+  };
 
   // Chuyển từ data fix cứng thành state
   const [reviews, setReview] = useState([
@@ -118,13 +203,7 @@ const CourseDetail = () => {
   };
 
   const handleStartLearning = () => {
-    // if (course.price === 0 || isPurchased) {
     if (isPurchased) {
-      // Redirect to first lesson
-      // const firstLesson = course.modules?.[0]?.lessons?.[0];
-      // if (firstLesson) {
-      //   window.location.href = `/learn/${course._id}/${firstLesson._id}`;
-      // }
       window.location.href = `/courses/learn/${course.slug}`;
     } else {
       handlePurchase();
@@ -201,8 +280,8 @@ const CourseDetail = () => {
                   {course.level === "beginner"
                     ? "Cơ bản"
                     : course.level === "intermediate"
-                    ? "Trung bình"
-                    : "Nâng cao"}
+                      ? "Trung bình"
+                      : "Nâng cao"}
                 </Badge>
               </div>
 
@@ -524,7 +603,7 @@ const CourseDetail = () => {
 
                 {/* UI người dùng nhập đánh giá */}
                 <CardContent>
-                  <div className="space-y-6"> 
+                  <div className="space-y-6">
                     <h3 className="text-lg font-semibold"> Đánh giá khóa học</h3>
 
                     {/* Input tên */}
@@ -541,20 +620,20 @@ const CourseDetail = () => {
                       placeholder="Nhập đánh giá của bạn..."
                       className="w-full border p-3 rounded-lg"
                       value={comment}
-                      onChange={ (e) => setComment(e.target.value)}
+                      onChange={(e) => setComment(e.target.value)}
                     />
 
                     {/* Rating */}
                     <div className="flex space-x-2">
-                      {[...Array(5)].map( (_, index) => {
+                      {[...Array(5)].map((_, index) => {
                         return (
-                            <Star
-                              key={index}
-                              className= {
-                                index < rating ? "w-5 h-5 cursor-pointer text-yellow-400 fill-yellow-400" : "w-5 h-5 cursor-pointer text-gray-300"
-                              }
-                              onClick={ () => setRating(index + 1)}
-                            />
+                          <Star
+                            key={index}
+                            className={
+                              index < rating ? "w-5 h-5 cursor-pointer text-yellow-400 fill-yellow-400" : "w-5 h-5 cursor-pointer text-gray-300"
+                            }
+                            onClick={() => setRating(index + 1)}
+                          />
                         );
                       })}
                     </div>
@@ -581,7 +660,7 @@ const CourseDetail = () => {
                   <>
                     <div className="text-center mb-4">
                       {course.salePrice > 0 &&
-                      course.salePrice < course.price ? (
+                        course.salePrice < course.price ? (
                         <div className="space-y-2">
                           <div className="text-3xl font-bold text-red-600">
                             {formatPrice(course.salePrice)}
@@ -594,7 +673,7 @@ const CourseDetail = () => {
                             {Math.round(
                               ((course.price - course.salePrice) /
                                 course.price) *
-                                100
+                              100
                             )}
                             %
                           </Badge>
@@ -615,8 +694,8 @@ const CourseDetail = () => {
                 >
                   <Play className="w-5 h-5 mr-2" />
                   {course.price === 0 ||
-                  course.price === undefined ||
-                  isPurchased
+                    course.price === undefined ||
+                    isPurchased
                     ? "Bắt đầu học"
                     : "Mua khóa học"}
                 </Button>
@@ -631,8 +710,8 @@ const CourseDetail = () => {
                       variant="outline"
                       className="w-full mb-4"
                       onClick={() =>
-                        (window.location.href =
-                          "/checkout?course=" + course._id)
+                      (window.location.href =
+                        "/checkout?course=" + course._id)
                       }
                     >
                       Thêm vào giỏ hàng
@@ -693,6 +772,13 @@ const CourseDetail = () => {
               </CardContent>
             </Card>
           </div>
+        </div>
+
+        <div className="flex flex-wrap gap-6 mt-12 justify-between">
+          <h1 className="w-full text-center text-2xl font-bold text-gray-900">Khóa học liên quan</h1>
+          {relatedCourses.map((course) => (
+            <CourseCard key={course._id} course={course} />
+          ))}
         </div>
       </div>
     </div>
