@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import { CircleX, Filter, Search } from "lucide-react";
 import { courseService } from "../../../services/admin/courseService";
 import { orderService } from "../../../services/admin/orderService";
-import { getAllUsers } from "../../../services/admin/userService";
+import { getAllUsers, revokePaidCourse } from "../../../services/admin/userService";
 import { Input } from "@/components/ui/input";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 
@@ -18,11 +18,12 @@ const CourseAssign = () => {
   const [searchCourseTerm, setSearchCourseTerm] = useState('');
   const [searchUserTerm, setSearchUserTerm] = useState('');
   const [dataDelete, setDataDelete] = useState(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [submited, setSubmited] = useState(false);
 
   useEffect(() => {
     fetchData();
-  }, [selectedUser]);
+  }, [selectedUser, submited]);
 
   const fetchData = async () => {
     try {
@@ -91,7 +92,15 @@ const CourseAssign = () => {
 
   const confirmDelete = () => {
     console.log(dataDelete);
+    // Xóa order
+    orderService.deleteOrder(dataDelete._id);
+
+    // Xóa purchasedCourse trong user
+    revokePaidCourse(dataDelete?.userId?._id, dataDelete?.courseId?._id);
+
+    toast.success(`Thu hồi khóa học ${dataDelete?.courseId?.title} của ${dataDelete?.userId?.fullName} thành công!`);
     setIsDeleteDialogOpen(false);
+    setSubmited(!submited);
   }
 
   const filteredPaidCourses = paidCouse.filter((course) => {

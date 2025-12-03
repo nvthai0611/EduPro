@@ -23,11 +23,16 @@ const deleteUserById = async (userId) => {
   return await client.delete(`/admin/user/${userId}`)
 }
 
+const revokePaidCourse = async (userId, courseId) => {
+  return await client.delete(`/admin/user/${userId}/paid-course/${courseId}`)
+}
+
 export {
   addUser,
   getAllUsers,
   updateUser,
   verifyEmail,
   deleteUserById,
-  getAllRole
+  getAllRole,
+  revokePaidCourse
 }

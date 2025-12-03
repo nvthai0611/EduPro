@@ -15,7 +15,7 @@ class OrderController {
       return res.status(500).json({ message: "Lỗi server" });
     }
   }
-  
+
   // Tạo order cho 1 khóa học
   async createOrder(req: Request, res: Response) {
     try {
@@ -49,6 +49,22 @@ class OrderController {
 
       return res.json({
         message: "Tạo order thành công",
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Lỗi server" });
+    }
+  }
+
+  // Xóa order
+  async deleteOrder(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      
+      await OrderService.deleteOrder(id);
+
+      return res.json({
+        message: "Xóa order thành công",
       });
     } catch (error) {
       console.error(error);

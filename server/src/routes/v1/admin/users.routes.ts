@@ -10,6 +10,7 @@ router.get('/:id', authenticateToken, userController.getUserById);
 router.put('/:id', authenticateToken, userController.updateUser);
 router.delete('/:id', authenticateToken, userController.deleteUser);
 router.post('/addUser', authenticateToken, userController.addUser);
+router.delete('/:userId/paid-course/:courseId', authenticateToken, userController.revokePaidCourse);
 router.get('/role/getAll', authenticateToken, roleController.getAllRoles);
 router.post("/purchase/course", userController.addPurchasedCourse);
 

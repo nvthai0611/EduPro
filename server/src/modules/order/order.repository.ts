@@ -29,6 +29,10 @@ class OrderRepository {
     return order.save();
   }
 
+  async deleteOrder(orderId: string) {
+    return Order.findByIdAndDelete(orderId).lean();
+  }
+
   async markAsPaid(orderId: string) {
     return Order.findById(orderId).then((order) => {
       if (!order) return null;

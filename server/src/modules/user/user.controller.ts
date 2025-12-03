@@ -3,6 +3,7 @@ import UserService from './user.service';
 import mongoose from 'mongoose';
 import OrderService from '../order/order.service';
 import User, { IUserDocument } from './user.model';
+import userRepository from './user.repository';
 
 class UserController {
     async getAllUsers(req: Request, res: Response): Promise<void> {
@@ -119,6 +120,38 @@ class UserController {
 
         } catch (error) {
             res.status(500).json({ message: 'Thêm khóa học đã thanh toán thất bại', error });
+        }
+    }
+
+    async revokePaidCourse(req: Request, res: Response): Promise<void> {
+        try {
+            const { userId, courseId } = req.params;
+
+            if (!userId || !courseId) {
+                res.status(400).json({
+                    success: false,
+                    message: "Missing required fields",
+                });
+            }
+
+            // Check user
+            const user = await User.findById(userId) as IUserDocument | null;
+
+            if (!user)
+                res.status(404).json({
+                    success: false,
+                    message: "User not found",
+                });
+
+            // Revoke paid course
+            await userRepository.revokePaidCourse(userId, courseId);
+            res.status(200).json({
+                success: true,
+                message: "Revoke paid course successfully",
+                purchasedCourses: user.purchasedCourses,
+            });
+        } catch (error) {
+            res.status(500).json({ message: 'Thu hồi khóa học đã thanh toán thất bại', error });
         }
     }
 }

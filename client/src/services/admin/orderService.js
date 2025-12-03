@@ -11,4 +11,14 @@ export const orderService = {
       throw error;
     }
   },
+  // Xóa order
+  deleteOrder: async (orderId) => {
+    try {
+      const response = await apiClient.delete(`/admin/order/${orderId}`);
+      return response;
+    } catch (error) {
+      console.error('Error fetching courses:', error);
+      throw error;
+    }
+  },
 };

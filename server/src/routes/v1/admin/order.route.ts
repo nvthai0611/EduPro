@@ -6,4 +6,6 @@ const router = Router();
 
 router.get("/", authenticateToken, orderController.getOrders);
 
+router.delete("/:id", authenticateToken, orderController.deleteOrder);
+
 export const orderAdminRoutes: Router = router;

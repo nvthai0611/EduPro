@@ -33,6 +33,10 @@ class OrderService {
     return OrderRepository.getOrderById(orderId);
   }
 
+  async deleteOrder(orderId: string) {
+    return OrderRepository.deleteOrder(orderId);
+  }
+
   async markOrderPaid(orderId: string) {
     return OrderRepository.markAsPaid(orderId);
   }
