@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   Users,
@@ -8,8 +8,9 @@ import {
   Database,
   Smartphone,
   Zap,
+  Loader2,
 } from "lucide-react";
-import { courseData } from "../../../data/courseData";
+import { courseService } from "../../../services/courseService";
 
 // Dữ liệu các chuyên môn
 const professions = [
@@ -127,13 +128,44 @@ export default function CourseList() {
   const isCategoryPage = !!categorySlug;
   const courseListRef = useRef(null);
 
+  // State management
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [courseData, setCourseData] = useState([]);
+
+  // Fetch courses từ backend
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const params = {};
+        params.status = "published"; // Chỉ lấy khóa học đã xuất bản
+        if (categorySlug) {
+          params.category = categorySlug;
+        }
+        
+        const response = await courseService.getCourses(params);
+        setCourseData(response.data || []); // Đảm bảo luôn là array
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách khóa học:", error);
+        setError("Không thể tải danh sách khóa học. Vui lòng thử lại sau.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, [categorySlug]);
+
   // Logic lọc khóa học
   const filteredCourses = useMemo(() => {
     if (!categorySlug) {
       return courseData;
     }
     return courseData.filter((c) => c.category === categorySlug);
-  }, [categorySlug]);
+  }, [categorySlug, courseData]);
 
   // Lấy tên chuyên môn để hiển thị tiêu đề
   const currentProfession = professions.find((p) => p.slug === categorySlug);
@@ -252,17 +284,44 @@ export default function CourseList() {
           <h1 className="text-4xl font-extrabold mb-8">{headerTitle}</h1>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredCourses.map((course) => (
-            <CourseCard key={course.id} course={course} />
-          ))}
-        </div>
+        {/* Loading state */}
+        {isLoading && (
+          <div className="flex justify-center items-center py-20">
+            <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
+          </div>
+        )}
 
-        {filteredCourses.length === 0 && (
-          <p className="text-center text-gray-600 mt-10 text-lg">
-            Không tìm thấy khóa học nào trong chuyên môn **
-            {currentProfession ? currentProfession.name : "này"}**.
-          </p>
+        {/* Error state */}
+        {error && !isLoading && (
+          <div className="text-center py-10">
+            <p className="text-red-600 text-lg mb-4">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            >
+              Thử lại
+            </button>
+          </div>
+        )}
+
+        {/* Course list */}
+        {!isLoading && !error && (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredCourses.map((course) => (
+                <CourseCard key={course.id} course={course} />
+              ))}
+            </div>
+
+            {filteredCourses.length === 0 && (
+              <p className="text-center text-gray-600 mt-10 text-lg">
+                Không tìm thấy khóa học nào trong chuyên môn{" "}
+                <strong>
+                  {currentProfession ? currentProfession.name : "này"}
+                </strong>.
+              </p>
+            )}
+          </>
         )}
       </div>
     </div>
