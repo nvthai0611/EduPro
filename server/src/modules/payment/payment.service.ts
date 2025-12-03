@@ -36,8 +36,6 @@ export class PaymentService {
 
   // Xử lý webhook
   async handleWebhook(webhookData: any): Promise<any> {
-    console.log('Webhook received:', webhookData);
-
     const content = webhookData.content;
     const amount = webhookData.transferAmount;
     const orderId = extractOrderId(content);

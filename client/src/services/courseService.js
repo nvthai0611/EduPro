@@ -6,7 +6,6 @@ const courseService = {
     try {
       // apiClient.get(url, params) - params là tham số thứ 2
       const response = await apiClient.get('/courses', { params });
-      console.log('getCourses response:', response);
       return response;
     } catch (error) {
       console.error('Error fetching courses:', error);

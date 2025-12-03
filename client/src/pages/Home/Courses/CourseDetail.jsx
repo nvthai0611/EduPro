@@ -219,9 +219,6 @@ const CourseDetail = () => {
                   <span className="text-blue-200">
                     ({course.reviewCount || 0} đánh giá)
                   </span>
-                  <span className="text-blue-200">
-                    ({course.totalReviews || 0} đánh giá)
-                  </span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Users className="w-5 h-5" />
@@ -674,7 +671,7 @@ const CourseDetail = () => {
               <CardContent>
                 <div className="text-center">
                   <img
-                    src={course.instructorId?.image || 'https://via.placeholder.com/100x100'}
+                    src={course.instructorId?.image || 'https://i.pravatar.cc'}
                     alt="Hoàng An IT"
                     className="w-20 h-20 rounded-full mx-auto mb-4"
                   />

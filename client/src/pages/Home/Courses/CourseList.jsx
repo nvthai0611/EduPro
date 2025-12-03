@@ -9,6 +9,7 @@ import {
   Smartphone,
   Zap,
   Loader2,
+  Star,
 } from "lucide-react";
 import { courseService } from "../../../services/courseService";
 
@@ -44,6 +45,14 @@ const professions = [
   },
 ];
 
+const formatPrice = (price) => {
+  if (price === 0) return "Miễn phí";
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(price);
+};
+
 // Component box chuyên môn
 const ProfessionBox = ({ profession }) => {
   const IconComponent = profession.icon;
@@ -66,37 +75,45 @@ const ProfessionBox = ({ profession }) => {
 
 // Component Course Card
 const CourseCard = ({ course }) => {
-  const labelToUse = course.label || course.title;
+  const labelToUse = course.title;
   const labelLines = labelToUse
     .split("\n")
     .map((line, index) => <span key={index}>{line}</span>);
 
-  const students = course.students || 0;
-  const lessons = course.lessons || 0;
-  const duration = course.duration || "N/A";
+  const students = course?.totalStudents || 0;
+  const lessons = course?.totalLessons || 0;
+  const duration = course?.duration || "N/A";
+  const star = course?.averageRating;
   const color = course.color || "from-gray-300 to-gray-500";
 
-    return (
-        <Link
-            to={`/courses/${course.slug}`} 
-            className="rounded-2xl shadow-md overflow-hidden bg-white hover:shadow-xl transition-shadow duration-300 transform hover:-translate-y-1 cursor-pointer"
-        >
-            <div
-                className={`h-48 bg-gradient-to-br ${color} flex items-center justify-center text-white text-lg font-semibold p-4 text-center`}
-                style={{ lineHeight: '1.2' }}
-            >
-                <div className="flex flex-col">
-                    <h3 className="text-2xl font-bold mb-2 whitespace-pre-line">
-                         {labelLines}
-                    </h3>
-                </div>
-            </div>
+  return (
+    <Link
+      to={`/courses/${course.slug}`}
+      className="rounded-2xl shadow-md overflow-hidden bg-white hover:shadow-xl transition-shadow duration-300 transform hover:-translate-y-1 cursor-pointer"
+    >
+      <div
+        className={`h-48 bg-gradient-to-br ${color} flex items-center justify-center text-white text-lg font-semibold p-4 text-center`}
+        style={{ lineHeight: '1.2' }}
+      >
+        <div className="flex flex-col">
+          <h3 className="text-2xl font-bold mb-2 whitespace-pre-line">
+            {labelLines}
+          </h3>
+        </div>
+      </div>
 
       <div className="p-5">
         <h4 className="font-semibold text-gray-900 mb-2 text-base line-clamp-2 min-h-[40px]">
           {course.title}
         </h4>
-        <p className="text-orange-500 font-medium mb-4">Miễn phí</p>
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-orange-500 font-medium">{formatPrice(course.salePrice)}</p>
+          <div>
+            <span className="text-lg font-semibold flex items-center justify-between gap-1">
+              {star.toFixed(1) || "5.0"} <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+            </span>
+          </div>
+        </div>
 
         {/* Stats */}
         <div className="flex items-center justify-between text-sm text-gray-600">
@@ -139,13 +156,13 @@ export default function CourseList() {
       try {
         setIsLoading(true);
         setError(null);
-        
+
         const params = {};
         params.status = "published"; // Chỉ lấy khóa học đã xuất bản
         if (categorySlug) {
           params.category = categorySlug;
         }
-        
+
         const response = await courseService.getCourses(params);
         setCourseData(response.data || []); // Đảm bảo luôn là array
       } catch (error) {
@@ -171,65 +188,16 @@ export default function CourseList() {
   const currentProfession = professions.find((p) => p.slug === categorySlug);
 
   // Text cho Tiêu đề trang
-  let headerTitle = "Khóa học miễn phí";
+  let headerTitle = "Khóa học Pro";
   if (isCategoryPage) {
     headerTitle = currentProfession
       ? `Khóa học ${currentProfession.name}`
       : "Khóa học";
   }
 
-  const scrollToCourses = () => {
-    courseListRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
   return (
     <div className="min-h-screen bg-white pb-12">
-      {/* --- 1. HEADER CHÍNH (Chỉ hiển thị trên trang /courses index) --- */}
-      {!isCategoryPage && (
-        <div className="pt-16 pb-12 bg-gradient-to-r from-blue-600 to-purple-700 mb-10 text-white shadow-xl rounded-b-xl">
-          <div className="max-w-7xl mx-auto px-4">
-            <h2 className="text-4xl font-extrabold mb-4 text-center">
-              Học Lập Trình Từ Cơ Bản Đến Nâng Cao
-            </h2>
-            <p className="text-lg text-gray-200 mb-8 text-center max-w-3xl mx-auto">
-              Khám phá thế giới lập trình với các khóa học chất lượng cao từ
-              HoangAn IT. Từ Frontend đến Backend, từ Web đến Mobile - chúng tôi
-              có tất cả!
-            </p>
-            <div className="flex justify-center gap-4">
-              <button
-                onClick={scrollToCourses} // Bấm vào thì cuộn xuống danh sách khóa học
-                className="flex items-center justify-center px-8 py-3 bg-white text-blue-600 font-semibold rounded-full shadow-lg hover:bg-gray-100 transition"
-              >
-                <i className="fas fa-play-circle mr-2"></i> Bắt đầu học ngay
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="max-w-7xl mx-auto">
-        {/* --- 2. SECTION THỐNG KÊ (50+ Khóa học, 10K+ Học viên) --- */}
-        {!isCategoryPage && (
-          <div className="flex justify-around py-10 my-8 border-y border-gray-200">
-            <div className="text-center">
-              <h3 className="text-3xl font-bold text-gray-800">50+</h3>
-              <p className="text-gray-500">Khóa học</p>
-            </div>
-            <div className="text-center">
-              <h3 className="text-3xl font-bold text-gray-800">10K+</h3>
-              <p className="text-gray-500">Học viên</p>
-            </div>
-            <div className="text-center">
-              <h3 className="text-3xl font-bold text-gray-800">500+</h3>
-              <p className="text-gray-500">Giờ học</p>
-            </div>
-            <div className="text-center">
-              <h3 className="text-3xl font-bold text-gray-800">5K+</h3>
-              <p className="text-gray-500">Chứng chỉ</p>
-            </div>
-          </div>
-        )}
 
         {/* --- 3. SECTION KHÁM PHÁ THEO CHUYÊN MÔN (Box chuyên môn) --- */}
         <div className="mb-12 text-center pt-8">
@@ -268,7 +236,7 @@ export default function CourseList() {
             <div className="flex justify-between items-end mb-6">
               <h2 className="text-xl font-medium text-gray-600">
                 <span className="text-3xl font-bold text-black mr-2">
-                  458.067+
+                  10K+
                 </span>{" "}
                 người đã học
               </h2>
@@ -309,7 +277,7 @@ export default function CourseList() {
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredCourses.map((course) => (
-                <CourseCard key={course.id} course={course} />
+                <CourseCard key={course._id} course={course} />
               ))}
             </div>
 
