@@ -659,12 +659,8 @@ const CourseDetail = () => {
                 {!isPurchased && (
                   <>
                     <div className="text-center mb-4">
-<<<<<<< HEAD
-                      {course.salePrice < course.price ? (
-=======
                       {course.salePrice > 0 &&
                         course.salePrice < course.price ? (
->>>>>>> 87f1fa2e4f4301735a92c9dcf6fa755bc58d9192
                         <div className="space-y-2">
                           <div className="text-3xl font-bold text-red-600">
                             {formatPrice(course.salePrice)}
@@ -699,13 +695,8 @@ const CourseDetail = () => {
                   
                   <Play className="w-5 h-5 mr-2" />
                   {course.price === 0 ||
-<<<<<<< HEAD
-                  course.price === undefined ||
-                  isPurchased 
-=======
                     course.price === undefined ||
                     isPurchased
->>>>>>> 87f1fa2e4f4301735a92c9dcf6fa755bc58d9192
                     ? "Bắt đầu học"
                     : "Mua khóa học"}
                 </Button>
