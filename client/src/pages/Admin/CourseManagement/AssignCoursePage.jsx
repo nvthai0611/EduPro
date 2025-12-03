@@ -71,7 +71,7 @@ const CourseAssign = () => {
       userId: selectedUser._id,
       courseId: selectedCourse._id,
       courseTitle: selectedCourse.title,
-      price: selectedCourse.salePrice,
+      price: selectedCourse.salePrice || selectedCourse.price || 1,
       paymentMethod: "sepay",
       statusOrder: "completed",
       paymentStatus: "paid",
