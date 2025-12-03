@@ -1,6 +1,6 @@
 import { apiClient } from '../utils/clientAxios';
 
-export const courseService = {
+const courseService = {
   // Lấy danh sách khóa học
   getCourses: async (params) => {
     try {
@@ -91,3 +91,6 @@ export const courseService = {
     }
   }
 };
+
+export { courseService };
+export default courseService;
