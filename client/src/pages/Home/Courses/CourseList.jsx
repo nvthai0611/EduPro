@@ -60,7 +60,7 @@ const ProfessionBox = ({ profession }) => {
     <Link
       // ĐIỂM QUAN TRỌNG: Link trực tiếp đến trang lọc category
       to={`/courses/category/${profession.slug}`}
-      className="block p-6 border rounded-2xl shadow-sm hover:shadow-lg transition duration-200 cursor-pointer bg-white"
+      className="block p-6 border rounded-2xl shadow-sm hover:shadow-lg transition duration-200 cursor-pointer bg-white flex flex-col items-center text-center"
     >
       <div
         className={`w-14 h-14 flex items-center justify-center rounded-full mb-4 ${profession.color}`}
