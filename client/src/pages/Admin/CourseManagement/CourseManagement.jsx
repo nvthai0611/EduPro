@@ -158,9 +158,8 @@ const CourseManagement = () => {
     }
   };
 
-  const handleToggleStatus = async (course) => {
+  const handleToggleStatus = async (course, newStatus) => {
     try {
-      let newStatus;
 
       const updatedCourse = { ...course, status: newStatus };
       await courseService.updateCourse(course._id, updatedCourse);
@@ -459,24 +458,25 @@ const CourseManagement = () => {
                               >
                                 Submit
                               </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleToggleStatus(course)}
-                              >
-                                Xuất bản
-                              </Button>
+                              
                             </>
                           )}
-                          
-                          {(course.status === 'published' || course.status === 'approved') && (
+                          {course.status === 'approved' && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleToggleStatus(course, 'published')}
+                              >
+                                Xuất bản
+                              </Button>)}
+                          {(course.status === 'published') && (
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => handleToggleDelete(course)}
                               className="text-red-600 hover:text-red-700"
                             >
-                              Ẩn
+                              Xóa
                             </Button>
                           ) }
                           {(course.status === 'approved' || course.status === 'rejected') && (

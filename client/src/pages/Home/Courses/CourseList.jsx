@@ -11,6 +11,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { courseService } from "../../../services/courseService";
+import { formatPrice } from "../../../utils/format";
 
 // Dữ liệu các chuyên môn
 const professions = [
@@ -43,7 +44,9 @@ const professions = [
     color: "text-orange-600 bg-orange-100",
   },
 ];
-
+ const handleClick = () => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  };
 // Component box chuyên môn
 const ProfessionBox = ({ profession }) => {
   const IconComponent = profession.icon;
@@ -66,6 +69,25 @@ const ProfessionBox = ({ profession }) => {
 
 // Component Course Card
 const CourseCard = ({ course }) => {
+  const gradientColors = [
+    "from-blue-400 to-blue-600",
+    "from-purple-400 to-purple-600",
+    "from-pink-400 to-pink-600",
+    "from-green-400 to-green-600",
+    "from-yellow-400 to-yellow-600",
+    "from-red-400 to-red-600",
+    "from-indigo-400 to-indigo-600",
+    "from-teal-400 to-teal-600",
+    "from-orange-400 to-orange-600",
+    "from-cyan-400 to-cyan-600",
+    "from-violet-400 to-violet-600",
+    "from-fuchsia-400 to-fuchsia-600",
+    "from-rose-400 to-rose-600",
+    "from-sky-400 to-sky-600",
+    "from-emerald-400 to-emerald-600",
+    "from-amber-400 to-amber-600",
+    "from-lime-400 to-lime-600",
+  ];
   const labelToUse = course.label || course.title;
   const labelLines = labelToUse
     .split("\n")
@@ -74,29 +96,39 @@ const CourseCard = ({ course }) => {
   const students = course.students || 0;
   const lessons = course.lessons || 0;
   const duration = course.duration || "N/A";
-  const color = course.color || "from-gray-300 to-gray-500";
 
-    return (
-        <Link
-            to={`/courses/${course.slug}`} 
-            className="rounded-2xl shadow-md overflow-hidden bg-white hover:shadow-xl transition-shadow duration-300 transform hover:-translate-y-1 cursor-pointer"
-        >
-            <div
-                className={`h-48 bg-gradient-to-br ${color} flex items-center justify-center text-white text-lg font-semibold p-4 text-center`}
-                style={{ lineHeight: '1.2' }}
-            >
-                <div className="flex flex-col">
-                    <h3 className="text-2xl font-bold mb-2 whitespace-pre-line">
-                         {labelLines}
-                    </h3>
-                </div>
-            </div>
+  const getRandomGradient = () => {
+    return gradientColors[Math.floor(Math.random() * gradientColors.length)];
+  };
+
+  const color = useMemo(() => {
+    return course.color || getRandomGradient();
+  }, [course.color]);
+
+  return (
+    <Link
+      to={`/courses/${course.slug}`}
+       onClick={handleClick}
+      className="rounded-2xl shadow-md overflow-hidden bg-white hover:shadow-xl transition-shadow duration-300 transform hover:-translate-y-1 cursor-pointer"
+    >
+      <div
+        className={`h-48 bg-gradient-to-br ${color} flex items-center justify-center text-white text-lg font-semibold p-4 text-center`}
+        style={{ lineHeight: "1.2" }}
+      >
+        <div className="flex flex-col">
+          <h3 className="text-2xl font-bold mb-2 whitespace-pre-line">
+            {labelLines}
+          </h3>
+        </div>
+      </div>
 
       <div className="p-5">
         <h4 className="font-semibold text-gray-900 mb-2 text-base line-clamp-2 min-h-[40px]">
           {course.title}
         </h4>
-        <p className="text-orange-500 font-medium mb-4">Miễn phí</p>
+        <p className="text-orange-500 font-medium mb-4">
+          {formatPrice(course.price)}
+        </p>
 
         {/* Stats */}
         <div className="flex items-center justify-between text-sm text-gray-600">
@@ -139,13 +171,13 @@ export default function CourseList() {
       try {
         setIsLoading(true);
         setError(null);
-        
+
         const params = {};
         params.status = "published"; // Chỉ lấy khóa học đã xuất bản
         if (categorySlug) {
           params.category = categorySlug;
         }
-        
+
         const response = await courseService.getCourses(params);
         setCourseData(response.data || []); // Đảm bảo luôn là array
       } catch (error) {
@@ -318,7 +350,8 @@ export default function CourseList() {
                 Không tìm thấy khóa học nào trong chuyên môn{" "}
                 <strong>
                   {currentProfession ? currentProfession.name : "này"}
-                </strong>.
+                </strong>
+                .
               </p>
             )}
           </>

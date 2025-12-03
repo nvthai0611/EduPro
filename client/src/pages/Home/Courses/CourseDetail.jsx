@@ -583,8 +583,7 @@ const CourseDetail = () => {
                 {!isPurchased && (
                   <>
                     <div className="text-center mb-4">
-                      {course.salePrice > 0 &&
-                      course.salePrice < course.price ? (
+                      {course.salePrice < course.price ? (
                         <div className="space-y-2">
                           <div className="text-3xl font-bold text-red-600">
                             {formatPrice(course.salePrice)}
@@ -616,10 +615,11 @@ const CourseDetail = () => {
                   size="lg"
                   onClick={handleStartLearning}
                 >
+                  
                   <Play className="w-5 h-5 mr-2" />
                   {course.price === 0 ||
                   course.price === undefined ||
-                  isPurchased
+                  isPurchased 
                     ? "Bắt đầu học"
                     : "Mua khóa học"}
                 </Button>
