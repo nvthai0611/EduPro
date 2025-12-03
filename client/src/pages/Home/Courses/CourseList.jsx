@@ -12,7 +12,6 @@ import {
   Star,
 } from "lucide-react";
 import { courseService } from "../../../services/courseService";
-import { formatPrice } from "../../../utils/format";
 
 // Dữ liệu các chuyên môn
 const professions = [
@@ -106,6 +105,7 @@ const CourseCard = ({ course }) => {
   const students = course.students || 0;
   const lessons = course.lessons || 0;
   const duration = course.duration || "N/A";
+    const star = course?.averageRating;
 
   const getRandomGradient = () => {
     return gradientColors[Math.floor(Math.random() * gradientColors.length)];
