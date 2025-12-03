@@ -692,6 +692,7 @@ const CourseDetail = () => {
                   size="lg"
                   onClick={handleStartLearning}
                 >
+                  
                   <Play className="w-5 h-5 mr-2" />
                   {course.price === 0 ||
                     course.price === undefined ||

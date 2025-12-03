@@ -44,6 +44,9 @@ const professions = [
     color: "text-orange-600 bg-orange-100",
   },
 ];
+ const handleClick = () => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  };
 
 const formatPrice = (price) => {
   if (price === 0) return "Miễn phí";
@@ -75,20 +78,47 @@ const ProfessionBox = ({ profession }) => {
 
 // Component Course Card
 const CourseCard = ({ course }) => {
-  const labelToUse = course.title;
+  const gradientColors = [
+    "from-blue-400 to-blue-600",
+    "from-purple-400 to-purple-600",
+    "from-pink-400 to-pink-600",
+    "from-green-400 to-green-600",
+    "from-yellow-400 to-yellow-600",
+    "from-red-400 to-red-600",
+    "from-indigo-400 to-indigo-600",
+    "from-teal-400 to-teal-600",
+    "from-orange-400 to-orange-600",
+    "from-cyan-400 to-cyan-600",
+    "from-violet-400 to-violet-600",
+    "from-fuchsia-400 to-fuchsia-600",
+    "from-rose-400 to-rose-600",
+    "from-sky-400 to-sky-600",
+    "from-emerald-400 to-emerald-600",
+    "from-amber-400 to-amber-600",
+    "from-lime-400 to-lime-600",
+  ];
+  const labelToUse = course.label || course.title;
   const labelLines = labelToUse
     .split("\n")
     .map((line, index) => <span key={index}>{line}</span>);
 
-  const students = course?.totalStudents || 0;
-  const lessons = course?.totalLessons || 0;
-  const duration = course?.duration || "N/A";
-  const star = course?.averageRating;
-  const color = course.color || "from-gray-300 to-gray-500";
+  const students = course.students || 0;
+  const lessons = course.lessons || 0;
+  const duration = course.duration || "N/A";
+    const star = course?.averageRating;
+
+  const getRandomGradient = () => {
+    return gradientColors[Math.floor(Math.random() * gradientColors.length)];
+  };
+
+  const color = useMemo(() => {
+    return course.color || getRandomGradient();
+  }, [course.color]);
 
   return (
     <Link
       to={`/courses/${course.slug}`}
+       onClick={handleClick}
       className="rounded-2xl shadow-md overflow-hidden bg-white hover:shadow-xl transition-shadow duration-300 transform hover:-translate-y-1 cursor-pointer"
     >
       <div
@@ -286,7 +316,8 @@ export default function CourseList() {
                 Không tìm thấy khóa học nào trong chuyên môn{" "}
                 <strong>
                   {currentProfession ? currentProfession.name : "này"}
-                </strong>.
+                </strong>
+                .
               </p>
             )}
           </>
