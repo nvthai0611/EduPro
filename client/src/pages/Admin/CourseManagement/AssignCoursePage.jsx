@@ -91,7 +91,6 @@ const CourseAssign = () => {
   };
 
   const confirmDelete = () => {
-    console.log(dataDelete);
     // Xóa order
     orderService.deleteOrder(dataDelete._id);
 
@@ -111,10 +110,57 @@ const CourseAssign = () => {
     );
   });
 
+  const filterUsers = users.filter((user) => {
+    const text = `${user.fullName} ${user.email}`.toLowerCase();
+    return text.includes(searchUserTerm.toLowerCase());
+  });
+
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-3xl font-bold">Cấp Khóa Học</h1>
       <p className="text-gray-600">Chọn học viên và khóa học để cấp</p>
+
+      {/* Filters */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                placeholder="Tìm kiếm khóa học..."
+                value={searchCourseTerm}
+                onChange={(e) => setSearchCourseTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                placeholder="Tìm kiếm học viên..."
+                value={searchUserTerm}
+                onChange={(e) => setSearchUserTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            <Button variant="outline" onClick={() => {
+              setSearchCourseTerm('');
+              setSearchUserTerm('');
+              setSelectedUser(null);
+              setSelectedCourse(null);
+            }}>
+              <Filter className="w-4 h-4 mr-2" />
+              Xóa bộ lọc
+            </Button>
+
+            <div className="flex justify-end">
+              <Button onClick={handleAssignCourse}>
+                Cấp Khóa Học
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="flex w-full gap-6">
         {/* Chọn User */}
@@ -132,7 +178,7 @@ const CourseAssign = () => {
               }}
             >
               <option value="">Chọn học viên</option>
-              {users.map((u) => (
+              {filterUsers.map((u) => (
                 <option key={u._id} value={u._id}>
                   {u.fullName} - {u.email}
                 </option>
@@ -165,46 +211,6 @@ const CourseAssign = () => {
           </CardContent>
         </Card>
       </div>
-
-      <div className="flex justify-end">
-        <Button onClick={handleAssignCourse}>
-          Cấp Khóa Học
-        </Button>
-      </div>
-
-      {/* Filters */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <Input
-                placeholder="Tìm kiếm khóa học..."
-                value={searchCourseTerm}
-                onChange={(e) => setSearchCourseTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <Input
-                placeholder="Tìm kiếm học viên..."
-                value={searchUserTerm}
-                onChange={(e) => setSearchUserTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-
-            <Button variant="outline" onClick={() => {
-              setSearchCourseTerm('');
-              setSearchUserTerm('');
-            }}>
-              <Filter className="w-4 h-4 mr-2" />
-              Xóa bộ lọc
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
 
       <Card>
         <CardHeader>

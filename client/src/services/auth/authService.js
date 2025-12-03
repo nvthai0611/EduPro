@@ -122,7 +122,7 @@ class AuthService {
       }
       const res = await apiClient.get("/auth/logout");
 
-      if (res.success) {
+      if (res) {
         return {
           success: true,
           message: res.message || "Đăng xuất thành công",
