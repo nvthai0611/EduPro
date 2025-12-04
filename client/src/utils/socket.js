@@ -1,6 +1,6 @@
 // src/utils/socketService.js
 import { io } from "socket.io-client";
-const socketURL = import.meta.env.VITE_PROD === 'development' ? "https://muddiest-bob-veillike.ngrok-free.dev/" : "https://edupro-qnsy.onrender.com/";
+const socketURL = import.meta.env.VITE_PROD === 'development' ? "https://muddiest-bob-veillike.ngrok-free.dev" : "https://edupro-qnsy.onrender.com/";
 
 class SocketService {
   socket = null;
