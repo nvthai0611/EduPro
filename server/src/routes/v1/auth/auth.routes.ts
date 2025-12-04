@@ -30,29 +30,29 @@ router.get(
   }),
   async (req: Request, res: Response) => {
     try {
+      console.log(
+        "🔍 Google Callback - User:",
+        req.user ? "Found" : "Not found"
+      );
+
       if (!req.user) {
+        console.log("❌ No user, redirecting to:", process.env.FRONTEND_URL);
         return res.redirect(process.env.FRONTEND_URL!);
       }
 
       const user = req.user as any;
+      console.log("✅ User authenticated:", user.email || user._id);
 
-      // Kiểm tra xem người dùng đã có sessionToken chưa
-      const existingUser = await userService.getUserById(user._id);
-      if (existingUser?.sessionToken) {
-        // Nếu đã có sessionToken, từ chối đăng nhập
-        return res.redirect(
-          `${process.env.FRONTEND_URL}?error=User already logged in`
-        );
-      }
-
-      // Generate JWT
+      // Luôn tạo JWT mới mỗi lần đăng nhập Google
+      // Cho phép user đăng nhập từ nhiều thiết bị
       const accessToken = await createAccessToken({
         userId: (req.user as any)["_id"],
         role: (req.user as any).role || "customer",
         image: (req.user as any).image,
       });
+      console.log("🔑 Access token created, length:", accessToken.length);
 
-      // Cập nhật sessionToken cho người dùng
+      // Cập nhật sessionToken mới nhất (optional - để track login gần nhất)
       await userService.updateUser(user._id, {
         sessionToken: accessToken,
         sessionTokenExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
@@ -60,21 +60,24 @@ router.get(
 
       const isProduction = process.env.NODE_ENV === "production";
 
+      // Cookie options - domain phải là undefined cho localhost
       const cookieOptions = {
-        sameSite: isProduction ? "none" : "strict",
+        sameSite: isProduction ? "none" : "lax", // lax thay vì strict để CORS hoạt động
         secure: isProduction,
         httpOnly: false,
-        domain: isProduction ? "edu-pro-delta.vercel.app" : undefined,
+        domain: isProduction ? ".edu-pro-delta.vercel.app" : undefined, // undefined cho localhost
         maxAge: 24 * 60 * 60 * 1000, // 1 day
+        path: "/",
       };
 
       // Set cookie với token
       res.cookie("render_id", accessToken, cookieOptions as any);
+      console.log("🍪 Cookie set with options:", cookieOptions);
 
-      // Mã hóa token bằng Base64 để bảo mật khi truyền qua URL
-      // Dùng tên tham số ngắn gọn để không lộ ý định
-      const encodedToken = Buffer.from(accessToken).toString("base64");
-      return res.redirect(`${process.env.FRONTEND_URL}?auth=${encodedToken}`);
+      // Redirect về FE với success flag, không cần gửi token qua URL nữa
+      const redirectUrl = `${process.env.FRONTEND_URL}?login=success`;
+      console.log("🔄 Redirecting to:", redirectUrl);
+      return res.redirect(redirectUrl);
     } catch (error) {
       console.error("Google Callback Error:", error);
       return res.redirect(`${process.env.FRONTEND_URL}?error=Server Error`);

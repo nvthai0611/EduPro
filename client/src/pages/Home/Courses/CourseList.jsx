@@ -186,13 +186,11 @@ export default function CourseList() {
       try {
         setIsLoading(true);
         setError(null);
-
         const params = {};
         params.status = "published"; // Chỉ lấy khóa học đã xuất bản
         if (categorySlug) {
           params.category = categorySlug;
         }
-
         const response = await courseService.getCourses(params);
         setCourseData(response.data || []); // Đảm bảo luôn là array
       } catch (error) {

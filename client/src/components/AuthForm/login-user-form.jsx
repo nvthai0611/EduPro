@@ -15,9 +15,9 @@ export default function LoginUserForm() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  // Xử lý token từ Google OAuth redirect
+  // Xử lý Google OAuth redirect (cookie được set từ server)
   useEffect(() => {
-    const encodedAuth = searchParams.get("auth");
+    const loginSuccess = searchParams.get("login");
     const error = searchParams.get("error");
 
     if (error) {
@@ -26,26 +26,16 @@ export default function LoginUserForm() {
       return;
     }
 
-    if (encodedAuth) {
-      try {
-        // Giải mã token từ Base64
-        const token = atob(encodedAuth);
-        
-        // Lưu token vào cookie
-        const isProduction = import.meta.env.VITE_PROD === "production";
-        const cookieOptions = `path=/; max-age=86400; ${
-          isProduction ? "secure; samesite=none" : "samesite=strict"
-        }`;
-        document.cookie = `render_id=${token}; ${cookieOptions}`;
-        
+    // Kiểm tra nếu login thành công và có cookie
+    if (loginSuccess === "success") {
+      const hasToken = document.cookie.includes("render_id=");
+      
+      if (hasToken) {
         toast.success("Đăng nhập Google thành công!");
-        
-        // Redirect về trang chủ sau 500ms
         setTimeout(() => {
           window.location.href = "/";
         }, 500);
-      } catch (err) {
-        console.error("Token decode error:", err);
+      } else {
         toast.error("Có lỗi xảy ra khi đăng nhập");
       }
     }
