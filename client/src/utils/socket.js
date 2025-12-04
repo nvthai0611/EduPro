@@ -1,6 +1,6 @@
 // src/utils/socketService.js
 import { io } from "socket.io-client";
-const socketURL = import.meta.env.VITE_PROD === 'development' ? "https://muddiest-bob-veillike.ngrok-free.dev/" : "https://edu-pro-delta.vercel.app/";
+const socketURL = import.meta.env.VITE_PROD === 'development' ? "https://muddiest-bob-veillike.ngrok-free.dev/" : "https://edupro-qnsy.onrender.com/";
 
 class SocketService {
   socket = null;
@@ -13,11 +13,11 @@ class SocketService {
       });
 
       this.socket.on("connect", () => {
-        console.log("Connected:", this.socket.id);
+        // console.log("Connected:", this.socket.id);
       });
 
       this.socket.on("disconnect", () => {
-        console.log("Disconnected");
+        // console.log("Disconnected");
       });
     }
   }

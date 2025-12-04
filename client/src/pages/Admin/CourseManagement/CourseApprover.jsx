@@ -42,7 +42,6 @@ const CourseApprover = () => {
             coursesData = [];
           }
           
-          console.log('Final coursesData:', coursesData);
           setCourses(coursesData);
         } catch (error) {
           console.error('Error fetching courses:', error);

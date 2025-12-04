@@ -1,10 +1,48 @@
-import mongoose from "mongoose";
+import mongoose, { Document } from "mongoose";
 
-const lessonSchema = new mongoose.Schema(
+export interface ILesson {
+
+  sectionId: mongoose.Types.ObjectId;
+  courseId: mongoose.Types.ObjectId;
+  title: string;
+  description?: string;
+
+  type: "video" | "article" | "quiz";
+
+  order: number;
+
+  // video specific
+  videoUrl?: string;
+  videoDuration?: number; // in seconds
+  
+  // article specific
+  content?: string; // HTML content for article
+  readingTime?: number; // in minutes
+  
+  // quiz specific (upcoming)
+  // quizId?: mongoose.Types.ObjectId;
+  // passingScore?: number;
+  
+  isPreviewed?: boolean;
+  isFree?: boolean;
+
+  isPublished?: boolean;
+  isDeleted?: boolean;
+
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface ILessonDocument extends ILesson, Document {
+  // custom methods (if any)
+  isAccessible(userPurchasedCourses: string[]): boolean;
+  formattedDuration(): string;
+}
+const lessonSchema = new mongoose.Schema<ILessonDocument>(
   {
-    moduleId: {
+    sectionId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Module",
+      ref: "Section",
       required: true,
     },
     courseId: {
@@ -15,22 +53,27 @@ const lessonSchema = new mongoose.Schema(
     title: { type: String, required: true, trim: true },
     description: { type: String, trim: true },
     order: { type: Number, required: true, min: 1 },
-    videoUrl: { type: String, required: true },
-    videoDuration: { type: Number, required: true, min: 0 }, // giây
+    
+    // Video fields (optional - only for video type)
+    videoUrl: { type: String },
+    videoDuration: { type: Number, min: 0 },
+    
+    // Article fields (optional - only for article type)
+    content: { type: String },
+    readingTime: { type: Number, min: 0 },
+    
     isFree: { type: Boolean, default: false },
-    resources: [
-      {
-        name: { type: String, required: true },
-        url: { type: String, required: true },
-        type: {
-          type: String,
-          enum: ["pdf", "code", "slides", "other"],
-          default: "other",
-        },
-      },
-    ],
+
+    type: {
+      type: String,
+      enum: ["video", "article", "quiz"],
+      required: true,
+    },
+    isPublished: { type: Boolean, default: false },
+    isDeleted: { type: Boolean, default: false },
+    isPreviewed: { type: Boolean, default: false },
   },
-  { collection: "Lessons", timestamps: true }
+  { collection: "Lesson", timestamps: true }
 );
 
 // Indexes

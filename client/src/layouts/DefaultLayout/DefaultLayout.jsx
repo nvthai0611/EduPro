@@ -9,7 +9,7 @@ const DefaultLayout = () => {
 
   
   return (
-    <CartProvider>
+    // <CartProvider>
     <div>
       <Header />
       <main>
@@ -17,7 +17,7 @@ const DefaultLayout = () => {
       </main>
       <Footer />
     </div>
-  </CartProvider>
+  // </CartProvider>
   );
 };
 

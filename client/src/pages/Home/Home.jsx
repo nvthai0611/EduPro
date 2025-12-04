@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { 
   Play, 
   Star, 
@@ -9,25 +9,60 @@ import {
   Clock, 
   BookOpen, 
   Award,
-  TrendingUp,
-  CheckCircle,
   ArrowRight,
-  Code,
   Database,
   Globe,
   Smartphone,
   Zap
 } from 'lucide-react';
-import CourseCard from '../../components/Course/CourseCard';
 import { courseService } from '../../services/courseService';
 import { useAuth } from '../../hooks/useAuth';
+import { Link } from 'react-router-dom';
+import SkillsSection from './SkillsSection';
+import LearningRoadmap from './LearningRoadmap';
+import { toast } from 'react-toastify';
 
 function Home() {
   const { user } = useAuth();
-  const [featuredCourses, setFeaturedCourses] = useState([]);
-  const [popularCourses, setPopularCourses] = useState([]);
-  const [freeCourses, setFreeCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  // Xử lý token từ Google OAuth redirect
+  useEffect(() => {
+    const encodedAuth = searchParams.get("auth");
+    const error = searchParams.get("error");
+
+    if (error) {
+      toast.error("Đăng nhập Google thất bại: " + error);
+      navigate("/", { replace: true });
+      return;
+    }
+
+    if (encodedAuth) {
+      try {
+        // Giải mã token từ Base64
+        const token = atob(encodedAuth);
+        
+        const isProduction = import.meta.env.VITE_PROD === "production";
+        const cookieOptions = `path=/; max-age=86400; ${
+          isProduction ? "secure; samesite=none" : "samesite=strict"
+        }`;
+        document.cookie = `render_id=${token}; ${cookieOptions}`;
+        
+        toast.success("Đăng nhập Google thành công!");
+        
+        // Xóa auth param khỏi URL và reload
+        navigate("/", { replace: true });
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+      } catch (err) {
+        console.error("Token decode error:", err);
+        toast.error("Có lỗi xảy ra khi đăng nhập");
+      }
+    }
+  }, [searchParams, navigate]);
 
   useEffect(() => {
     fetchHomeData();
@@ -36,15 +71,6 @@ function Home() {
   const fetchHomeData = async () => {
     try {
       setLoading(true);
-      const [featured, popular, free] = await Promise.all([
-        courseService.getFeaturedCourses(),
-        courseService.getPopularCourses(),
-        courseService.getFreeCourses()
-      ]);
-      
-      setFeaturedCourses(featured.data || []);
-      setPopularCourses(popular.data || []);
-      setFreeCourses(free.data || []);
     } catch (error) {
       console.error('Error fetching home data:', error);
     } finally {
@@ -52,23 +78,36 @@ function Home() {
     }
   };
 
-  const handleViewDetail = (course) => {
-    window.location.href = `/courses/${course.slug}`;
-  };
-
-  const handlePurchase = (course) => {
-    if (course.price === 0) {
-      window.location.href = `/learn/${course._id}`;
-    } else {
-      window.location.href = `/courses/${course.slug}`;
-    }
-  };
-
+  // Dữ liệu các chuyên môn
   const categories = [
-    { name: 'Frontend', icon: Globe, color: 'bg-blue-500', count: 12 },
-    { name: 'Backend', icon: Database, color: 'bg-green-500', count: 8 },
-    { name: 'Mobile', icon: Smartphone, color: 'bg-purple-500', count: 6 },
-    { name: 'DevOps', icon: Zap, color: 'bg-orange-500', count: 4 },
+    {
+      name: "Frontend",
+      slug: "frontend",
+      count: 7,
+      icon: Globe,
+      color: "text-blue-600 bg-blue-100",
+    },
+    {
+      name: "Backend",
+      slug: "backend",
+      count: 3,
+      icon: Database,
+      color: "text-green-600 bg-green-100",
+    },
+    {
+      name: "Mobile",
+      slug: "mobile",
+      count: 1,
+      icon: Smartphone,
+      color: "text-purple-600 bg-purple-100",
+    },
+    {
+      name: "DevOps",
+      slug: "devops",
+      count: 1,
+      icon: Zap,
+      color: "text-orange-600 bg-orange-100",
+    },
   ];
 
   const stats = [
@@ -84,21 +123,21 @@ function Home() {
       role: 'Frontend Developer',
       content: 'Khóa học React của Hoàng An IT rất chi tiết và dễ hiểu. Tôi đã có thể tự tin apply vào các công ty lớn.',
       rating: 5,
-      avatar: 'https://via.placeholder.com/60x60'
+      avatar: 'https://i.pravatar.cc/?img=4'
     },
     {
       name: 'Trần Thị B',
       role: 'Fullstack Developer',
       content: 'Hệ thống học tập rất tốt, video chất lượng cao và có hỗ trợ 24/7. Rất đáng để đầu tư!',
       rating: 5,
-      avatar: 'https://via.placeholder.com/60x60'
+      avatar: 'https://i.pravatar.cc/?img=5'
     },
     {
       name: 'Lê Văn C',
       role: 'Mobile Developer',
       content: 'Sau khi học khóa Flutter, tôi đã có thể tự phát triển ứng dụng mobile và kiếm được thu nhập tốt.',
       rating: 5,
-      avatar: 'https://via.placeholder.com/60x60'
+      avatar: 'https://i.pravatar.cc/?img=11'
     }
   ];
 
@@ -120,26 +159,17 @@ function Home() {
               Học Lập Trình Từ Cơ Bản Đến Nâng Cao
             </h1>
             <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
-              Khám phá thế giới lập trình với các khóa học chất lượng cao từ Hoàng An IT. 
+              Khám phá thế giới lập trình với các khóa học chất lượng cao từ Hoàng An IT.
               Từ Frontend đến Backend, từ Web đến Mobile - chúng tôi có tất cả!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
-                size="lg" 
+              <Button
+                size="lg"
                 className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3"
                 onClick={() => window.location.href = '/courses'}
               >
                 <Play className="w-5 h-5 mr-2" />
                 Bắt đầu học ngay
-              </Button>
-              <Button 
-                variant="outline" 
-                size="lg" 
-                className="border-white text-white hover:bg-white/10 px-8 py-3"
-                onClick={() => window.location.href = '/courses?price=free'}
-              >
-                <BookOpen className="w-5 h-5 mr-2" />
-                Khóa học miễn phí
               </Button>
             </div>
           </div>
@@ -178,128 +208,31 @@ function Home() {
               Chọn lĩnh vực phù hợp với mục tiêu nghề nghiệp của bạn
             </p>
           </div>
-          
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {categories.map((category, index) => (
-              <Card key={index} className="group hover:shadow-lg transition-all duration-300 cursor-pointer">
-                <CardContent className="p-6 text-center">
-                  <div className={`w-16 h-16 ${category.color} rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform`}>
-                    <category.icon className="w-8 h-8 text-white" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {category.name}
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    {category.count} khóa học
-                  </p>
-                </CardContent>
-              </Card>
+              <Link to={`/courses/category/${category.slug}`} key={index}>
+                <Card key={index} className="group hover:shadow-lg transition-all duration-300 cursor-pointer">
+                  <CardContent className="p-6 text-center">
+                    <div className={`w-16 h-16 ${category.color} rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform`}>
+                      <category.icon className="w-8 h-8" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      {category.name}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {category.count} khóa học
+                    </p>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Featured Courses */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-12">
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Khóa học nổi bật
-              </h2>
-              <p className="text-lg text-gray-600">
-                Những khóa học được đánh giá cao nhất
-              </p>
-            </div>
-            <Button 
-              variant="outline"
-              onClick={() => window.location.href = '/courses?sort=featured'}
-            >
-              Xem tất cả
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredCourses.slice(0, 6).map(course => (
-              <CourseCard
-                key={course._id}
-                course={course}
-                onViewDetail={handleViewDetail}
-                onPurchase={handlePurchase}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Popular Courses */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-12">
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Khóa học phổ biến
-              </h2>
-              <p className="text-lg text-gray-600">
-                Được nhiều học viên lựa chọn nhất
-              </p>
-            </div>
-            <Button 
-              variant="outline"
-              onClick={() => window.location.href = '/courses?sort=popular'}
-            >
-              Xem tất cả
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {popularCourses.slice(0, 6).map(course => (
-              <CourseCard
-                key={course._id}
-                course={course}
-                onViewDetail={handleViewDetail}
-                onPurchase={handlePurchase}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Free Courses */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-12">
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Khóa học miễn phí
-              </h2>
-              <p className="text-lg text-gray-600">
-                Bắt đầu hành trình học tập của bạn ngay hôm nay
-              </p>
-            </div>
-            <Button 
-              variant="outline"
-              onClick={() => window.location.href = '/courses?price=free'}
-            >
-              Xem tất cả
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {freeCourses.slice(0, 6).map(course => (
-              <CourseCard
-                key={course._id}
-                course={course}
-                onViewDetail={handleViewDetail}
-                onPurchase={handlePurchase}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
+      <SkillsSection />
+      <LearningRoadmap />
 
       {/* Testimonials */}
       <section className="py-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
@@ -312,7 +245,7 @@ function Home() {
               Hàng nghìn học viên đã thành công với các khóa học của chúng tôi
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
               <Card key={index} className="bg-white/10 backdrop-blur-sm border-white/20">
@@ -321,7 +254,7 @@ function Home() {
                     <img
                       src={testimonial.avatar}
                       alt={testimonial.name}
-                      className="w-12 h-12 rounded-full mr-4"
+                      className="w-12 h-12 rounded-full mr-4 bg-white object-cover"
                     />
                     <div>
                       <h4 className="font-semibold text-white">
@@ -338,7 +271,7 @@ function Home() {
                     ))}
                   </div>
                   <p className="text-blue-100 italic">
-                    "{testimonial.content}"
+                    {testimonial.content}
                   </p>
                 </CardContent>
               </Card>
@@ -357,8 +290,8 @@ function Home() {
             Tham gia cùng hàng nghìn học viên đang học tập và phát triển kỹ năng lập trình
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               className="bg-blue-600 hover:bg-blue-700 px-8 py-3"
               onClick={() => window.location.href = '/courses'}
             >
@@ -366,11 +299,11 @@ function Home() {
               Khám phá khóa học
             </Button>
             {!user && (
-              <Button 
-                variant="outline" 
-                size="lg" 
+              <Button
+                variant="outline"
+                size="lg"
                 className="px-8 py-3"
-                onClick={() => window.location.href = '/dang-ky'}
+                onClick={() => window.location.href = '/dang-nhap'}
               >
                 <Users className="w-5 h-5 mr-2" />
                 Đăng ký miễn phí

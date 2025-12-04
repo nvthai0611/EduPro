@@ -3,6 +3,16 @@ import Order, { IOrder } from "./order.model";
 import { Types } from "mongoose";
 
 class OrderRepository {
+  async getAllOrders() {
+    return await Order.find({
+      statusOrder: "completed",
+      paymentStatus: "paid",
+    })
+      .populate("userId", "fullName email")
+      .populate("courseId", "title thumbnail description")
+      .lean();
+  }
+
   async createOrder(data: Partial<IOrder>) {
     return Order.create(data);
   }
@@ -17,6 +27,10 @@ class OrderRepository {
 
   async updateOrder(order: IOrder) {
     return order.save();
+  }
+
+  async deleteOrder(orderId: string) {
+    return Order.findByIdAndDelete(orderId).lean();
   }
 
   async markAsPaid(orderId: string) {

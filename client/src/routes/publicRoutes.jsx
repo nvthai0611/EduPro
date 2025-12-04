@@ -22,6 +22,7 @@ import CourseList from "../pages/Home/Courses/CourseList";
 import CourseDetail from "../pages/Home/Courses/CourseDetail";
 import CourseLearnDetail from "../pages/Courses/CourseLearnDetail";
 import Profile from "../pages/Auth/Profile";
+import Home from "../pages/Home/Home";
 
 // Learning Platform
 
@@ -31,7 +32,7 @@ export const publicRoutes = (
     {/* Wrapper check role cho toàn bộ public pages */}
     <Route element={<RoleRedirectMiddleware />}>
       <Route element={<DefaultLayout />}>
-        <Route path="/" element={<CourseList />} />
+        <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/advisory" element={<AdvisoryPage />} />
         {/* Course Routes */}

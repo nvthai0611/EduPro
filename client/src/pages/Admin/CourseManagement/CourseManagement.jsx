@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -32,11 +33,13 @@ import {
   Info,
   CheckSquare,
   AlertCircle,
-  UserCheck
+  UserCheck,
+  Layers
 } from 'lucide-react';
 import { courseService } from '../../../services/admin/courseService';
 
 const CourseManagement = () => {
+  const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -83,7 +86,7 @@ const CourseManagement = () => {
         coursesData = [];
       }
       
-      console.log('Final coursesData:', coursesData);
+      // console.log('Final coursesData:', coursesData);
       setCourses(coursesData);
     } catch (error) {
       console.error('Error fetching courses:', error);
@@ -92,6 +95,7 @@ const CourseManagement = () => {
       setLoading(false);
     }
   };
+
   const getStatusBadge = (status) => {
     const statusConfig = {
       published: { label: "Đã xuất bản", className: "bg-green-100 text-green-800" },
@@ -154,9 +158,8 @@ const CourseManagement = () => {
     }
   };
 
-  const handleToggleStatus = async (course) => {
+  const handleToggleStatus = async (course, newStatus) => {
     try {
-      let newStatus;
 
       const updatedCourse = { ...course, status: newStatus };
       await courseService.updateCourse(course._id, updatedCourse);
@@ -353,7 +356,8 @@ const CourseManagement = () => {
                   <tr className="border-b">
                     <th className="text-left p-4">Khóa học</th>
                     <th className="text-left p-4">Cấp độ</th>
-                    <th className="text-left p-4">Giá</th>
+                    <th className="text-left p-4">Giá gốc</th>
+                    <th className="text-left p-4">Giá khuyến mãi</th>
                     <th className="text-left p-4">Học viên</th>
                     <th className="text-left p-4">Đánh giá</th>
                     <th className="text-left p-4">Trạng thái</th>
@@ -390,6 +394,11 @@ const CourseManagement = () => {
                         </span>
                       </td>
                       <td className="p-4">
+                        <span className="font-medium">
+                          {formatPrice(course?.salePrice ? course.salePrice : 0)}
+                        </span>
+                      </td>
+                      <td className="p-4">
                         <div className="flex items-center space-x-1">
                           <Users className="w-4 h-4 text-gray-400" />
                           <span>{course?.totalStudents || 0}</span>
@@ -408,6 +417,15 @@ const CourseManagement = () => {
                       </td>
                       <td className="p-4">
                         <div className="flex items-center space-x-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate(`/admin/courses/${course?.slug}/builder`)}
+                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                            title="Xây dựng nội dung"
+                          >
+                            <Layers className="w-4 h-4" />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -440,15 +458,27 @@ const CourseManagement = () => {
                               >
                                 Submit
                               </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleToggleStatus(course)}
-                              >
-                                Xuất bản
-                              </Button>
+                              
                             </>
                           )}
+                          {course.status === 'approved' && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleToggleStatus(course, 'published')}
+                              >
+                                Xuất bản
+                              </Button>)}
+                          {(course.status === 'published') && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleToggleDelete(course)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              Xóa
+                            </Button>
+                          ) }
                           {(course.status === 'approved' || course.status === 'rejected') && (
                             <Button
                               variant="ghost"
@@ -463,16 +493,7 @@ const CourseManagement = () => {
                               <MessageSquare className="w-4 h-4" />
                             </Button>
                           )}
-                          {course.status === 'published' && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleToggleDelete(course)}
-                            >
-                              Ẩn
-                            </Button>
-                          )}
-                          {course?.status !== 'pending' && (
+                          {/* {course?.status !== 'pending' && (
                             <Button
                               variant="ghost"
                               size="sm"
@@ -481,7 +502,7 @@ const CourseManagement = () => {
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
-                          )}
+                          )} */}
                         </div>
                       </td>
                     </tr>
