@@ -24,9 +24,10 @@ const MyCourses = () => {
   const [activeTab, setActiveTab] = useState('learning');
   const [learningCourses, setLearningCourses] = useState([]);
   const [completedCourses, setCompletedCourses] = useState([]);
-
+  
   useEffect(() => {
     fetchMyCourses();
+    
   }, [user]);
 
   const fetchMyCourses = async () => {

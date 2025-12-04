@@ -16,7 +16,6 @@ class AuthService {
 
   getUser() {
     if (typeof window === "undefined") return null;
-
     try {
       return decodeJWT(Cookies.get(this.accessTokenKey));
     } catch {
@@ -46,7 +45,10 @@ class AuthService {
 
   clearAuthData() {
     // Domain phải khớp với server cookie domain: .edu-pro-delta.vercel.app
-    const domain = import.meta.env.VITE_PROD === "production" ? ".edu-pro-delta.vercel.app" : undefined;
+    const domain =
+      import.meta.env.VITE_PROD === "production"
+        ? ".edu-pro-delta.vercel.app"
+        : undefined;
 
     // Xoá với cả domain và không domain để đảm bảo
     [undefined, domain].forEach((d) => {
@@ -70,7 +72,9 @@ class AuthService {
 
   async register(credentials) {
     try {
-      const response = await apiClient.post("/auth/register", { data: credentials });
+      const response = await apiClient.post("/auth/register", {
+        data: credentials,
+      });
       return response;
     } catch (error) {
       return {
@@ -82,7 +86,10 @@ class AuthService {
 
   async checkExistEmailOrPhone(email, phoneNumber) {
     try {
-      const response = await apiClient.post("/auth/check-email-phone", { email, phoneNumber });
+      const response = await apiClient.post("/auth/check-email-phone", {
+        email,
+        phoneNumber,
+      });
       return response;
     } catch (error) {
       return {
@@ -220,15 +227,13 @@ class AuthService {
     try {
       // Thay vì gọi API không tồn tại, decode token để lấy user info
       const token = apiClient.getTokenFromCookie();
+      console.log(token);
+
       if (!token) return null;
-      
-      const decoded = decodeJWT(token);
-      if (decoded) {
-        // Store decoded user data
-        this.storeUserData(decoded);
-        return decoded;
-      }
-      return null;
+      const user = decodeJWT(token);
+      console.log(user);
+      this.storeUserData(user);
+      return user;
     } catch (error) {
       console.error("fetchCurrentUser error:", error);
       return null;
