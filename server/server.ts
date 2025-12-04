@@ -3,7 +3,7 @@ import http from "http";
 
 import morgan from "morgan";
 import { Server } from "socket.io";
-import SocketService  from "./src/utils/socket/socket";
+import SocketService from "./src/utils/socket/socket";
 import PayOS from "@payos/node";
 import axios from "axios";
 import fs from "fs";
@@ -44,7 +44,7 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:9999",
   "https://muddiest-bob-veillike.ngrok-free.dev/",
-  "https://edu-pro-delta.vercel.app/",
+  "https://edu-pro-delta.vercel.app",
 ];
 const corsOptions = {
   origin: (origin: any, callback: any) => {
