@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { 
   Play, 
   Star, 
@@ -9,10 +9,7 @@ import {
   Clock, 
   BookOpen, 
   Award,
-  TrendingUp,
-  CheckCircle,
   ArrowRight,
-  Code,
   Database,
   Globe,
   Smartphone,
@@ -21,6 +18,7 @@ import {
 import CourseCard from '../../components/Course/CourseCard';
 import { courseService } from '../../services/courseService';
 import { useAuth } from '../../hooks/useAuth';
+import { toast } from 'react-toastify';
 
 function Home() {
   const { user } = useAuth();
@@ -28,6 +26,44 @@ function Home() {
   const [popularCourses, setPopularCourses] = useState([]);
   const [freeCourses, setFreeCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  // Xử lý token từ Google OAuth redirect
+  useEffect(() => {
+    const encodedAuth = searchParams.get("auth");
+    const error = searchParams.get("error");
+
+    if (error) {
+      toast.error("Đăng nhập Google thất bại: " + error);
+      navigate("/", { replace: true });
+      return;
+    }
+
+    if (encodedAuth) {
+      try {
+        // Giải mã token từ Base64
+        const token = atob(encodedAuth);
+        
+        const isProduction = import.meta.env.VITE_PROD === "production";
+        const cookieOptions = `path=/; max-age=86400; ${
+          isProduction ? "secure; samesite=none" : "samesite=strict"
+        }`;
+        document.cookie = `render_id=${token}; ${cookieOptions}`;
+        
+        toast.success("Đăng nhập Google thành công!");
+        
+        // Xóa auth param khỏi URL và reload
+        navigate("/", { replace: true });
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+      } catch (err) {
+        console.error("Token decode error:", err);
+        toast.error("Có lỗi xảy ra khi đăng nhập");
+      }
+    }
+  }, [searchParams, navigate]);
 
   useEffect(() => {
     fetchHomeData();
@@ -338,7 +374,7 @@ function Home() {
                     ))}
                   </div>
                   <p className="text-blue-100 italic">
-                    "{testimonial.content}"
+                    {testimonial.content}
                   </p>
                 </CardContent>
               </Card>

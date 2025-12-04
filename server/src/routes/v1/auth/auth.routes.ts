@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import passport from "passport";
 
-import {createAccessToken} from "../../../utils/jwt";
+import { createAccessToken } from "../../../utils/jwt";
 
 const router: Router = Router();
 
@@ -49,9 +49,13 @@ router.get(
         domain: isProduction ? "edu-pro-delta.vercel.app" : undefined,
       };
 
+      // Set cookie với token
       res.cookie("render_id", accessToken, cookieOptions as any);
 
-      return res.redirect(process.env.FRONTEND_URL!);
+      // Mã hóa token bằng Base64 để bảo mật khi truyền qua URL
+      // Dùng tên tham số ngắn gọn để không lộ ý định
+      const encodedToken = Buffer.from(accessToken).toString("base64");
+      return res.redirect(`${process.env.FRONTEND_URL}?auth=${encodedToken}`);
     } catch (error) {
       console.error("Google Callback Error:", error);
       return res.redirect(`${process.env.FRONTEND_URL}?error=Server Error`);
