@@ -1,17 +1,55 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import authService from "../../services/auth/authService";
 import { toast, ToastContainer } from "react-toastify";
 
 export default function LoginUserForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  // Xử lý token từ Google OAuth redirect
+  useEffect(() => {
+    const encodedAuth = searchParams.get("auth");
+    const error = searchParams.get("error");
+
+    if (error) {
+      toast.error("Đăng nhập Google thất bại: " + error);
+      navigate("/dang-nhap", { replace: true });
+      return;
+    }
+
+    if (encodedAuth) {
+      try {
+        // Giải mã token từ Base64
+        const token = atob(encodedAuth);
+        
+        // Lưu token vào cookie
+        const isProduction = import.meta.env.VITE_PROD === "production";
+        const cookieOptions = `path=/; max-age=86400; ${
+          isProduction ? "secure; samesite=none" : "samesite=strict"
+        }`;
+        document.cookie = `render_id=${token}; ${cookieOptions}`;
+        
+        toast.success("Đăng nhập Google thành công!");
+        
+        // Redirect về trang chủ sau 500ms
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 500);
+      } catch (err) {
+        console.error("Token decode error:", err);
+        toast.error("Có lỗi xảy ra khi đăng nhập");
+      }
+    }
+  }, [searchParams, navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();

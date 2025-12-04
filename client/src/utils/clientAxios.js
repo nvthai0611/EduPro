@@ -1,6 +1,7 @@
 import axios from "axios";
 import { AUTH_TOKEN } from "../constains/auth";
 import CryptoJS from "crypto-js";
+import { logger } from "./logger";
 
 // Khởi tạo axios instance
 const client = axios.create({
@@ -101,7 +102,7 @@ export const getTokenFromCookie = () => {
 export const initSession = () => {
   const token = getToken();
   if (token) {
-    console.log("Session initialized with token");
+    logger.log("Session initialized with token");
   } else {
     console.log("No token found for session");
   }

@@ -7,6 +7,10 @@ import { Provider } from "react-redux";
 import store from "./stores/store";
 import "./lib/i18n"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { disableConsoleInProduction } from "./utils/logger";
+
+// Tắt console logs trong production
+disableConsoleInProduction();
 
 // // Global alert management
 // window.devToolsAlertShown = false;

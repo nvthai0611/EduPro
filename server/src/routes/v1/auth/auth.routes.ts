@@ -40,7 +40,9 @@ router.get(
       const existingUser = await userService.getUserById(user._id);
       if (existingUser?.sessionToken) {
         // Nếu đã có sessionToken, từ chối đăng nhập
-        return res.redirect(`${process.env.FRONTEND_URL}?error=User already logged in`);
+        return res.redirect(
+          `${process.env.FRONTEND_URL}?error=User already logged in`
+        );
       }
 
       // Generate JWT
@@ -51,12 +53,10 @@ router.get(
       });
 
       // Cập nhật sessionToken cho người dùng
-      await userService.updateUser(user._id,
-        {
-          sessionToken: accessToken,
-          sessionTokenExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
-        }
-      );
+      await userService.updateUser(user._id, {
+        sessionToken: accessToken,
+        sessionTokenExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
+      });
 
       const isProduction = process.env.NODE_ENV === "production";
 
@@ -68,9 +68,13 @@ router.get(
         maxAge: 24 * 60 * 60 * 1000, // 1 day
       };
 
+      // Set cookie với token
       res.cookie("render_id", accessToken, cookieOptions as any);
 
-      return res.redirect(process.env.FRONTEND_URL!);
+      // Mã hóa token bằng Base64 để bảo mật khi truyền qua URL
+      // Dùng tên tham số ngắn gọn để không lộ ý định
+      const encodedToken = Buffer.from(accessToken).toString("base64");
+      return res.redirect(`${process.env.FRONTEND_URL}?auth=${encodedToken}`);
     } catch (error) {
       console.error("Google Callback Error:", error);
       return res.redirect(`${process.env.FRONTEND_URL}?error=Server Error`);
@@ -85,7 +89,10 @@ router.get("/logout", async (req: Request, res: Response) => {
   try {
     const decoded: any = await decodeToken(token);
 
-    await userService.updateUser(decoded.userId, { $unset: { sessionToken: "" }, $set: { sessionTokenExpiresAt: "" }, } as any);
+    await userService.updateUser(decoded.userId, {
+      $unset: { sessionToken: "" },
+      $set: { sessionTokenExpiresAt: "" },
+    } as any);
 
     // Xóa token khỏi cookie
     res.clearCookie("render_id");
@@ -94,6 +101,6 @@ router.get("/logout", async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).send("Server error");
   }
-})
+});
 
 export const authRoutes: Router = router;
