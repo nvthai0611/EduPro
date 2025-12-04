@@ -15,28 +15,37 @@ export default function LoginUserForm() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  // Xử lý Google OAuth redirect (cookie được set từ server)
+  // Xử lý OAuth redirect
   useEffect(() => {
-    const loginSuccess = searchParams.get("login");
+    const encodedAuth = searchParams.get("auth");
     const error = searchParams.get("error");
 
     if (error) {
-      toast.error("Đăng nhập Google thất bại: " + error);
+      toast.error("Đăng nhập thất bại: " + error);
       navigate("/dang-nhap", { replace: true });
       return;
     }
 
-    // Kiểm tra nếu login thành công và có cookie
-    if (loginSuccess === "success") {
-      const hasToken = document.cookie.includes("render_id=");
-      
-      if (hasToken) {
-        toast.success("Đăng nhập Google thành công!");
+    // Xử lý auth param
+    if (encodedAuth) {
+      try {
+        // Giải mã từ Base64
+        const token = atob(encodedAuth);
+        
+        // Lưu vào cookie
+        const isProduction = import.meta.env.VITE_PROD === "production";
+        const cookieOptions = `path=/; max-age=86400; ${
+          isProduction ? "secure; samesite=none" : "samesite=lax"
+        }`;
+        document.cookie = `render_id=${token}; ${cookieOptions}`;
+        
+        toast.success("Đăng nhập thành công!");
         setTimeout(() => {
           window.location.href = "/";
         }, 500);
-      } else {
-        toast.error("Có lỗi xảy ra khi đăng nhập");
+      } catch (err) {
+        console.error("Decode error:", err);
+        toast.error("Đăng nhập thất bại");
       }
     }
   }, [searchParams, navigate]);

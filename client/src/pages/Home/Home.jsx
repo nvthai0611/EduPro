@@ -30,39 +30,38 @@ function Home() {
 
   // Xử lý Google OAuth redirect
   useEffect(() => {
-    const loginSuccess = searchParams.get("login");
+    const encodedAuth = searchParams.get("auth");
     const error = searchParams.get("error");
 
-    console.log("🏠 Home - Google OAuth Check:", {
-      loginSuccess,
+    console.log("🏠 Home - OAuth Check:", {
+      hasAuth: !!encodedAuth,
       hasError: !!error,
-      cookies: document.cookie,
       url: window.location.href
     });
 
     if (error) {
-      toast.error("Đăng nhập Google thất bại: " + error);
+      toast.error("Đăng nhập thất bại: " + error);
       navigate("/", { replace: true });
       return;
     }
 
-    // Kiểm tra nếu có login=success và cookie render_id tồn tại
-    if (loginSuccess === "success") {
-      const hasToken = document.cookie.includes("render_id=");
-      console.log("✅ Login success detected, has token:", hasToken);
-      
-      if (hasToken) {
-        toast.success("Đăng nhập Google thành công!");
+    // Xử lý auth param từ URL
+    if (encodedAuth) {
+      try {
+        // Giải mã từ Base64
+        const token = atob(encodedAuth);
+        console.log("✅ Decoded, length:", token.length);
         
-        // Xóa param khỏi URL và reload
-        navigate("/", { replace: true });
-        setTimeout(() => {
-          console.log("🔄 Reloading page to update auth state...");
-          window.location.reload();
-        }, 500);
-      } else {
-        console.error("❌ Login success but no token in cookie");
-        toast.error("Có lỗi xảy ra khi đăng nhập");
+        // Lưu vào cookie
+        const isProduction = import.meta.env.VITE_PROD === "production";
+        const cookieOptions = `path=/; max-age=86400; ${
+          isProduction ? "secure; samesite=none" : "samesite=lax"
+        }`;
+        document.cookie = `render_id=${token}; ${cookieOptions}`;
+        console.log("🍪 Cookie saved");
+      } catch (err) {
+        console.error("❌ Decode error:", err);
+        toast.error("Đăng nhập thất bại");
       }
     }
   }, [searchParams, navigate]);

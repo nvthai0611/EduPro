@@ -62,20 +62,21 @@ router.get(
 
       // Cookie options - domain phải là undefined cho localhost
       const cookieOptions = {
-        sameSite: isProduction ? "none" : "lax", // lax thay vì strict để CORS hoạt động
+        sameSite: isProduction ? "none" : "strict", // lax thay vì strict để CORS hoạt động
         secure: isProduction,
         httpOnly: false,
-        domain: isProduction ? ".edu-pro-delta.vercel.app" : undefined, // undefined cho localhost
+        domain: isProduction ? "edu-pro-delta.vercel.app" : undefined, // undefined cho localhost
         maxAge: 24 * 60 * 60 * 1000, // 1 day
-        path: "/",
       };
 
-      // Set cookie với token
+      // Set cookie với token (backup nếu FE không lưu được)
       res.cookie("render_id", accessToken, cookieOptions as any);
       console.log("🍪 Cookie set with options:", cookieOptions);
 
-      // Redirect về FE với success flag, không cần gửi token qua URL nữa
-      const redirectUrl = `${process.env.FRONTEND_URL}?login=success`;
+      // Mã hóa token và gửi về FE để FE tự lưu vào cookie
+      // Dùng tên ngắn gọn 'auth' thay vì 'token' để không lộ ý định
+      const encodedToken = Buffer.from(accessToken).toString("base64");
+      const redirectUrl = `${process.env.FRONTEND_URL}?auth=${encodedToken}`;
       console.log("🔄 Redirecting to:", redirectUrl);
       return res.redirect(redirectUrl);
     } catch (error) {
