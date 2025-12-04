@@ -24,13 +24,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 
-// Import face-api.js
-// Bạn có thể cần thêm thư viện này vào dự án của mình nếu chưa có.
-// Ví dụ: import * as faceapi from 'face-api.js';
-// Nếu bạn đang sử dụng Next.js, bạn có thể cần cài đặt nó qua npm/yarn
-// và đảm bảo nó được tải động hoặc chỉ ở phía client.
-// Đối với v0, chúng ta giả định nó có sẵn hoặc được tải qua CDN nếu cần.
-import * as faceapi from "face-api.js"
+// Face-api.js sẽ được lazy load khi component mount để tránh load ban đầu chậm
 
 function RobotModel({ isTalking }) {
   const groupRef = useRef(null)
@@ -229,17 +223,22 @@ export default function Assistant3D() {
       if (modelsLoadedRef.current) return // Prevent re-loading
 
       try {
+        // Lazy load face-api.js chỉ khi cần
+        const faceapi = await import("face-api.js");
+        
         // IMPORTANT: Bạn cần tải các mô hình face-api.js và đặt chúng vào thư mục public/models của bạn.
         // Ví dụ, tải ssd_mobilenetv1_model.weights, ssd_mobilenetv1_model.json, v.v.
         // từ https://github.com/justadudewhohacks/face-api.js/tree/master/weights
-        await faceapi.nets.ssdMobilenetv1.loadFromUri("/face")
-        modelsLoadedRef.current = true
-        console.log("Face API models loaded successfully!")
+        await faceapi.nets.ssdMobilenetv1.loadFromUri("/face");
+        modelsLoadedRef.current = true;
+        // Lưu faceapi instance để dùng sau
+        window.faceapi = faceapi;
+        console.log("Face API models loaded successfully!");
       } catch (err) {
-        console.error("Error loading Face API models:", err)
+        console.error("Error loading Face API models:", err);
         setError(
           "Không thể tải các mô hình AI phân tích khuôn mặt. Vui lòng đảm bảo chúng có trong thư mục public/face.",
-        )
+        );
       }
     }
 
@@ -503,15 +502,19 @@ export default function Assistant3D() {
         try {
           // Ensure the image element is loaded before detection if using an <img> tag
           // For canvas, it's usually ready after drawImage
-          const detections = await faceapi.detectAllFaces(canvas, new faceapi.SsdMobilenetv1Options())
-          analyzeFace(imageData, detections.length) // Pass face count to analyzeFace
+          const faceapi = window.faceapi;
+          if (!faceapi) {
+            throw new Error("Face API chưa được load");
+          }
+          const detections = await faceapi.detectAllFaces(canvas, new faceapi.SsdMobilenetv1Options());
+          analyzeFace(imageData, detections.length); // Pass face count to analyzeFace
         } catch (detectionError) {
-          console.error("Face detection error:", detectionError)
-          const errorMessage = "Lỗi trong quá trình nhận dạng khuon mat. Vui lòng thu lai."
-          setResponse(errorMessage)
-          speakText(errorMessage)
-          setIsAnalyzing(false)
-          setIsTalking(false)
+          console.error("Face detection error:", detectionError);
+          const errorMessage = "Lỗi trong quá trình nhận dạng khuon mat. Vui lòng thu lai.";
+          setResponse(errorMessage);
+          speakText(errorMessage);
+          setIsAnalyzing(false);
+          setIsTalking(false);
         }
       }
     }

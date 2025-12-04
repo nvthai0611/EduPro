@@ -24,6 +24,14 @@ class UserRepository {
   async delete(id: string): Promise<IUser | null> {
     return User.findByIdAndDelete(id);
   }
+
+  async revokePaidCourse(userId: string, courseId: string): Promise<IUser | null> {
+    return User.findByIdAndUpdate(
+      userId,
+      { $pull: { purchasedCourses: { courseId } } },
+      { new: true }
+    );
+  }
 }
 
 export default new UserRepository();

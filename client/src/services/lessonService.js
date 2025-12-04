@@ -4,7 +4,7 @@ export const lessonService = {
   // Lấy danh sách bài học của khóa học
   getLessonsByCourse: async (courseId) => {
     try {
-      const response = await apiClient.get(`/api/v1/courses/${courseId}/lessons`);
+      const response = await apiClient.get(`/courses/${courseId}/lessons`);
       return response.data;
     } catch (error) {
       console.error('Error fetching lessons:', error);

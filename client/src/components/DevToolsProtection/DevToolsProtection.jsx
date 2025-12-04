@@ -87,7 +87,7 @@ const DevToolsProtection = () => {
       
       // Restore console methods only in development
       if (!import.meta.env.PROD) {
-        console.log = originalConsole.log;
+        console.log = originalconsole.log;
         console.warn = originalConsole.warn;
         console.error = originalConsole.error;
         console.info = originalConsole.info;

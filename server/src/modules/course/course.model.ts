@@ -120,7 +120,7 @@ const courseSchema = new Schema<ICourseDocument>(
 
     isFeatured: { type: Boolean, default: false },
     
-    language: { type: String, default: "vi" },
+    language: { type: String },
     duration: { type: Number, default: 0 },
     totalDuration: { type: Number, default: 0 },
     totalLessons: { type: Number, default: 0 },

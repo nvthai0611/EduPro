@@ -9,7 +9,9 @@ class OrderService {
     courseTitle: string;
     price: number;
     paymentMethod: string;
-    notes: string;
+    notes?: string;
+    statusOrder?: string;
+    paymentStatus?: string;
   }) {
     return OrderRepository.createOrder({
       userId: new Types.ObjectId(payload.userId),
@@ -18,11 +20,21 @@ class OrderService {
       price: payload.price,
       paymentMethod: payload.paymentMethod as any,
       notes: payload.notes as any,
+      statusOrder: (payload.statusOrder || "pending") as any,
+      paymentStatus: (payload.paymentStatus || "pending") as any,
     });
+  }
+
+  async getAllOrders() {
+    return OrderRepository.getAllOrders();
   }
 
   async getOrderById(orderId: string) {
     return OrderRepository.getOrderById(orderId);
+  }
+
+  async deleteOrder(orderId: string) {
+    return OrderRepository.deleteOrder(orderId);
   }
 
   async markOrderPaid(orderId: string) {

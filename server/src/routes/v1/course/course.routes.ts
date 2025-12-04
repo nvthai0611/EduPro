@@ -13,6 +13,7 @@ import {
 } from "../../../modules/course/course.controller";
 import { Router } from "express";
 import authenticateToken from "../../../middlewares/auth/authenticateToken";
+import { getLessonsByCourseId } from "../../../modules/lesson/lesson.controller";
 
 const router: Router = Router();
 
@@ -34,5 +35,7 @@ router.patch("/:id/review", authenticateToken, reviewCourse);
 // Dynamic routes (must be last)
 router.get("/:id", getCourseById);
 router.get("/:id/details", getCourseDetails);
+
+router.get("/:courseId/lessons", getLessonsByCourseId); // Get all lessons by course
 
 export const courseRoutes: Router = router;

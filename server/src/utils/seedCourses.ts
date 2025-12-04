@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import CourseModel from '../models/course.model';
+import CourseModel from '../modules/course/course.model';
 
 // Dữ liệu seed từ courseData.js
 const coursesData = [

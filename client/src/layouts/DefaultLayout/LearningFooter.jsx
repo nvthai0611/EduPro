@@ -1,9 +1,12 @@
 import React from 'react';
+import { useNavigate } from "react-router-dom";
 import { Link } from 'react-router-dom';
 import { ArrowUp, Mail, Phone, MapPin, Facebook, Youtube, Instagram, Github, BookOpen, Users, Award, Code } from 'lucide-react';
 import LearningPlatformLogo from '../../components/Logo/LearningPlatformLogo';
 
 const Footer = () => {
+
+    const navigate = useNavigate();
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -61,9 +64,15 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/about" className="text-gray-300 hover:text-white transition-colors text-sm">
-                  Về chúng tôi
-                </Link>
+                        <button
+          onClick={() => {
+            navigate("/about");
+            window.scrollTo(0, 0);
+          }}
+          className="text-gray-300 hover:text-white transition-colors text-sm"
+        >
+          Về chúng tôi
+        </button>
               </li>
             </ul>
           </div>
