@@ -7,7 +7,23 @@ const { AUTH_MESSAGES, AUTH_STATUS, TYPE_AUTH } = require("../../../constain/aut
 
 module.exports = async (req, res, next) => {
   try {
-    const accessToken = req.headers.authorization.split(" ")[1];
+    // Ưu tiên cookie trước, fallback sang Authorization header
+    let accessToken = req.cookies?.render_id;
+    
+    // Nếu không có cookie, thử lấy từ Authorization header
+    if (!accessToken && req.headers.authorization) {
+      const authHeader = req.headers.authorization;
+      // Xử lý cả "Bearer token" và chỉ "token"
+      if (authHeader.startsWith("Bearer ")) {
+        accessToken = authHeader.substring(7).trim();
+        console.log(accessToken);
+      } else {
+        // Nếu không có "Bearer ", có thể là token trực tiếp
+        accessToken = authHeader.trim();
+        console.log(accessToken);
+      }
+    }
+    
     if (!accessToken) {
       return errorResponse(res, {}, 401, AUTH_MESSAGES.UNAUTHORIZED);
     }

@@ -33,8 +33,11 @@ const MyCourses = () => {
   const fetchMyCourses = async () => {
     try {
       setLoading(true);
-      const response = await getUserProfile(user?.userId);
-      setCourses(response.purchasedCourses);
+      // Backend sẽ tự động dùng req.user.id nếu không truyền id hoặc id là undefined
+      const response = await getUserProfile(user?.userId || null);
+      if (response.success && response.data) {
+        setCourses(response.data.purchasedCourses || []);
+      }
 
     } catch (error) {
       console.error('Error fetching my courses:', error);

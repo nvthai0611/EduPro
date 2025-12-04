@@ -19,11 +19,13 @@ const setCookie = (name, value, days = 7, options = {}) => {
   const expires = new Date();
   expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
 
+  const isProduction = import.meta.env.VITE_PROD === "production" || window.location.hostname !== "localhost";
+  
   const defaultOptions = {
     expires: expires.toUTCString(),
     path: "/",
-    secure: window.location.protocol === "https:",
-    sameSite: "strict",
+    secure: isProduction || window.location.protocol === "https:", // true trong production
+    sameSite: isProduction ? "None" : "Lax", // None cho cross-site trong production
   };
 
   const cookieOptions = { ...defaultOptions, ...options };
@@ -49,19 +51,22 @@ const getCookie = (name) => {
 
 const removeCookie = (name, path = "/") => {
   const isLocalhost = window.location.hostname === "localhost";
+  const isProduction = import.meta.env.VITE_PROD === "production" || window.location.hostname !== "localhost";
+  const expires = "Thu, 01 Jan 1970 00:00:00 GMT";
 
-  // Xóa cookie không có domain
-  document.cookie = `${name}=; Path=${path}; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; SameSite=None; Secure;`;
-
-  // Nếu không phải localhost thì xóa thêm với 2 domain
-  if (!isLocalhost) {
+  // Xóa cookie không có domain (cho localhost)
+  if (isLocalhost) {
+    document.cookie = `${name}=; Path=${path}; Expires=${expires}; Max-Age=0; SameSite=Lax;`;
+  } else {
+    // Production: xóa với secure và sameSite=none
+    document.cookie = `${name}=; Path=${path}; Expires=${expires}; Max-Age=0; SameSite=None; Secure;`;
+    
+    // Xóa cookie với domain có dấu chấm (.edu-pro-delta.vercel.app) để đảm bảo
     const baseDomain = window.location.hostname.replace(/^www\./, "");
-
-    // Xóa cookie với domain không có dấu chấm (edu-pro-delta.vercel.app)
-    document.cookie = `${name}=; Path=${path}; Domain=${baseDomain}; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; SameSite=None; Secure;`;
-
-    // Xóa cookie với domain có dấu chấm (.edu-pro-delta.vercel.app)
-    document.cookie = `${name}=; Path=${path}; Domain=.${baseDomain}; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; SameSite=None; Secure;`;
+    document.cookie = `${name}=; Path=${path}; Domain=.${baseDomain}; Expires=${expires}; Max-Age=0; SameSite=None; Secure;`;
+    
+    // Xóa cookie với domain không có dấu chấm (backup)
+    document.cookie = `${name}=; Path=${path}; Domain=${baseDomain}; Expires=${expires}; Max-Age=0; SameSite=None; Secure;`;
   }
 };
 

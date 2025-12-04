@@ -806,10 +806,11 @@ const UserProfileModal = ({ isOpen, onClose }) => {
     useEffect(() => {
         const fetchUserData = async () => {
             try {
-                const resDataUser = await getUserProfile()
+                // Backend sẽ tự động dùng req.user.id từ authenticateToken middleware
+                const resDataUser = await getUserProfile(null)
                 console.log("resDataUser", resDataUser);
 
-                if (resDataUser.success) {
+                if (resDataUser.success && resDataUser.data) {
                     setUserData(resDataUser.data)
                     setEditData(resDataUser.data)
                 }
