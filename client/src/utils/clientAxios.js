@@ -57,10 +57,10 @@ const removeCookie = (name, path = "/") => {
   if (!isLocalhost) {
     const baseDomain = window.location.hostname.replace(/^www\./, "");
 
-    // Xóa cookie với domain không có dấu chấm (haeispa.online)
+    // Xóa cookie với domain không có dấu chấm (edu-pro-delta.vercel.app)
     document.cookie = `${name}=; Path=${path}; Domain=${baseDomain}; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; SameSite=None; Secure;`;
 
-    // Xóa cookie với domain có dấu chấm (.haeispa.online)
+    // Xóa cookie với domain có dấu chấm (.edu-pro-delta.vercel.app)
     document.cookie = `${name}=; Path=${path}; Domain=.${baseDomain}; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; SameSite=None; Secure;`;
   }
 };
@@ -99,7 +99,7 @@ export const getTokenFromCookie = () => {
   return getCookie(TOKEN_KEY);
 };
 
-export const initSession = () => {
+export const initSession = () => {  
   const token = getToken();
   if (token) {
     logger.log("Session initialized with token");

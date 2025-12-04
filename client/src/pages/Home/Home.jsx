@@ -50,7 +50,7 @@ function Home() {
       try {
         // Giải mã từ Base64
         const token = atob(encodedAuth);
-        console.log("✅ Decoded, length:", token.length);
+        console.log("Decoded, length:", token.length);
         
         // Lưu vào cookie
         const isProduction = import.meta.env.VITE_PROD === "production";

@@ -3,11 +3,21 @@ import { Request, Response, NextFunction } from "express";
 import { decodeToken } from "../../utils/jwt";
 import { errorResponse } from "../../utils/response";
 
-const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
+const authenticateToken = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const accessToken = req.cookies?.render_id;
+
     if (!accessToken) {
-      return errorResponse(res, {}, 401, "Token không hợp lệ hoặc không được cung cấp");
+      return errorResponse(
+        res,
+        {},
+        401,
+        "Token không hợp lệ hoặc không được cung cấp"
+      );
     }
 
     // Verify token
@@ -28,11 +38,24 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
     }
 
     if (user.sessionToken === undefined || user.sessionToken !== accessToken) {
-      return errorResponse(res, {}, 401, "Token đã bị đăng xuất hoặc không hợp lệ");
+      return errorResponse(
+        res,
+        {},
+        401,
+        "Token đã bị đăng xuất hoặc không hợp lệ"
+      );
     }
-    
-    if (user.sessionTokenExpiresAt === null || user.sessionTokenExpiresAt < new Date()) {
-      return errorResponse(res, {}, 401, "Token đã hết hạn, vui lòng đăng nhập lại");
+
+    if (
+      user.sessionTokenExpiresAt === null ||
+      user.sessionTokenExpiresAt < new Date()
+    ) {
+      return errorResponse(
+        res,
+        {},
+        401,
+        "Token đã hết hạn, vui lòng đăng nhập lại"
+      );
     }
     // Attach user to request
     req.user = {

@@ -30,21 +30,23 @@ class AuthService {
   }
 
   storeUserData(user, refreshToken = null) {
-    Cookies.set(this.userKey, JSON.stringify(user), {
-      sameSite: "Strict",
-      secure: import.meta.env.VITE_PROD === "production",
-    });
+    const isProduction = import.meta.env.VITE_PROD === "production";
+    const cookieOptions = {
+      sameSite: isProduction ? "None" : "Lax",
+      secure: isProduction,
+      path: "/",
+    };
+
+    Cookies.set(this.userKey, JSON.stringify(user), cookieOptions);
 
     if (refreshToken) {
-      Cookies.set(this.refreshTokenKey, refreshToken, {
-        sameSite: "Strict",
-        secure: import.meta.env.VITE_PROD === "production",
-      });
+      Cookies.set(this.refreshTokenKey, refreshToken, cookieOptions);
     }
   }
 
   clearAuthData() {
-    const domain = import.meta.env.PROD === "production" ? "haeispa.online" : undefined;
+    // Domain phải khớp với server cookie domain: .edu-pro-delta.vercel.app
+    const domain = import.meta.env.VITE_PROD === "production" ? ".edu-pro-delta.vercel.app" : undefined;
 
     // Xoá với cả domain và không domain để đảm bảo
     [undefined, domain].forEach((d) => {
