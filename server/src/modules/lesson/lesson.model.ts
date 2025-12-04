@@ -42,12 +42,12 @@ const lessonSchema = new mongoose.Schema<ILessonDocument>(
   {
     sectionId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Sections",
+      ref: "Section",
       required: true,
     },
     courseId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Courses",
+      ref: "Course",
       required: true,
     },
     title: { type: String, required: true, trim: true },

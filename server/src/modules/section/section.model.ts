@@ -55,7 +55,7 @@ const sectionSchema = new Schema<ISectionDocument>(
     },
     courseId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Courses",
+      ref: "Course",
       required: true,
     },
     order: {

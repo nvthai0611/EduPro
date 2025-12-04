@@ -1,30 +1,24 @@
-import { courseData } from "../../data/courseData";
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { courseService } from "../../services/courseService";
+import { lessonService } from "../../services/lessonService";
+import * as orderService from "../../services/user/orderService";
+import { useAuth } from "../../hooks/useAuth";
 // Đảm bảo đường dẫn import courseData đúng với cấu trúc của bạn
 
 // Component cho từng bài học trong danh sách bên phải
 const LessonItem = ({ item, isCurrent, onClick }) => (
   <div
-    className={`p-3 cursor-pointer border-b hover:bg-gray-50 transition ${
-      isCurrent ? "bg-gray-100 text-orange-600 font-semibold" : "text-gray-700"
-    } ${item.locked ? "opacity-60 cursor-not-allowed" : ""}`}
-    onClick={() => !item.locked && onClick(item)} // Chỉ cho phép click nếu không bị khóa
+    className={`p-3 cursor-pointer border-b hover:bg-gray-50 transition ${isCurrent ? "bg-orange-100 text-orange-600 font-semibold" : "text-gray-700"
+      }`}
+    onClick={() => onClick(item)}
   >
     <div className="flex items-center justify-between">
       <span className="flex items-center text-sm">
-        <i
-          className={`mr-2 ${
-            item.completed
-              ? "far fa-check-circle text-green-500"
-              : item.locked
-              ? "fas fa-lock text-gray-400"
-              : "far fa-circle text-gray-400"
-          }`}
-        ></i>
+        <i className={`mr-2 far fa-circle ${isCurrent ? "text-orange-500" : "text-gray-400"}`}></i>
         {item.title}
       </span>
-      <span className="text-xs text-gray-500">{item.duration}</span>
+      <span className="text-xs text-gray-500">{item.videoDuration ? item.videoDuration / 60 + " ph" : ""}</span>
     </div>
   </div>
 );
@@ -34,7 +28,6 @@ const CourseSection = ({ section, currentVideoId, onLessonClick }) => {
   const sectionItems = section.items || [];
 
   // Tính toán số bài đã hoàn thành và tổng số bài trong section
-  const completedItems = sectionItems.filter((item) => item.completed).length;
   const totalItems = sectionItems.length;
 
   // Mặc định mở section
@@ -51,7 +44,7 @@ const CourseSection = ({ section, currentVideoId, onLessonClick }) => {
         </div>
         <div className="flex items-center text-xs text-gray-500">
           <span className="mr-2">
-            {completedItems}/{totalItems}
+            {totalItems} Bài Giảng
           </span>
           <i
             className={`fas ${isOpen ? "fa-chevron-up" : "fa-chevron-down"}`}
@@ -62,9 +55,11 @@ const CourseSection = ({ section, currentVideoId, onLessonClick }) => {
         <div>
           {sectionItems.map((item, index) => (
             <LessonItem
-              key={item.id || index}
+              key={item._id || index}
               item={item}
-              isCurrent={item.videoId === currentVideoId}
+              isCurrent={
+                currentVideoId === item.videoUrl.split("/").pop()
+              }
               onClick={onLessonClick}
             />
           ))}
@@ -74,45 +69,102 @@ const CourseSection = ({ section, currentVideoId, onLessonClick }) => {
   );
 };
 
+const formatDate = (isoDate) => {
+  const date = new Date(isoDate);
+  return date.toLocaleString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+};
+
 export default function CourseLearnDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const [course, setCourse] = useState(null);
+  const { user } = useAuth();
 
-  // Tìm khóa học dựa trên slug từ courseData
-  // TODO: Thay bằng API call thực tế
-  const course = useMemo(() => {
-    return courseData.find((c) => c.slug === slug);
-  }, [slug]);
+  useEffect(() => {
+    // Fetch course data from API
+    const fetchCourse = async () => {
+      try {
+        const responeCourse = await courseService.getCourseBySlug(slug);
+        const responeLessons = await lessonService.getLessonsByCourse(responeCourse.data._id);
 
-  // Mặc định video đầu tiên không bị khóa
-  const initialVideo = useMemo(() => {
-    if (course && course.sections) {
-      for (const section of course.sections) {
-        if (section.items) {
-          const firstUnlockedItem = section.items.find(
-            (item) => !item.locked && item.videoId
+        // Check if user has purchased this course
+        if (user) {
+          const hasPurchased = await orderService.checkPurchase(
+            user?.userId,
+            responeCourse.data._id
           );
-          if (firstUnlockedItem) {
-            return {
-              title: firstUnlockedItem.title,
-              videoId: firstUnlockedItem.videoId,
-            };
+
+          if (!hasPurchased.purchased) {
+            window.location.href = `/checkout?course=${responeCourse.data._id}`;
+            return;
+          } else {
+            const sectionsMap = {};
+
+            for (const lesson of responeLessons) {
+              const sec = lesson.sectionId; // thông tin section trong từng lession
+
+              // nhóm lesson theo id của section
+              if (!sectionsMap[sec._id]) {
+                sectionsMap[sec._id] = {
+                  _id: sec._id,
+                  title: sec.title,
+                  description: sec.description,
+                  items: []
+                };
+              }
+
+              sectionsMap[sec._id].items.push(lesson);
+            }
+
+            const dataFinal = {
+              ...responeCourse.data,
+              sections: Object.values(sectionsMap)
+            }
+
+            setCourse(dataFinal);
           }
+        }
+
+      } catch (error) {
+        console.error("Error fetching course data:", error);
+      }
+    };
+
+    fetchCourse();
+  }, [slug, user]);
+
+  // State để quản lý video hiện tại đang phát
+  const [currentPlayingVideo, setCurrentPlayingVideo] = useState(null);
+
+  useEffect(() => {
+    if (!course || !course.sections) return;
+
+    for (const section of course.sections) {
+      if (section.items?.length) {
+        const first = section.items.find(item => item.videoUrl);
+        if (first) {
+          setCurrentPlayingVideo({
+            title: first.title,
+            videoId: first.videoUrl.split("/")[first.videoUrl.split("/").length - 1],
+            updatedAt: first.updatedAt
+          });
+          break;
         }
       }
     }
-    return { title: "Không có video", videoId: "" };
   }, [course]);
-
-  // State để quản lý video hiện tại đang phát
-  const [currentPlayingVideo, setCurrentPlayingVideo] = useState(initialVideo);
 
   // Xử lý khi click vào một bài học
   const handleLessonClick = (lesson) => {
-    if (!lesson.locked && lesson.videoId) {
+    if (lesson.videoUrl) {
       setCurrentPlayingVideo({
         title: lesson.title,
-        videoId: lesson.videoId,
+        videoId: lesson.videoUrl.split("/")[lesson.videoUrl.split("/").length - 1],
+        updatedAt: lesson.updatedAt
       });
     }
   };
@@ -137,27 +189,9 @@ export default function CourseLearnDetail() {
   }
 
   // Video Embed URL
-  const videoEmbedUrl = currentPlayingVideo.videoId
-    ? `https://www.youtube.com/embed/${currentPlayingVideo.videoId}?autoplay=1&rel=0`
+  const videoEmbedUrl = currentPlayingVideo?.videoId
+    ? `https://www.youtube.com/embed/${currentPlayingVideo?.videoId}?autoplay=1&rel=0`
     : "";
-
-  // Tính toán tổng số bài đã hoàn thành và tổng số bài của cả khóa
-  const totalCompletedLessons = course.sections
-    ? course.sections.reduce(
-        (acc, section) =>
-          acc +
-          (section.items
-            ? section.items.filter((item) => item.completed).length
-            : 0),
-        0
-      )
-    : 0;
-  const totalAllLessons = course.sections
-    ? course.sections.reduce(
-        (acc, section) => acc + (section.items ? section.items.length : 0),
-        0
-      )
-    : 0;
 
   return (
     <div className="flex flex-col lg:flex-row w-full min-h-screen bg-gray-100">
@@ -183,8 +217,7 @@ export default function CourseLearnDetail() {
               <iframe
                 className="w-full h-full"
                 src={videoEmbedUrl}
-                title={currentPlayingVideo.title}
-                frameBorder="0"
+                title={currentPlayingVideo?.title}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               ></iframe>
@@ -206,10 +239,10 @@ export default function CourseLearnDetail() {
         {/* Lesson Details */}
         <div className="p-6 bg-white border-t border-gray-200 shadow-sm flex-1">
           <h1 className="text-3xl font-bold mb-1 text-gray-900">
-            {currentPlayingVideo.title}
+            {currentPlayingVideo?.title}
           </h1>
           <p className="text-gray-500 text-sm">
-            {course.updatedAt || "Chưa có thông tin cập nhật"}
+            Cập nhật lần cuối vào ngày {formatDate(currentPlayingVideo?.updatedAt) || "Chưa có thông tin cập nhật"}
           </p>
 
           <div className="mt-4 flex items-center justify-between">
@@ -250,20 +283,20 @@ export default function CourseLearnDetail() {
           <i className="fas fa-arrow-left"></i> Quay lại danh sách
         </button>
 
-        <div className="w-full flex items-center gap-2 bg-orange-100 border border-orange-300 text-orange-700 px-4 py-2 rounded-lg mb-4 text-sm font-medium">
+        {/* <div className="w-full flex items-center gap-2 bg-orange-100 border border-orange-300 text-orange-700 px-4 py-2 rounded-lg mb-4 text-sm font-medium">
           <i className="fas fa-fire"></i> Bắt đầu chuỗi ngày học
         </div>
         <p className="text-xs text-gray-600 mb-4">
           Hoàn thành: **{totalCompletedLessons}/{totalAllLessons}** bài học
-        </p>
+        </p> */}
 
         {/* List Sections */}
         {course.sections &&
-          course.sections.map((section, index) => (
+          course.sections.map((section) => (
             <CourseSection
-              key={section.id || index}
+              key={section._id}
               section={section}
-              currentVideoId={currentPlayingVideo.videoId}
+              currentVideoId={currentPlayingVideo?.videoId}
               onLessonClick={handleLessonClick}
             />
           ))}
