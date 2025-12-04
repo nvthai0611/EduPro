@@ -59,6 +59,10 @@ function Home() {
         }`;
         document.cookie = `render_id=${token}; ${cookieOptions}`;
         console.log("🍪 Cookie saved");
+        toast.success("Đăng nhập thành công!");
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 500);
       } catch (err) {
         console.error("❌ Decode error:", err);
         toast.error("Đăng nhập thất bại");
