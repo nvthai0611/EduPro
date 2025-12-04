@@ -8,13 +8,17 @@ interface RequestWithUser extends Request {
 
 export const limitRequestsMiddleware = (() => {
   // Middleware decode token và attach decodedUserId
-  const attachDecodedUser = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+  const attachDecodedUser = async (
+    req: RequestWithUser,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
       const token = req.cookies?.render_id;
       if (!token) return next(); // guest fallback
 
       const decoded = await decodeToken(token);
-      
+
       if (!decoded?.userId) return next();
 
       req.decodedUserId = decoded.userId; // gán tạm để rate-limit dùng
@@ -27,7 +31,7 @@ export const limitRequestsMiddleware = (() => {
   // Middleware rate-limit
   const limiter = rateLimit({
     windowMs: 60 * 1000, // 1 phút
-    max: (req: RequestWithUser) => (req.decodedUserId ? 300 : 15),
+    max: (req: RequestWithUser) => (req.decodedUserId ? 2000 : 500),
     keyGenerator: (req: RequestWithUser) => req.decodedUserId,
     standardHeaders: true,
     legacyHeaders: false,

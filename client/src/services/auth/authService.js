@@ -218,13 +218,19 @@ class AuthService {
 
   async fetchCurrentUser() {
     try {
-      const response = await apiClient.get("/auth/users");
-      if (response.data && response.data.success && response.data.data) {
-        this.storeUserData(response.data.data);
-        return response.data.data;
+      // Thay vì gọi API không tồn tại, decode token để lấy user info
+      const token = apiClient.getTokenFromCookie();
+      if (!token) return null;
+      
+      const decoded = decodeJWT(token);
+      if (decoded) {
+        // Store decoded user data
+        this.storeUserData(decoded);
+        return decoded;
       }
       return null;
     } catch (error) {
+      console.error("fetchCurrentUser error:", error);
       return null;
     }
   }
