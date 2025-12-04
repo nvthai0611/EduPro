@@ -28,10 +28,17 @@ function Home() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  // Xử lý token từ Google OAuth redirect
+  // Xử lý Google OAuth redirect
   useEffect(() => {
-    const encodedAuth = searchParams.get("auth");
+    const loginSuccess = searchParams.get("login");
     const error = searchParams.get("error");
+
+    console.log("🏠 Home - Google OAuth Check:", {
+      loginSuccess,
+      hasError: !!error,
+      cookies: document.cookie,
+      url: window.location.href
+    });
 
     if (error) {
       toast.error("Đăng nhập Google thất bại: " + error);
@@ -39,26 +46,22 @@ function Home() {
       return;
     }
 
-    if (encodedAuth) {
-      try {
-        // Giải mã token từ Base64
-        const token = atob(encodedAuth);
-        
-        const isProduction = import.meta.env.VITE_PROD === "production";
-        const cookieOptions = `path=/; max-age=86400; ${
-          isProduction ? "secure; samesite=none" : "samesite=strict"
-        }`;
-        document.cookie = `render_id=${token}; ${cookieOptions}`;
-        
+    // Kiểm tra nếu có login=success và cookie render_id tồn tại
+    if (loginSuccess === "success") {
+      const hasToken = document.cookie.includes("render_id=");
+      console.log("✅ Login success detected, has token:", hasToken);
+      
+      if (hasToken) {
         toast.success("Đăng nhập Google thành công!");
         
-        // Xóa auth param khỏi URL và reload
+        // Xóa param khỏi URL và reload
         navigate("/", { replace: true });
         setTimeout(() => {
+          console.log("🔄 Reloading page to update auth state...");
           window.location.reload();
         }, 500);
-      } catch (err) {
-        console.error("Token decode error:", err);
+      } else {
+        console.error("❌ Login success but no token in cookie");
         toast.error("Có lỗi xảy ra khi đăng nhập");
       }
     }
