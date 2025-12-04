@@ -14,6 +14,8 @@ export function useAuth() {
     const initAuth = async () => {
       authService.initAuth();
       let state = authService.getAuthState();
+      console.log(state);
+      
       // Nếu có token nhưng chưa có user, hoặc user null, thì fetch lại user từ API
       if (state.token && !state.user) {
         const user = await authService.fetchCurrentUser();
@@ -21,7 +23,8 @@ export function useAuth() {
       }
       setAuthState({ ...state, isLoading: false });
     };
-
+    console.log(authState);
+    
     initAuth();
   }, []);
 
