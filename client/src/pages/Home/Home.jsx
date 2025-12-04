@@ -22,7 +22,6 @@ import { courseService } from '../../services/courseService';
 import { useAuth } from '../../hooks/useAuth';
 import { Link } from 'react-router-dom';
 import SkillsSection from './SkillsSection';
-import Contact from './Contact';
 import LearningRoadmap from './LearningRoadmap';
 
 function Home() {
@@ -36,15 +35,6 @@ function Home() {
   const fetchHomeData = async () => {
     try {
       setLoading(true);
-      const [featured, popular, free] = await Promise.all([
-        courseService.getFeaturedCourses(),
-        courseService.getPopularCourses(),
-        courseService.getFreeCourses()
-      ]);
-
-      setFeaturedCourses(featured.data || []);
-      setPopularCourses(popular.data || []);
-      setFreeCourses(free.data || []);
     } catch (error) {
       console.error('Error fetching home data:', error);
     } finally {
@@ -207,7 +197,6 @@ function Home() {
 
       <SkillsSection />
       <LearningRoadmap />
-      <Contact />
 
       {/* Testimonials */}
       <section className="py-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
