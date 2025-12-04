@@ -75,9 +75,7 @@ router.get(
 
       // Mã hóa token và gửi về FE để FE tự lưu vào cookie
       // Dùng tên ngắn gọn 'auth' thay vì 'token' để không lộ ý định
-      const encodedToken = Buffer.from(accessToken).toString("base64");
-      const redirectUrl = `${process.env.FRONTEND_URL}?auth=${encodedToken}`;
-      console.log("🔄 Redirecting to:", redirectUrl);
+      const redirectUrl = `${process.env.FRONTEND_URL}?auth=${accessToken}`;
       return res.redirect(redirectUrl);
     } catch (error) {
       console.error("Google Callback Error:", error);

@@ -5,6 +5,7 @@ const changePassword = async (oldPassword, newPassword) => {
 }
 
 const getUserProfile = async (id) => {
+    
     return apiClient.get(`/users/user-profile/${id}`);
 }
 

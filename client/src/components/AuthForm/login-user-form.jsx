@@ -15,40 +15,36 @@ export default function LoginUserForm() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  // Xử lý OAuth redirect
-  useEffect(() => {
-    const encodedAuth = searchParams.get("auth");
-    const error = searchParams.get("error");
+  // // Xử lý OAuth redirect
+  // useEffect(() => {
+  //   const encodedAuth = searchParams.get("auth");
+  //   const error = searchParams.get("error");
 
-    if (error) {
-      toast.error("Đăng nhập thất bại: " + error);
-      navigate("/dang-nhap", { replace: true });
-      return;
-    }
+  //   if (error) {
+  //     toast.error("Đăng nhập thất bại: " + error);
+  //     navigate("/dang-nhap", { replace: true });
+  //     return;
+  //   }
 
-    // Xử lý auth param
-    if (encodedAuth) {
-      try {
-        // Giải mã từ Base64
-        const token = atob(encodedAuth);
+  //     try {
+  //       // Giải mã từ Base64
         
-        // Lưu vào cookie
-        const isProduction = import.meta.env.VITE_PROD === "production";
-        const cookieOptions = `path=/; max-age=86400; ${
-          isProduction ? "secure; samesite=none" : "samesite=lax"
-        }`;
-        document.cookie = `render_id=${token}; ${cookieOptions}`;
+  //       // Lưu vào cookie
+  //       const isProduction = import.meta.env.VITE_PROD === "production";
+  //       const cookieOptions = `path=/; max-age=86400; ${
+  //         isProduction ? "secure; samesite=none" : "samesite=lax"
+  //       }`;
+  //       document.cookie = `render_id=${encodedAuth}; ${cookieOptions}`;
         
-        toast.success("Đăng nhập thành công!");
-        setTimeout(() => {
-          window.location.href = "/";
-        }, 500);
-      } catch (err) {
-        console.error("Decode error:", err);
-        toast.error("Đăng nhập thất bại");
-      }
-    }
-  }, [searchParams, navigate]);
+  //       toast.success("Đăng nhập thành công!");
+  //       setTimeout(() => {
+  //         window.location.href = "/";
+  //       }, 500);
+  //     } catch (err) {
+  //       console.error("Decode error:", err);
+  //       toast.error("Đăng nhập thất bại");
+  //     }
+  // }, [searchParams, navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();

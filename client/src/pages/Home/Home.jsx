@@ -48,16 +48,13 @@ function Home() {
     // Xử lý auth param từ URL
     if (encodedAuth) {
       try {
-        // Giải mã từ Base64
-        const token = atob(encodedAuth);
-        console.log("Decoded, length:", token.length);
         
         // Lưu vào cookie
         const isProduction = import.meta.env.VITE_PROD === "production";
         const cookieOptions = `path=/; max-age=86400; ${
           isProduction ? "secure; samesite=none" : "samesite=lax"
         }`;
-        document.cookie = `render_id=${token}; ${cookieOptions}`;
+        document.cookie = `render_id=${encodedAuth}; ${cookieOptions}`;
         console.log("🍪 Cookie saved");
         toast.success("Đăng nhập thành công!");
         setTimeout(() => {
