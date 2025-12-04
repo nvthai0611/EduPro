@@ -19,8 +19,11 @@ const Profile = () => {
 
   const fetchProfile = async () => {
     try {
-      const data = await getUserProfile(user.userId);
-      setInfoUser(data);
+      // Backend sẽ tự động dùng req.user.id nếu không truyền id hoặc id là undefined
+      const response = await getUserProfile(user?.userId || null);
+      if (response.success && response.data) {
+        setInfoUser(response.data);
+      }
     } catch (err) {
       console.error("Fetch Error:", err);
     }

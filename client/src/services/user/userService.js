@@ -5,8 +5,9 @@ const changePassword = async (oldPassword, newPassword) => {
 }
 
 const getUserProfile = async (id) => {
-    
-    return apiClient.get(`/users/user-profile/${id}`);
+    // Nếu id là null, undefined hoặc "undefined", backend sẽ dùng req.user.id từ authenticateToken
+    const url = id && id !== "undefined" ? `/users/user-profile/${id}` : `/users/user-profile/me`;
+    return apiClient.get(url);
 }
 
 const changeImageProfile = async (image) => {

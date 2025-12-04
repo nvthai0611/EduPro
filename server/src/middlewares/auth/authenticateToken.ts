@@ -9,7 +9,20 @@ const authenticateToken = async (
   next: NextFunction
 ) => {
   try {
-    const accessToken = req.cookies?.render_id;
+    // Ưu tiên cookie trước, fallback sang Authorization header
+    let accessToken = req.cookies?.render_id;
+    
+    // Nếu không có cookie, thử lấy từ Authorization header
+    if (!accessToken && req.headers.authorization) {
+      const authHeader = req.headers.authorization;
+      // Xử lý cả "Bearer token" và chỉ "token"
+      if (authHeader.startsWith("Bearer ")) {
+        accessToken = authHeader.substring(7).trim();
+      } else {
+        // Nếu không có "Bearer ", có thể là token trực tiếp
+        accessToken = authHeader.trim();
+      }
+    }
 
     if (!accessToken) {
       return errorResponse(
@@ -60,6 +73,7 @@ const authenticateToken = async (
     // Attach user to request
     req.user = {
       id: user["_id"],
+      userId: decode.userId, // Thêm userId từ token để dễ truy cập
       email: user.email,
       fullName: user.fullName,
       role: user.role,
