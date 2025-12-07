@@ -47,7 +47,6 @@ export const apiRouter = (io?: Server) => {
 
   // Lesson routes
   router.use("/admin/lessons", lessonRoutes);
-  
   // Course routes
   router.use("/admin/order", orderAdminRoutes);
 
