@@ -10,6 +10,7 @@ import {
   // uploadVideo, // TODO: Uncomment when video upload is implemented
 } from "../../../modules/lesson/lesson.controller";
 import authenticateToken from "../../../middlewares/auth/authenticateToken";
+import { authorizeRoles } from "../../../middlewares/auth/authorizeRoles";
 
 const router: Router = Router();
 
