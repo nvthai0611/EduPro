@@ -18,11 +18,9 @@ export const createCourse = async (req: any, res: any) => {
   }
 };
 
-// GET /courses
-export const getAllCourses = async (req: any, res: any) => {
+// GET /courses - Public route với fields giới hạn
+export const getAllCoursesPublic = async (req: any, res: any) => {
   try {
-    // console.log('getAllCourses - req.query:', req.query);
-    
     // Handle nested params if they exist (params[status] from axios)
     const queryParams = req.query.params || req.query;
     
@@ -35,14 +33,39 @@ export const getAllCourses = async (req: any, res: any) => {
       isFeatured: queryParams.isFeatured,
     };
     
-    // console.log('Filters applied:', filters);
-    
-    const courses = await courseService.getAllCourses(filters);
+    // Chỉ trả về các fields cần thiết cho public
+    const courses = await courseService.getAllCoursesPublic(filters);
     res.status(200).json({ success: true, data: courses });
   } catch (error: any) {
     res.status(400).json({ success: false, message: error.message });
   }
 };
+
+// GET /admin/courses - Admin route với full fields
+export const getAllCoursesAdmin = async (req: any, res: any) => {
+  try {
+    // Handle nested params if they exist (params[status] from axios)
+    const queryParams = req.query.params || req.query;
+    
+    const filters = {
+      search: queryParams.search,
+      status: queryParams.status,
+      level: queryParams.level,
+      category: queryParams.category,
+      price: queryParams.price,
+      isFeatured: queryParams.isFeatured,
+    };
+    
+    // Trả về đầy đủ fields cho admin
+    const courses = await courseService.getAllCoursesAdmin(filters);
+    res.status(200).json({ success: true, data: courses });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+// Deprecated: Keep for backward compatibility
+export const getAllCourses = getAllCoursesAdmin;
 
 // GET /courses/:id
 export const getCourseById = async (req: any, res: any) => {

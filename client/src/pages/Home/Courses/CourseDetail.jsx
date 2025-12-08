@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import {
   Star,
@@ -19,38 +18,36 @@ import {
   Target,
   Users2,
   PlayCircle,
+  Loader2,
 } from "lucide-react";
 import { useAuth } from "../../../hooks/useAuth";
-import { courseService } from "../../../services/courseService";
+import { useCourseBySlug, useCourses } from "../../../hooks/useCourseQueries";
 import * as orderService from "../../../services/user/orderService";
 import { Link, useParams } from "react-router-dom";
 
 const CourseDetail = () => {
   const { slug } = useParams();
   const { user } = useAuth();
-  const [course, setCourse] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [isPurchased, setIsPurchased] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
-  const [relatedCourses, setRelatedCourses] = useState([]);
 
-  useEffect(() => {
-    fetchRelatedCourse();
-  }, [slug, course]);
+  // Sử dụng TanStack Query để fetch course by slug
+  const { 
+    data: course, 
+    isLoading: loading, 
+    error: courseError 
+  } = useCourseBySlug(slug);
 
-  const fetchRelatedCourse = async () => {
-    try {
-
-      const response = await courseService.getCourses();
-      const related = response.data.filter(c => c.slug !== slug && c.category === course?.category);
-      setRelatedCourses(related.slice(0, 4)); // Lấy tối đa 4 khóa học liên quan
-
-    } catch (error) {
-      console.error("Error fetching course detail:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Fetch related courses
+  const { data: allCourses = [] } = useCourses({ status: "published" });
+  
+  // Filter related courses based on category
+  const relatedCourses = React.useMemo(() => {
+    if (!course || !allCourses.length) return [];
+    return allCourses
+      .filter(c => c.slug !== slug && c.category === course.category)
+      .slice(0, 4);
+  }, [course, allCourses, slug]);
 
   // Component Course Card
   const CourseCard = ({ course }) => {
@@ -86,7 +83,7 @@ const CourseDetail = () => {
             {course.title}
           </h4>
           <div className="flex items-center justify-between mb-4">
-            <p className="text-orange-500 font-medium">{formatPrice(course.salePrice ? course.salePrice : course.price)}</p>
+            <p className="text-orange-500 font-medium">{formatPrice((course.salePrice && course.salePrice > 0) ? course.salePrice : course.price)}</p>
             <div>
               <span className="text-lg font-semibold flex items-center justify-between gap-1">
                 {star.toFixed(1) || "5.0"} <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
@@ -165,31 +162,24 @@ const CourseDetail = () => {
     setRating(0);
   };
 
+  // Check if user has purchased this course
   useEffect(() => {
-    fetchCourseDetail();
-  }, [slug, user]);
-
-  const fetchCourseDetail = async () => {
-    try {
-      setLoading(true);
-      const response = await courseService.getCourseBySlug(slug);
-      // Server trả về { success: true, data: course }
-      setCourse(response.data);
-
-      // Check if user has purchased this course
-      if (user) {
-        const hasPurchased = await orderService.checkPurchase(
-          user?.userId,
-          response.data._id
-        );
-        setIsPurchased(hasPurchased.purchased);
+    const checkPurchaseStatus = async () => {
+      if (user && course) {
+        try {
+          const hasPurchased = await orderService.checkPurchase(
+            user?.userId,
+            course._id
+          );
+          setIsPurchased(hasPurchased.purchased);
+        } catch (error) {
+          console.error("Error checking purchase status:", error);
+        }
       }
-    } catch (error) {
-      console.error("Error fetching course detail:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    checkPurchaseStatus();
+  }, [user, course]);
 
   const handlePurchase = () => {
     if (!user) {
@@ -211,6 +201,7 @@ const CourseDetail = () => {
   };
 
   const formatPrice = (price) => {
+    if (price === undefined || price === null) return "Miễn phí";
     if (price === 0) return "Miễn phí";
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
@@ -247,7 +238,7 @@ const CourseDetail = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
       </div>
     );
   }
@@ -659,7 +650,18 @@ const CourseDetail = () => {
                 {!isPurchased && (
                   <>
                     <div className="text-center mb-4">
-                      {course.salePrice > 0 &&
+                      {course.salePrice === 0 || course.salePrice === undefined || course.salePrice === null ? (
+                        <div className="text-3xl font-bold text-red-600">
+                          Miễn phí
+                          {course.price && course.price > 0 ? (
+                            <>
+                          <div className="text-lg text-gray-500 line-through">
+                            {formatPrice(course.price)}
+                          </div>
+                          </>
+                      ) : null}
+                        </div>
+                      ) : course.salePrice && course.salePrice > 0 &&
                         course.salePrice < course.price ? (
                         <div className="space-y-2">
                           <div className="text-3xl font-bold text-red-600">
@@ -678,11 +680,7 @@ const CourseDetail = () => {
                             %
                           </Badge>
                         </div>
-                      ) : (
-                        <div className="text-3xl font-bold text-blue-600">
-                          {formatPrice(course.price || 0)}
-                        </div>
-                      )}
+                      ) : null}
                     </div>
                   </>
                 )}
