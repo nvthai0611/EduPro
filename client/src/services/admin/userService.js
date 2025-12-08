@@ -1,30 +1,30 @@
-import { client } from '../../utils/clientUtils'
+import { apiClient } from '../../utils/clientAxios';
 
 const addUser = async (userData) => {
-  return await client.post('/admin/user/addUser', userData)
+  return await apiClient.post('/admin/user/addUser', userData)
 }
 
 const getAllUsers = async (params) => {
-  return await client.get('/admin/user')
+  return await apiClient.get('/admin/user')
 }
 
 const updateUser = async (userId, userData) => {
-  return await client.put(`/admin/user/${userId}`, userData)
+  return await apiClient.put(`/admin/user/${userId}`, userData)
 }
 
 const verifyEmail = async (userId) => {
-  return await client.put(`/admin/user/verify-account/${userId}`)
+  return await apiClient.put(`/admin/user/verify-account/${userId}`)
 }
 const getAllRole = async () => {
-  return await client.get('/admin/user/role/getAll')
+  return await apiClient.get('/admin/user/role/getAll')
 }
 
 const deleteUserById = async (userId) => {
-  return await client.delete(`/admin/user/${userId}`)
+  return await apiClient.delete(`/admin/user/${userId}`)
 }
 
 const revokePaidCourse = async (userId, courseId) => {
-  return await client.delete(`/admin/user/${userId}/paid-course/${courseId}`)
+  return await apiClient.delete(`/admin/user/${userId}/paid-course/${courseId}`)
 }
 
 export {

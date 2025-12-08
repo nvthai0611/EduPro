@@ -13,6 +13,7 @@ import {
 } from "../../../modules/course/course.controller";
 import { Router } from "express";
 import authenticateToken from "../../../middlewares/auth/authenticateToken";
+import { getLessonsByCourseId } from "../../../modules/lesson/lesson.controller";
 
 const router: Router = Router();
 
@@ -35,7 +36,6 @@ router.patch("/:id/review", authenticateToken, reviewCourse);
 router.get("/:id", getCourseById);
 router.get("/:id/details", getCourseDetails);
 
-// REMOVED: Lessons endpoint moved to protected enrollment routes
-// Users must enroll in course to access lessons
+router.get("/:courseId/lessons", getLessonsByCourseId); // Get all lessons by course
 
 export const courseRoutes: Router = router;

@@ -1,131 +1,154 @@
-import { useEffect, useState } from "react";
+import { useState, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { toast } from "react-toastify";
 import { CircleX, Filter, Search } from "lucide-react";
-import { courseService } from "../../../services/admin/courseService";
-import { orderService } from "../../../services/admin/orderService";
-import { getAllUsers, revokePaidCourse } from "../../../services/admin/userService";
+import { ToastContainer, toast } from "react-toastify"
+
 import { Input } from "@/components/ui/input";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 
+import { courseService } from "../../../services/admin/courseService";
+import { orderService } from "../../../services/admin/orderService";
+import { getAllUsers, revokePaidCourse } from "../../../services/admin/userService";
+
 const CourseAssign = () => {
+  const queryClient = useQueryClient();
+
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedCourse, setSelectedCourse] = useState(null);
-  const [courses, setCourses] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [paidCouse, setPaidCouse] = useState([]);
-  const [searchCourseTerm, setSearchCourseTerm] = useState('');
-  const [searchUserTerm, setSearchUserTerm] = useState('');
-  const [dataDelete, setDataDelete] = useState(null);
+
+  const [searchCourseTerm, setSearchCourseTerm] = useState("");
+  const [searchUserTerm, setSearchUserTerm] = useState("");
+
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [submited, setSubmited] = useState(false);
+  const [dataDelete, setDataDelete] = useState(null);
 
-  useEffect(() => {
-    fetchData();
-  }, [selectedUser, submited]);
+  const { data: courses = [] } = useQuery({
+    queryKey: ["courses"],
+    queryFn: () => courseService.getCourses(),
+  });
 
-  const fetchData = async () => {
-    try {
+  const { data: users = [] } = useQuery({
+    queryKey: ["users"],
+    queryFn: () => getAllUsers(),
+  });
 
-      const responseCourses = await courseService.getCourses();
-      const responseUsers = await getAllUsers();
-      const responseOrder = await orderService.getPaidCourses();
+  const { data: paidCourses = [] } = useQuery({
+    queryKey: ["paidCourses"],
+    queryFn: () => orderService.getPaidCourses(),
+  });
 
-      setPaidCouse(responseOrder);
+  const filteredCourses = useMemo(() => {
+    if (!selectedUser) return courses;
 
-      if (responseCourses) {
-        if (selectedUser) {
-          if (selectedUser?.purchasedCourses?.length > 0) {
-            const purchasedIds = new Set(selectedUser.purchasedCourses.map(p => p.courseId));
+    const purchasedIds = new Set(
+      selectedUser?.purchasedCourses?.map((p) => p.courseId)
+    );
 
-            const notPurchasedCourses = responseCourses.filter(c => !purchasedIds.has(c._id));
+    return courses.filter((c) => !purchasedIds.has(c._id));
+  }, [courses, selectedUser]);
 
-            setCourses(notPurchasedCourses);
-          } else {
-            setCourses(responseCourses);
-          }
-        } else {
-          setCourses(responseCourses);
-        }
-      }
+  const filteredUsers = useMemo(() => {
+    return users.filter((u) =>
+      `${u.fullName} ${u.email}`
+        .toLowerCase()
+        .includes(searchUserTerm.toLowerCase())
+    );
+  }, [users, searchUserTerm]);
 
-      if (responseUsers?.data) {
-        setUsers(responseUsers?.data);
-      }
+  const filteredPaidCourses = useMemo(() => {
+    return paidCourses.filter((c) => {
+      const text = `${c?.courseId?.title} ${c?.courseId?.description} ${c?.userId?.fullName} ${c?.userId?.email}`.toLowerCase();
 
-    } catch (error) {
-      console.error('Error fetching courses:', error);
-      setCourses([]);
-      setUsers([]);
-    }
-  };
+      return (
+        text.includes(searchCourseTerm.toLowerCase()) &&
+        text.includes(searchUserTerm.toLowerCase())
+      );
+    });
+  }, [paidCourses, searchCourseTerm, searchUserTerm]);
 
-  const handleAssignCourse = async () => {
+  const assignMutation = useMutation({
+    mutationFn: async () => {
+      return courseService.addPaidCourse({
+        userId: selectedUser._id,
+        courseId: selectedCourse._id,
+        courseTitle: selectedCourse.title,
+        price: selectedCourse.salePrice || selectedCourse.price || 1,
+        paymentMethod: "sepay",
+        statusOrder: "completed",
+        paymentStatus: "paid",
+      });
+    },
+    onSuccess: () => {
+      toast.success(
+        `Cấp khóa học ${selectedCourse.title} cho ${selectedUser.fullName} thành công!`
+      );
+
+      // reload lại danh sách:
+      queryClient.invalidateQueries(["paidCourses"]);
+      queryClient.invalidateQueries(["users"]);
+
+      setSelectedCourse(null);
+      setSelectedUser(null);
+    },
+  });
+
+  const handleAssignCourse = () => {
     if (!selectedUser || !selectedCourse) {
       toast.error("Vui lòng chọn học viên và khóa học!");
       return;
     }
-
-    await courseService.addPaidCourse({
-      userId: selectedUser._id,
-      courseId: selectedCourse._id,
-      courseTitle: selectedCourse.title,
-      price: selectedCourse.salePrice || selectedCourse.price || 1,
-      paymentMethod: "sepay",
-      statusOrder: "completed",
-      paymentStatus: "paid",
-    });
-
-    toast.success(`Cấp khóa học ${selectedCourse.title} cho ${selectedUser.fullName} thành công!`);
-    setSelectedUser(null);
-    setSelectedCourse(null);
+    assignMutation.mutate();
   };
 
-  const formatPrice = (price) => {
-    if (price === 0 || price === undefined) return 'Miễn phí';
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(price);
-  };
+  const deleteMutation = useMutation({
+    mutationFn: async (dataDelete) => {
+      await orderService.deleteOrder(dataDelete._id);
+      await revokePaidCourse(
+        dataDelete?.userId?._id,
+        dataDelete?.courseId?._id
+      );
+    },
+    onSuccess: () => {
+      toast.success(
+        `Thu hồi khóa học ${dataDelete?.courseId?.title} của ${dataDelete?.userId?.fullName} thành công!`
+      );
+
+      queryClient.invalidateQueries(["paidCourses"]);
+      queryClient.invalidateQueries(["users"]);
+
+      setIsDeleteDialogOpen(false);
+    },
+  });
 
   const confirmDelete = () => {
-    // Xóa order
-    orderService.deleteOrder(dataDelete._id);
+    deleteMutation.mutate(dataDelete);
+  };
 
-    // Xóa purchasedCourse trong user
-    revokePaidCourse(dataDelete?.userId?._id, dataDelete?.courseId?._id);
-
-    toast.success(`Thu hồi khóa học ${dataDelete?.courseId?.title} của ${dataDelete?.userId?.fullName} thành công!`);
-    setIsDeleteDialogOpen(false);
-    setSubmited(!submited);
-  }
-
-  const filteredPaidCourses = paidCouse.filter((course) => {
-    const text = `${course?.courseId?.title} ${course?.courseId?.description} ${course?.userId?.fullName} ${course?.userId?.email}`.toLowerCase();
-
-    return (
-      text.includes(searchCourseTerm.toLowerCase()) && text.includes(searchUserTerm.toLowerCase())
-    );
-  });
-
-  const filterUsers = users.filter((user) => {
-    const text = `${user.fullName} ${user.email}`.toLowerCase();
-    return text.includes(searchUserTerm.toLowerCase());
-  });
+  // ================================
+  const formatPrice = (price) => {
+    if (!price) return "Miễn phí";
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(price);
+  };
 
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-3xl font-bold">Cấp Khóa Học</h1>
       <p className="text-gray-600">Chọn học viên và khóa học để cấp</p>
 
+      <ToastContainer />
+
       {/* Filters */}
       <Card>
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
                 placeholder="Tìm kiếm khóa học..."
                 value={searchCourseTerm}
@@ -133,8 +156,9 @@ const CourseAssign = () => {
                 className="pl-10"
               />
             </div>
+
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
                 placeholder="Tìm kiếm học viên..."
                 value={searchUserTerm}
@@ -143,18 +167,21 @@ const CourseAssign = () => {
               />
             </div>
 
-            <Button variant="outline" onClick={() => {
-              setSearchCourseTerm('');
-              setSearchUserTerm('');
-              setSelectedUser(null);
-              setSelectedCourse(null);
-            }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSearchCourseTerm("");
+                setSearchUserTerm("");
+                setSelectedCourse(null);
+                setSelectedUser(null);
+              }}
+            >
               <Filter className="w-4 h-4 mr-2" />
               Xóa bộ lọc
             </Button>
 
             <div className="flex justify-end">
-              <Button onClick={handleAssignCourse}>
+              <Button onClick={handleAssignCourse} disabled={assignMutation.isPending}>
                 Cấp Khóa Học
               </Button>
             </div>
@@ -162,8 +189,9 @@ const CourseAssign = () => {
         </CardContent>
       </Card>
 
+      {/* Selects */}
       <div className="flex w-full gap-6">
-        {/* Chọn User */}
+        {/* Users */}
         <Card className="w-full">
           <CardHeader>
             <h3 className="text-lg font-semibold">Chọn Học Viên</h3>
@@ -178,7 +206,7 @@ const CourseAssign = () => {
               }}
             >
               <option value="">Chọn học viên</option>
-              {filterUsers.map((u) => (
+              {filteredUsers.map((u) => (
                 <option key={u._id} value={u._id}>
                   {u.fullName} - {u.email}
                 </option>
@@ -187,7 +215,7 @@ const CourseAssign = () => {
           </CardContent>
         </Card>
 
-        {/* Chọn Course */}
+        {/* Courses */}
         <Card className="w-full">
           <CardHeader>
             <h3 className="text-lg font-semibold">Chọn Khóa Học</h3>
@@ -197,12 +225,12 @@ const CourseAssign = () => {
               className="w-full p-2 border rounded"
               value={selectedCourse?._id || ""}
               onChange={(e) => {
-                const course = courses.find((c) => c._id === e.target.value);
+                const course = filteredCourses.find((c) => c._id === e.target.value);
                 setSelectedCourse(course);
               }}
             >
               <option value="">Chọn khóa học</option>
-              {courses.map((c) => (
+              {filteredCourses.map((c) => (
                 <option key={c._id} value={c._id}>
                   {c.title} - {formatPrice(c.salePrice)}
                 </option>
@@ -212,10 +240,12 @@ const CourseAssign = () => {
         </Card>
       </div>
 
+      {/* TABLE */}
       <Card>
         <CardHeader>
           <h3 className="text-lg font-semibold">Danh sách học viên</h3>
         </CardHeader>
+
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -227,54 +257,54 @@ const CourseAssign = () => {
                   <th className="text-left p-4">Thao tác</th>
                 </tr>
               </thead>
+
               <tbody>
-                {filteredPaidCourses.map(course => (
+                {filteredPaidCourses.map((course) => (
                   <tr key={course._id} className="border-b hover:bg-gray-50">
                     <td className="p-4">
                       <div className="flex items-center space-x-3">
                         <img
-                          src={course?.courseId?.thumbnail || 'https://via.placeholder.com/60x40'}
-                          alt={course?.courseId?.title || 'Course'}
+                          src={course?.courseId?.thumbnail}
+                          alt={course?.courseId?.title}
                           className="w-15 h-10 object-cover rounded"
                         />
                         <div>
-                          <h4 className="font-medium text-gray-900">{course?.courseId?.title}</h4>
+                          <h4 className="font-medium text-gray-900">
+                            {course?.courseId?.title}
+                          </h4>
                           <p className="text-sm text-gray-600 line-clamp-1">
                             {course?.courseId?.description}
                           </p>
                         </div>
                       </div>
                     </td>
+
                     <td className="p-4">
                       <span className="font-medium">
-                        {formatPrice(course.price || 0)}
+                        {formatPrice(course.price)}
                       </span>
                     </td>
+
                     <td className="p-4">
                       <div className="text-sm">
                         <div className="font-medium text-gray-900">
-                          {course?.userId?.fullName || 'N/A'}
+                          {course?.userId?.fullName}
                         </div>
-                        <div className="text-gray-500">
-                          {course?.userId?.email || 'N/A'}
-                        </div>
+                        <div className="text-gray-500">{course?.userId?.email}</div>
                       </div>
                     </td>
+
                     <td className="p-4">
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          title="Thu hồi khóa học"
-                          onClick={() => {
-                            setDataDelete(course);
-                            setIsDeleteDialogOpen(true);
-                          }}
-                        >
-                          <CircleX className="w-4 h-4" />
-                        </Button>
-                      </div>
+                      <Button
+                        variant="ghost"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => {
+                          setDataDelete(course);
+                          setIsDeleteDialogOpen(true);
+                        }}
+                      >
+                        <CircleX className="w-4 h-4" />
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -284,13 +314,12 @@ const CourseAssign = () => {
         </CardContent>
       </Card>
 
-      {/* Dialog xác nhận xóa */}
+      {/* Dialog Delete */}
       <DeleteConfirmDialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
         onConfirm={confirmDelete}
       />
-
     </div>
   );
 };
