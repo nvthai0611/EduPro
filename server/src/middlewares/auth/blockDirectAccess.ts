@@ -13,6 +13,7 @@ const blockDirectAccess = (req: Request, res: Response, next: NextFunction) => {
   const allowedOrigins = [
     "http://localhost:5173",
     "http://localhost:3000",
+    "https://www.fuedupro.com",
     "https://edu-pro-delta.vercel.app",
   ];
 
