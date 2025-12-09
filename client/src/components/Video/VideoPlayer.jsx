@@ -31,9 +31,29 @@ const VideoPlayer = ({ src, poster, title, className = "" }) => {
 
 
   const getYouTubeId = () => {
-    if (src.includes("youtu.be")) return src.split("/").pop();
-    const u = new URL(src);
-    return u.searchParams.get("v");
+    if (!src) return null;
+
+    const trimmed = src.trim();
+    if (/^[A-Za-z0-9_-]{11}$/.test(trimmed)) return trimmed;
+
+    const patterns = [
+      /youtu\.be\/([A-Za-z0-9_-]{11})/, // short links
+      /youtu\.be\/watch\?v=([A-Za-z0-9_-]{11})/, // non-standard short links
+      /youtube\.com\/shorts\/([A-Za-z0-9_-]{11})/, // shorts
+      /youtube\.com\/embed\/([A-Za-z0-9_-]{11})/, // embed
+      /youtube\.com\/v\/([A-Za-z0-9_-]{11})/, // legacy
+      /youtube\.com\/watch\?v=([A-Za-z0-9_-]{11})/, // standard
+      /youtube\.com\/.*[?&]v=([A-Za-z0-9_-]{11})/, // fallback query param
+    ];
+
+    for (const pattern of patterns) {
+      const match = trimmed.match(pattern);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+
+    return null;
   };
 
   const ytOptions = {
@@ -154,13 +174,18 @@ const VideoPlayer = ({ src, poster, title, className = "" }) => {
     >
       {/* YouTube Player */}
       <div id="yt-player-frame" className="w-full h-full">
-        <YouTube
-          videoId={getYouTubeId()}
-          opts={ytOptions}
-          onReady={onReady}
-          onStateChange={onStateChange}
-          className="w-full h-full"
-        />
+        {(() => {
+          const videoId = getYouTubeId();
+          return (
+            <YouTube
+              videoId={videoId}
+              opts={ytOptions}
+              onReady={onReady}
+              onStateChange={onStateChange}
+              className="w-full h-full"
+            />
+          );
+        })()}
       </div>
 
       {/* Title */} 

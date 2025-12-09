@@ -6,6 +6,7 @@ import * as orderService from "../../services/user/orderService";
 import * as freeCourseService from "../../services/user/freeCourseService";
 import { useAuth } from "../../hooks/useAuth";
 import VideoPlayer from "../../components/Video/VideoPlayer";
+import AssignmentSubmission from "../../components/Assignment/AssignmentSubmission";
 import { Loader2 } from "lucide-react";
 
 // Component cho từng bài học trong danh sách bên phải
@@ -144,6 +145,8 @@ export default function CourseLearnDetail() {
 
   // State để quản lý video hiện tại đang phát
   const [currentPlayingVideo, setCurrentPlayingVideo] = useState(null);
+  const [isAssignmentOpen, setAssignmentOpen] = useState(false);
+  const [assignmentSubmissions, setAssignmentSubmissions] = useState([]);
 
   useEffect(() => {
     if (!course || !course.sections) return;
@@ -174,6 +177,20 @@ export default function CourseLearnDetail() {
     }
   };
 
+  const handleAssignmentSubmit = ({ note, attachment }) => {
+    if (!attachment) return;
+
+    const newSubmission = {
+      id: `${Date.now()}`,
+      fileName: attachment.name,
+      note,
+      submittedAt: new Date().toISOString(),
+      status: "pending",
+    };
+
+    setAssignmentSubmissions((prev) => [newSubmission, ...prev]);
+  };
+
   if (!course) {
     return (
       <div className="flex justify-center items-center py-20">
@@ -188,7 +205,8 @@ export default function CourseLearnDetail() {
     : "";
 
   return (
-    <div className="flex flex-col lg:flex-row w-full min-h-screen bg-gray-100">
+    <>
+      <div className="flex flex-col lg:flex-row w-full min-h-screen bg-gray-100">
       {/* Left - Video Player & Lesson Info */}
       <div className="flex-1 flex flex-col overflow-y-auto">
         {/* Header (Nút Back Desktop) */}
@@ -241,9 +259,17 @@ export default function CourseLearnDetail() {
             <button className="flex items-center gap-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-100 transition">
               <i className="fas fa-plus text-xs"></i> Thêm ghi chú
             </button>
-            <button className="flex items-center gap-1 bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600 transition">
-              <i className="fas fa-comments"></i> Hỏi đáp
-            </button>
+            <div className="flex items-center gap-2">
+              <button className="flex items-center gap-1 bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600 transition">
+                <i className="fas fa-comments"></i> Hỏi đáp
+              </button>
+              <button
+                className="flex items-center gap-1 bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition"
+                onClick={() => setAssignmentOpen(true)}
+              >
+                <i className="fas fa-upload"></i> Nộp bài tập
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -293,6 +319,14 @@ export default function CourseLearnDetail() {
             />
           ))}
       </div>
-    </div>
+      </div>
+      <AssignmentSubmission
+        open={isAssignmentOpen}
+        onOpenChange={setAssignmentOpen}
+        onSubmit={handleAssignmentSubmit}
+        submissions={assignmentSubmissions}
+        lessonTitle={currentPlayingVideo?.title}
+      />
+    </>
   );
 }
