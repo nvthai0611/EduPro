@@ -3,8 +3,10 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { courseService } from "../../services/courseService";
 import { lessonService } from "../../services/lessonService";
 import * as orderService from "../../services/user/orderService";
+import * as freeCourseService from "../../services/user/freeCourseService";
 import { useAuth } from "../../hooks/useAuth";
 import VideoPlayer from "../../components/Video/VideoPlayer";
+import { Loader2 } from "lucide-react";
 
 // Component cho từng bài học trong danh sách bên phải
 const LessonItem = ({ item, isCurrent, onClick }) => (
@@ -98,8 +100,11 @@ export default function CourseLearnDetail() {
             responeCourse.data._id
           );
 
-          if (!hasPurchased.purchased) {
-            window.location.href = `/checkout?course=${responeCourse.data._id}`;
+          // Check if course is free
+          const isFree = freeCourseService.isFreeCourse(responeCourse.data);
+
+          if (!hasPurchased.purchased && !isFree) {
+            window.location.href = `/courses/${slug}`;
             return;
           } else {
             const sectionsMap = {};
@@ -171,19 +176,8 @@ export default function CourseLearnDetail() {
 
   if (!course) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6 text-center">
-        <h1 className="text-3xl font-bold text-gray-800 mb-4">
-          Khóa học với slug ${slug} không tìm thấy!
-        </h1>
-        <p className="text-lg text-gray-600 mb-6">
-          Có vẻ như khóa học bạn đang tìm kiếm không tồn tại hoặc đã bị gỡ.
-        </p>
-        <Link
-          to="/courses"
-          className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-        >
-          <i className="fas fa-arrow-left mr-2"></i> Quay lại danh sách khóa học
-        </Link>
+      <div className="flex justify-center items-center py-20">
+        <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
       </div>
     );
   }

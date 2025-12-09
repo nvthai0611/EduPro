@@ -166,18 +166,30 @@ export default function UserManagement() {
     if (!isValidEmail(data.email)) return toast.error("Email không hợp lệ")
     if (!isValidName(data.fullName)) return toast.error("Tên không hợp lệ")
 
-    // Update
-    if (data.id) {
-      await updateUserMutation.mutateAsync({ id: data.id, data })
-      toast.success("Cập nhật thành công")
-    }
-    // Create
-    else {
-      await createUserMutation.mutateAsync(data)
-      toast.success("Tạo người dùng thành công")
-    }
+    try {
+      // Update
+      if (data.id) {
+        await updateUserMutation.mutateAsync({ id: data.id, data })
+        toast.success("Cập nhật thành công")
+      }
+      // Create
+      else {
+        // Validate password for admin role
+        if (data.role === "admin" && !data.password) {
+          toast.error("Mật khẩu là bắt buộc cho tài khoản admin")
+          return
+        }
+        
+        await createUserMutation.mutateAsync(data)
+        toast.success("Tạo người dùng thành công")
+      }
 
-    setIsUserDialogOpen(false)
+      setIsUserDialogOpen(false)
+    } catch (error) {
+      // Handle backend validation errors
+      const errorMessage = error?.response?.data?.message || error?.message || "Có lỗi xảy ra"
+      toast.error(errorMessage)
+    }
   }
 
   const toggleUserStatus = async (id) => {

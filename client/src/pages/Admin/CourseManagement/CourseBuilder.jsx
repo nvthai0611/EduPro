@@ -51,7 +51,7 @@ const CourseBuilder = () => {
   // TanStack Query hooks
   const { data: course, isLoading: courseLoading, error: courseError } = useCourseBySlug(slug, {
     onError: (error) => {
-      console.error('Error fetching course:', error);
+      // console.error('Error fetching course:', error);
       toast.error('Không thể tải dữ liệu khóa học');
       navigate('/admin/manager-courses');
     }

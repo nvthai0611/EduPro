@@ -44,7 +44,7 @@ export class PaymentService {
 
     let paymentStatus: string;
 
-    if (order.notes === orderId && order.price === amount) {
+    if (order?.notes === orderId && order?.price === amount) {
       paymentStatus = "completed";
       await axios.post(
         `${BASE_URL}api/v1/admin/user/purchase/course`,
@@ -58,8 +58,11 @@ export class PaymentService {
     } else {
       paymentStatus = "failed";
     }
-
-    return { status: paymentStatus };
+    
+    return { 
+      status: paymentStatus,
+      userId: order.userId.toString()
+    };
   }
 
   async getTransactions(limit = 50): Promise<any[]> {
