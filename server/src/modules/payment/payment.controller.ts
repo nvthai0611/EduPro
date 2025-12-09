@@ -17,11 +17,14 @@ export class PaymentController {
     try {
       const result = await this.paymentService.handleWebhook(req.body);
 
-      this.socketService.emit('payment-webhook', result);
+      if (result.status === "completed") {
+        // Emit đến đúng user
+        this.socketService.emitToRoom(result.userId, "payment-webhook", result);
+      }
 
       res.status(200).json(result);
     } catch (error) {
-      console.error('Error handling webhook:', error);
+      // console.error('Error handling webhook:', error);
       res.status(500).json({ error: 'Something went wrong while handling the webhook.' });
     }
   }

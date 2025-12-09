@@ -10,8 +10,10 @@ class SocketService {
   // Lắng nghe kết nối của client và phát sự kiện
   listen() {
     this.io.on('connection', (socket: Socket) => {
-      console.log(`Client connected: ${socket.id}`);
-
+      socket.on("join-room", (userId) => {
+        socket.join(userId.toString());
+        console.log("User joined room:", userId);
+      });
       socket.on('disconnect', () => {
         console.log(`Client disconnected: ${socket.id}`);
       });
@@ -21,6 +23,10 @@ class SocketService {
   // Phát sự kiện từ server
   emit(event: string, data: any) {
     this.io.emit(event, data);
+  }
+
+  emitToRoom(roomId: string, event: string, data: any) {
+    this.io.to(roomId).emit(event, data);
   }
 
   // Lắng nghe sự kiện từ client
