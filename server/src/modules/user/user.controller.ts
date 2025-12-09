@@ -120,18 +120,63 @@ class UserController {
 
     async addUser(req: Request, res: Response): Promise<Response> {
         try {
-            const existEmail = await UserService.getUserByEmail(req.body.email);
+            const { email, role, password } = req.body;
 
+            // Validate email existence
+            const existEmail = await UserService.getUserByEmail(email);
             if (existEmail) {
-                return res.status(500).json("Email đã tồn tại");
-            } else {
-                await UserService.register(req.body);
-
-                return res.status(200).json("Thêm người dùng thành công");
+                return res.status(400).json({ message: "Email đã tồn tại" });
             }
 
+            // Validate password for admin role
+            if (role === 'admin') {
+                if (!password) {
+                    return res.status(400).json({ 
+                        message: "Mật khẩu là bắt buộc cho tài khoản admin" 
+                    });
+                }
+
+                // Validate password strength
+                if (password.length < 8) {
+                    return res.status(400).json({ 
+                        message: "Mật khẩu phải có ít nhất 8 ký tự" 
+                    });
+                }
+                if (!/[A-Z]/.test(password)) {
+                    return res.status(400).json({ 
+                        message: "Mật khẩu phải có ít nhất 1 chữ in hoa" 
+                    });
+                }
+                if (!/[a-z]/.test(password)) {
+                    return res.status(400).json({ 
+                        message: "Mật khẩu phải có ít nhất 1 chữ thường" 
+                    });
+                }
+                if (!/[0-9]/.test(password)) {
+                    return res.status(400).json({ 
+                        message: "Mật khẩu phải có ít nhất 1 chữ số" 
+                    });
+                }
+                if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+                    return res.status(400).json({ 
+                        message: "Mật khẩu phải có ít nhất 1 ký tự đặc biệt" 
+                    });
+                }
+            }
+
+            await UserService.register(req.body);
+
+            return res.status(200).json({ 
+                message: "Thêm người dùng thành công",
+                success: true 
+            });
+
         } catch (error) {
-            return res.status(500).json({ message: 'Thêm người dùng thất bại', error });
+            console.error('Error adding user:', error);
+            return res.status(500).json({ 
+                message: 'Thêm người dùng thất bại', 
+                error: error instanceof Error ? error.message : 'Unknown error' 
+            });
         }
     }
 

@@ -5,9 +5,15 @@ dotenv.config();
 
 const fixPhoneNumberIndex = async () => {
   try {
-    const mongoUri = process.env.MONGO_URI || "";
+    // Try MONGODB_URL first (for production), then MONGO_URI (fallback)
+    const mongoUri = process.env.MONGODB_URL || process.env.MONGO_URI || "";
+
+    if (!mongoUri) {
+      throw new Error("MongoDB connection string not found. Set MONGODB_URL or MONGO_URI in .env");
+    }
 
     console.log("Connecting to MongoDB...");
+    console.log("MongoDB URI:", mongoUri.replace(/\/\/([^:]+):([^@]+)@/, "//*****:*****@")); // Hide credentials
     await mongoose.connect(mongoUri);
     console.log("Connected successfully");
 
