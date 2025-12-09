@@ -32,8 +32,16 @@ export interface IUserDocument extends IUser, Document {
   comparePassword(candidatePassword: string): Promise<boolean>;
   hasPurchasedCourse(courseId: Types.ObjectId | string): boolean;
   hasPurchasedBundle(bundleId: Types.ObjectId | string): boolean;
-  addPurchasedCourse(courseId: Types.ObjectId | string, price: number, orderId: Types.ObjectId | string): Promise<IUserDocument>;
-  addPurchasedBundle(bundleId: Types.ObjectId | string, price: number, orderId: Types.ObjectId | string): Promise<IUserDocument>;
+  addPurchasedCourse(
+    courseId: Types.ObjectId | string,
+    price: number,
+    orderId: Types.ObjectId | string
+  ): Promise<IUserDocument>;
+  addPurchasedBundle(
+    bundleId: Types.ObjectId | string,
+    price: number,
+    orderId: Types.ObjectId | string
+  ): Promise<IUserDocument>;
   getPurchasedCourseIds(): string[];
   getPurchasedBundleIds(): string[];
   totalCoursesPurchased?: number;
@@ -101,6 +109,7 @@ const userSchema = new Schema<IUserDocument>(
       type: String,
       trim: true,
       unique: true,
+      sparse: true, // Allows multiple null/undefined values in unique index
       validate: {
         validator: function (value: string) {
           if (!value) return true; // optional
@@ -164,8 +173,7 @@ userSchema.methods.hasPurchasedCourse = function (
 ) {
   return this.purchasedCourses.some(
     (purchase) =>
-      purchase.courseId &&
-      purchase.courseId.toString() === courseId.toString()
+      purchase.courseId && purchase.courseId.toString() === courseId.toString()
   );
 };
 
@@ -175,8 +183,7 @@ userSchema.methods.hasPurchasedBundle = function (
 ) {
   return this.purchasedBundles.some(
     (purchase) =>
-      purchase.bundleId &&
-      purchase.bundleId.toString() === bundleId.toString()
+      purchase.bundleId && purchase.bundleId.toString() === bundleId.toString()
   );
 };
 
@@ -184,7 +191,7 @@ userSchema.methods.addPurchasedCourse = async function (
   this: IUserDocument,
   courseId: Types.ObjectId | string,
   price: number,
-  orderId: Types.ObjectId | string,
+  orderId: Types.ObjectId | string
 ) {
   if (this.hasPurchasedCourse(courseId)) {
     throw new Error("Course already purchased");
@@ -203,7 +210,7 @@ userSchema.methods.addPurchasedBundle = async function (
   this: IUserDocument,
   bundleId: Types.ObjectId | string,
   price: number,
-  orderId: Types.ObjectId | string,
+  orderId: Types.ObjectId | string
 ) {
   if (this.hasPurchasedBundle(bundleId)) {
     throw new Error("Bundle already purchased");
