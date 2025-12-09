@@ -108,6 +108,8 @@ const userSchema = new Schema<IUserDocument>(
     phoneNumber: {
       type: String,
       trim: true,
+      unique: true,
+      sparse: true, // Allows multiple null/undefined values in unique index
       validate: {
         validator: function (value: string) {
           if (!value) return true; // optional
