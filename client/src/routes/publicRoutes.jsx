@@ -13,15 +13,12 @@ import RegisterPage from "../pages/Auth/Register";
 import ForgotPasswordPage from "../pages/Auth/ForgotPass";
 import ConfirmEmailResetPasswordSuccess from "../pages/Auth/ConfirmEmail";
 import EmailVerifiedSuccess from "../pages/Admin/User/VerifyPage";
-import Assistant3D from "../pages/AI_Agent/Assistant3D";
 
 // Middlewares
 import GuestMiddleware from "../middlewares/GuestMiddleware";
 import RoleRedirectMiddleware from "../middlewares/RoleRedirectMiddleware";
 import CourseList from "../pages/Home/Courses/CourseList";
 import CourseDetail from "../pages/Home/Courses/CourseDetail";
-import CourseLearnDetail from "../pages/Courses/CourseLearnDetail";
-import Profile from "../pages/Auth/Profile";
 import Home from "../pages/Home/Home";
 
 // Learning Platform

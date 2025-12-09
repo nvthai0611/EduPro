@@ -1,9 +1,10 @@
 import authenticateToken from "../../../middlewares/auth/authenticateToken";
+import { authorizeRoles } from "../../../middlewares/auth/authorizeRoles";
 import {
   createCourse,
   getCourseById,
   getCoursesByManager,
-  getAllCourses,
+  getAllCoursesAdmin,
 } from "../../../modules/course/course.controller";
 import { Router } from "express";
 
@@ -12,10 +13,12 @@ const router: Router = Router();
 router.get("/", (req, res) => {
   res.send("Course API is working");
 });
-router.get("/all", authenticateToken, getAllCourses);
-router.post("/", authenticateToken, createCourse);
-router.get("/:id", authenticateToken, getCourseById);
-router.get("/manager/:managerId", authenticateToken, getCoursesByManager);
+
+// Admin routes - Yêu cầu authentication + admin role
+router.get("/all", authenticateToken, authorizeRoles(["admin", "manager"]), getAllCoursesAdmin);
+router.post("/", authenticateToken, authorizeRoles(["admin", "manager"]), createCourse);
+router.get("/:id", authenticateToken, authorizeRoles(["admin", "manager"]), getCourseById);
+router.get("/manager/:managerId", authenticateToken, authorizeRoles(["admin", "manager"]), getCoursesByManager);
 
 
 // Section Management

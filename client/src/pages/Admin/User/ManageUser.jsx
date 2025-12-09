@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import {
   ChevronDown,
   ChevronUp,
@@ -12,594 +12,361 @@ import {
   Trash2,
   Unlock,
   Users,
-} from "lucide-react" // Các icon từ thư viện lucide-react
+} from "lucide-react"
 
-import { Button } from "@/components/ui/button" // Nút bấm
-import { Card, CardContent } from "@/components/ui/card" // Thẻ chứa nội dung
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu" // Menu thả xuống
-import { Input } from "@/components/ui/input" // Ô nhập liệu
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select" // Thanh chọn
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table" // Bảng
-import UserDialog from "./UserDialog" // Dialog để thêm/sửa người dùng
-import { Badge } from "@/components/ui/badge" // Huy hiệu/nhãn trạng thái
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination" // Phân trang
-import DeleteConfirmDialog from "./DeleteConfirmDialog" // Dialog xác nhận xóa
-import { ToastContainer, toast } from 'react-toastify'; // Thư viện hiển thị thông báo toast
-import {
-  addUser,
-  deleteUserById,
-  getAllRole,
-  getAllUsers,
-  updateUser
-} from '../../../services/admin/userService' // Các API liên quan đến người dùng
-import { isValidEmail, isValidName, isValidPhone } from "../../../utils/validation" // Các hàm kiểm tra dữ liệu
+} from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import UserDialog from "./UserDialog"
+import { Badge } from "@/components/ui/badge"
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
+import DeleteConfirmDialog from "./DeleteConfirmDialog"
+import { ToastContainer, toast } from "react-toastify"
+
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { addUser, deleteUserById, getAllRole, getAllUsers, updateUser } from "../../../services/admin/userService"
+
 import Cookies from "js-cookie"
 import { jwtDecode } from "jwt-decode"
+import { isValidEmail, isValidName, isValidPhone } from "../../../utils/validation"
 
-const USERS_PER_PAGE = 10; // Số người dùng hiển thị trên mỗi trang
+const USERS_PER_PAGE = 10
+
 export default function UserManagement() {
-  // State để lưu trữ danh sách người dùng
-  const [users, setUsers] = useState([])
-  // State cho thanh tìm kiếm
-  const [currentId, setCurrentId] = useState(null)
-  // State cho thanh tìm kiếm
   const [searchTerm, setSearchTerm] = useState("")
-  // State cho bộ lọc vai trò
   const [roleFilter, setRoleFilter] = useState("all")
-  // State cho các tùy chọn vai trò (lấy từ API)
-  const [roleOptions, setRoleOptions] = useState([])
-  // State cho bộ lọc trạng thái
   const [statusFilter, setStatusFilter] = useState("all")
-  // State cho trường sắp xếp
+
   const [sortField, setSortField] = useState("")
-  // State cho hướng sắp xếp ('asc' - tăng dần, 'desc' - giảm dần)
   const [sortDirection, setSortDirection] = useState("asc")
-  // State để điều khiển việc mở/đóng UserDialog
+
   const [isUserDialogOpen, setIsUserDialogOpen] = useState(false)
-  // State để lưu trữ thông tin người dùng hiện tại (khi sửa)
   const [currentUser, setCurrentUser] = useState(null)
-  // State để điều khiển việc mở/đóng DeleteConfirmDialog
+
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  // State để lưu trữ người dùng cần xóa
   const [userToDelete, setUserToDelete] = useState(null)
-  // State cho trạng thái tải (loading)
-  const [loading, setLoading] = useState(false)
-  // State để kích hoạt lại useEffect sau khi gửi form
-  const [submited, setSubmited] = useState(false);
 
-  // useEffect để lấy dữ liệu người dùng, vai trò và vị trí khi component được mount hoặc khi `submited` thay đổi
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await getAllUsers(); // Gọi API lấy tất cả người dùng
+  const [currentPage, setCurrentPage] = useState(1)
 
-        const roleResponse = await getAllRole(); // Gọi API lấy tất cả vai trò
+  const qc = useQueryClient()
 
-        if (response?.data) {
-          setUsers(response?.data) // Cập nhật state `users`
-        }
+  const { data: users = [] } = useQuery({
+    queryKey: ["users"],
+    queryFn: getAllUsers,
+  })
 
-        if (roleResponse) {
-          // Chuyển đổi đối tượng vai trò thành mảng các cặp [label, value]
-          setRoleOptions(Object.entries(roleResponse?.data));
-          // Ví dụ: roleResponse?.data.data[0] = { "CUSTOMER": "customer", "STAFF": "staff" }
-          // setRoleOptions sẽ là: [["CUSTOMER", "customer"], ["STAFF", "staff"], ...]
-        }
-      } catch (error) {
-        console.log(error); // Ghi lỗi ra console
-      }
-    }
-    fetchUsers() // Gọi hàm fetchUsers
-    setCurrentId(jwtDecode(Cookies.get("render_id")).userId);
-  }, [submited]) // Dependencies: chạy lại khi `submited` thay đổi
+  const { data: roles = {} } = useQuery({
+    queryKey: ["roles"],
+    queryFn: getAllRole,
+  })
 
-  // Lọc và sắp xếp người dùng dựa trên `searchTerm`, `roleFilter`, `statusFilter`, `sortField`, `sortDirection`
+  const roleOptions = Object.entries(roles || {})
+
+  const currentId = jwtDecode(Cookies.get("render_id"))?.userId
+
+  const createUserMutation = useMutation({
+    mutationFn: addUser,
+    onSuccess: () => qc.invalidateQueries(["users"]),
+  })
+
+  const updateUserMutation = useMutation({
+    mutationFn: ({ id, data }) => updateUser(id, data),
+    onSuccess: () => qc.invalidateQueries(["users"]),
+  })
+
+  const deleteUserMutation = useMutation({
+    mutationFn: deleteUserById,
+    onSuccess: () => qc.invalidateQueries(["users"]),
+  })
+
   const filteredUsers = users
-    .filter((user) => {
-      // Tìm kiếm theo tên hoặc email
+    ?.filter((user) => {
       const matchesSearch =
-        user?.fullName.toLowerCase().includes(searchTerm?.toLowerCase()) ||
-        user?.email.toLowerCase().includes(searchTerm?.toLowerCase())
-      // Lọc theo vai trò
-      const matchesRole = roleFilter === "all" || user?.role === roleFilter
-      // Lọc theo trạng thái
-      const matchesStatus = statusFilter === "all" ||
-        (statusFilter === "active" && user?.status === true) ||
-        (statusFilter === "locked" && user?.status === false)
+        user?.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user?.email.toLowerCase().includes(searchTerm.toLowerCase())
+
+      const matchesRole = roleFilter === "all" || user.role === roleFilter
+
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "active" && user.status === true) ||
+        (statusFilter === "locked" && user.status === false)
+
       return matchesSearch && matchesRole && matchesStatus
     })
     .sort((a, b) => {
-      // Sắp xếp theo tên
       if (sortField === "name") {
-        return sortDirection === "asc" ? a?.fullName.localeCompare(b.fullName) : b?.fullName.localeCompare(a.fullName)
-      }
-      // Sắp xếp theo email
-      else if (sortField === "email") {
-        return sortDirection === "asc" ? a?.email.localeCompare(b.email) : b?.email.localeCompare(a.email)
-      }
-      // Sắp xếp theo thời gian tạo (createdAt)
-      else if (sortField === "lastLogin") { // "lastLogin" thực chất là "createdAt" trong code này
         return sortDirection === "asc"
-          ? new Date(a?.createdAt) - new Date(b?.createdAt)
-          : new Date(b?.createdAt) - new Date(a?.createdAt)
+          ? a.fullName.localeCompare(b.fullName)
+          : b.fullName.localeCompare(a.fullName)
       }
-      return 0 // Không sắp xếp
+      if (sortField === "email") {
+        return sortDirection === "asc" ? a.email.localeCompare(b.email) : b.email.localeCompare(a.email)
+      }
+      if (sortField === "createdAt") {
+        return sortDirection === "asc"
+          ? new Date(a.createdAt) - new Date(b.createdAt)
+          : new Date(b.createdAt) - new Date(a.createdAt)
+      }
+      return 0
     })
 
-
-  // State và logic phân trang
-  const [currentPage, setCurrentPage] = useState(1); // Trang hiện tại
-
-  const totalPages = Math.ceil(filteredUsers.length / USERS_PER_PAGE); // Tổng số trang
-
+  const totalPages = Math.ceil(filteredUsers.length / USERS_PER_PAGE)
   const paginatedUsers = filteredUsers.slice(
     (currentPage - 1) * USERS_PER_PAGE,
     currentPage * USERS_PER_PAGE
-  ); // Danh sách người dùng của trang hiện tại
+  )
 
-  // Xử lý thay đổi trang
-  const handlePageChange = (page) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
-
-  // Xử lý sắp xếp cột
   const handleSort = (field) => {
     if (sortField === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc") // Đảo ngược hướng sắp xếp nếu cùng trường
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
     } else {
-      setSortField(field) // Đặt trường sắp xếp mới
-      setSortDirection("asc") // Mặc định sắp xếp tăng dần
+      setSortField(field)
+      setSortDirection("asc")
     }
   }
 
-  // Mở dialog tạo người dùng mới
   const handleCreateUser = () => {
-    setCurrentUser(null) // Đặt currentUser về null để biết là tạo mới
-    setIsUserDialogOpen(true) // Mở dialog
+    setCurrentUser(null)
+    setIsUserDialogOpen(true)
   }
 
-  // Mở dialog sửa người dùng
   const handleEditUser = (user) => {
-    setCurrentUser(user) // Đặt người dùng hiện tại để sửa
-    setIsUserDialogOpen(true) // Mở dialog
+    setCurrentUser(user)
+    setIsUserDialogOpen(true)
   }
 
-  // Mở dialog xác nhận xóa người dùng
   const handleDeleteUser = (user) => {
-    setUserToDelete(user) // Đặt người dùng cần xóa
-    setIsDeleteDialogOpen(true) // Mở dialog xác nhận
+    setUserToDelete(user)
+    setIsDeleteDialogOpen(true)
   }
 
-  // Xác nhận và thực hiện xóa người dùng
   const confirmDeleteUser = async () => {
-    if (userToDelete) {
-      try {
-        const response = await deleteUserById(userToDelete?._id) // Gọi API xóa người dùng
-        if (response) {
-          setUsers(users.filter((user) => user?._id !== userToDelete?._id)) // Cập nhật danh sách người dùng sau khi xóa
-          setIsDeleteDialogOpen(false) // Đóng dialog
-          setUserToDelete(null) // Xóa người dùng khỏi state
-          toast.success("Người dùng đã được xóa thành công"); // Hiển thị thông báo thành công
-          setSubmited(!submited);
-        }
-        else {
-          toast.error(response?.data.message); // Hiển thị thông báo lỗi từ server
-        }
-      } catch (error) {
-        console.error("Lỗi xóa người dùng:", error.message); // Ghi lỗi ra console
-        toast.error("Đã xảy ra lỗi khi xóa người dùng."); // Thông báo lỗi chung
-      }
-    }
+    await deleteUserMutation.mutateAsync(userToDelete._id)
+    setIsDeleteDialogOpen(false)
+    toast.success("Xóa người dùng thành công")
   }
 
-  // Xử lý lưu (thêm mới hoặc cập nhật) người dùng
-  const handleSaveUser = async (userData) => {
-    try {
-      // Kiểm tra dữ liệu người dùng
-      if (!userData?.fullName || !userData?.email || !userData?.phoneNumber) {
-        toast.error("Vui lòng điền đầy đủ tất cả các trường", {
-          style: {
-            backgroundColor: "#f0f4ff",
-            color: "#1e3a8a",
-          },
-          duration: 2000,
-        });
-        return
-      }
-      // Kiểm tra số điện thoại hợp lệ
-      if (!isValidPhone(userData?.phoneNumber)) {
-        toast.error("Số điện thoại phải có ít nhất 10 chữ số và là số điện thoại Việt Nam", {
-          style: {
-            backgroundColor: "#f0f4ff",
-            color: "#1e3a8a",
-          },
-          duration: 2000,
-        });
-        return
-      }
-      // Kiểm tra email hợp lệ
-      if (!isValidEmail(userData?.email)) {
-        toast.error("Email không hợp lệ", {
-          style: {
-            backgroundColor: "#f0f4ff",
-            color: "#1e3a8a",
-          },
-          duration: 2000,
-        });
-        return
-      }
-      // Kiểm tra tên không chứa số hoặc ký tự đặc biệt
-      if (isValidName(userData?.fullName) == false) {
-        toast.error("Tên không hợp lệ và không được chứa ký tự đặc biệt hoặc số", {
-          style: {
-            backgroundColor: "#f0f4ff",
-            color: "#1e3a8a",
-          },
-          duration: 2000,
-        });
-        return
-      }
-
-      setLoading(true) // Bắt đầu trạng thái loading
-
-      // Cập nhật người dùng hiện có
-      if (userData?.id) {
-        const updatedUser = await updateUser(userData?.id, userData) // Gọi API cập nhật
-        
-        setLoading(false) // Kết thúc loading
-        if (updatedUser.response.ok) {
-          toast.success(updatedUser?.data, { // Thông báo thành công
-            style: {
-              backgroundColor: "#f0f4ff",
-              color: "#1e3a8a",
-            },
-            duration: 2000,
-          });
-          setIsUserDialogOpen(false) // Đóng dialog
-          setSubmited(!submited);
-        } else {
-          toast.error(updatedUser?.data, { // Thông báo lỗi
-            style: {
-              backgroundColor: "#f0f4ff",
-              color: "#1e3a8a",
-            },
-            duration: 2000,
-          });
-        }
-      }
-      // Tạo người dùng mới
-      else {
-
-        const createUser = await addUser(userData) // Gọi API thêm người dùng
-        
-        setLoading(false) // Kết thúc loading
-        if (createUser.response.ok) {
-          toast.success(createUser?.data, { // Thông báo thành công
-            style: {
-              backgroundColor: "#f0f4ff",
-              color: "#1e3a8a",
-            },
-            duration: 2000,
-          });
-          setIsUserDialogOpen(false) // Đóng dialog
-          setSubmited(!submited);
-        } else {
-          toast.error(createUser?.data, { // Thông báo lỗi
-            style: {
-              backgroundColor: "#f0f4ff",
-              color: "#1e3a8a",
-            },
-            duration: 2000,
-          });
-        }
-      }
-    } catch (error) {
-      console.log(error) // Ghi lỗi ra console
-      setLoading(false) // Kết thúc loading
-      toast.error("Đã xảy ra lỗi khi lưu người dùng.", { // Thông báo lỗi chung
-        style: {
-          backgroundColor: "#f0f4ff",
-          color: "#1e3a8a",
-        },
-        duration: 2000,
-      });
+  const handleSaveUser = async (data) => {
+    if (!data.fullName || !data.email || !data.phoneNumber) {
+      toast.error("Vui lòng điền đầy đủ trường")
+      return
     }
+
+    if (!isValidPhone(data.phoneNumber)) return toast.error("Số điện thoại không hợp lệ")
+    if (!isValidEmail(data.email)) return toast.error("Email không hợp lệ")
+    if (!isValidName(data.fullName)) return toast.error("Tên không hợp lệ")
+
+    // Update
+    if (data.id) {
+      await updateUserMutation.mutateAsync({ id: data.id, data })
+      toast.success("Cập nhật thành công")
+    }
+    // Create
+    else {
+      await createUserMutation.mutateAsync(data)
+      toast.success("Tạo người dùng thành công")
+    }
+
+    setIsUserDialogOpen(false)
   }
 
-  // Chuyển đổi trạng thái hoạt động/khóa của người dùng
-  const toggleUserStatus = async (userId) => {
-    try {
-      const user = users.find((user) => user?._id === userId) // Tìm người dùng theo ID
-      if (!user) return // Nếu không tìm thấy, thoát
-      const changeStatus = await updateUser(userId, { status: !user.status }) // Gọi API cập nhật trạng thái
-      if (changeStatus?.data.success == true) {
-        toast.success(changeStatus?.data.message, { // Thông báo thành công
-          style: {
-            backgroundColor: "#f0f4ff",
-            color: "#1e3a8a",
-          },
-          duration: 2000,
-        });
-        setUsers(users?.map((user) => (user?._id === userId ? { ...user, status: !user?.status } : user))) // Cập nhật trạng thái trong state
-      }
-      setSubmited(!submited);
-    } catch (error) {
-      console.log(error) // Ghi lỗi ra console
-      toast.error("Đã xảy ra lỗi khi cập nhật trạng thái người dùng", { // Thông báo lỗi chung
-        style: {
-          backgroundColor: "#f0f4ff",
-          color: "#1e3a8a",
-        },
-        duration: 2000,
-      });
-    }
+  const toggleUserStatus = async (id) => {
+    const user = users.find((u) => u._id === id)
+    await updateUserMutation.mutateAsync({ id, data: { status: !user.status } })
+    toast.success("Đổi trạng thái thành công")
   }
 
-  // Thay đổi vai trò của người dùng
-  const changeUserRole = async (userId, newRole) => {
-    try {
-      const user = users?.find((user) => user?._id === userId) // Tìm người dùng theo ID
-      if (user?.role === 'admin' && newRole === 'admin') {
-        toast.error("Vai trò quản trị viên không thể thay đổi thành quản trị viên", {
-          style: {
-            backgroundColor: "#f0f4ff",
-            color: "#1e3a8a",
-          },
-          duration: 2000,
-        });
-        return
-      }
-      const updateRole = await updateUser(userId, { role: newRole }) // Gọi API cập nhật vai trò
-      if (updateRole?.data.success == true) {
-        toast.success(updateRole?.data.message, { // Thông báo thành công
-          style: {
-            backgroundColor: "#f0f4ff",
-            color: "#1e3a8a",
-          },
-          duration: 2000,
-        });
-        setUsers(users?.map((user) => (user?._id === userId ? { ...user, role: newRole } : user))) // Cập nhật vai trò trong state
-      }
-      setSubmited(!submited);
-    } catch (error) {
-      console.log(error) // Ghi lỗi ra console
-      toast.error("Đã xảy ra lỗi khi cập nhật vai trò người dùng", { // Thông báo lỗi chung
-        style: {
-          backgroundColor: "#f0f4ff",
-          color: "#1e3a8a",
-        },
-        duration: 2000,
-      });
-    }
+  const changeUserRole = async (id, newRole) => {
+    await updateUserMutation.mutateAsync({ id, data: { role: newRole } })
+    toast.success("Đã cập nhật vai trò")
   }
 
-  // Định dạng ngày tháng
-  const formatDate = (dateString) => {
-    if (dateString === "-") return "-"
-    const date = new Date(dateString)
-    return new Intl.DateTimeFormat("en-US", {
+  const formatDate = (date) =>
+    new Intl.DateTimeFormat("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    }).format(date)
-  }
+    }).format(new Date(date))
 
-  // Lấy màu huy hiệu (badge) dựa trên vai trò
   const getRoleBadgeColor = (role) => {
     switch (role) {
       case "admin":
-        return "bg-purple-100 text-purple-800 hover:bg-purple-200"
+        return "bg-purple-100 text-purple-800"
       case "staff":
-        return "bg-blue-100 text-blue-800 hover:bg-blue-200"
-      case "customer":
-        return "bg-green-100 text-green-800 hover:bg-green-200"
+        return "bg-blue-100 text-blue-800"
       default:
-        return "bg-gray-100 text-gray-800 hover:bg-gray-200"
+        return "bg-green-100 text-green-800"
     }
   }
 
   return (
     <div className="space-y-4">
-      {/* Container cho các thông báo Toast */}
-      <ToastContainer position="top-center"
-        autoClose={2000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover />
+      <ToastContainer />
+
       <Card>
         <CardContent className="p-6">
+          {/* Search + Filters */}
           <div className="flex flex-col md:flex-row gap-4 justify-between mb-6">
-            {/* Thanh tìm kiếm */}
             <div className="relative w-full md:w-96">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                type="search"
-                placeholder="Tìm kiếm người dùng..."
-                className="w-full pl-8"
+                placeholder="Tìm kiếm..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-8"
               />
             </div>
-            {/* Bộ lọc và nút Thêm người dùng */}
-            <div className="flex flex-col sm:flex-row gap-2">
-              {/* Bộ lọc theo vai trò */}
+
+            <div className="flex gap-2">
               <Select value={roleFilter} onValueChange={setRoleFilter}>
-                <SelectTrigger className="w-full sm:w-[150px]">
-                  <SelectValue placeholder="Lọc theo vai trò" />
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Vai trò" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tất cả vai trò</SelectItem>
-                  {roleOptions.map(([index, value]) => (
-                    <SelectItem key={index} value={value.name} className="capitalize">
-                      {value.name}
+                  {roleOptions.map(([key, role]) => (
+                    <SelectItem key={key} value={role.name} className="capitalize">
+                      {role.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {/* Bộ lọc theo trạng thái */}
+
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-[150px]">
-                  <SelectValue placeholder="Lọc theo trạng thái" />
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Trạng thái" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tất cả trạng thái</SelectItem>
+                  <SelectItem value="all">Tất cả</SelectItem>
                   <SelectItem value="active">Hoạt động</SelectItem>
                   <SelectItem value="locked">Bị khóa</SelectItem>
                 </SelectContent>
               </Select>
-              {/* Nút Thêm người dùng */}
-              <Button onClick={handleCreateUser} className="gap-1">
-                <Plus className="h-4 w-4" />
-                <span className="hidden sm:inline">Thêm người dùng</span>
+
+              <Button onClick={handleCreateUser}>
+                <Plus className="h-4 w-4 mr-1" />
+                Thêm
               </Button>
             </div>
           </div>
 
-          {/* Bảng quản lý người dùng */}
+          {/* Table */}
           <div className="rounded-md border overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
-                  {/* Cột Tên (có thể sắp xếp) */}
-                  <TableHead className="w-[250px] cursor-pointer" onClick={() => handleSort("name")}>
-                    <div className="flex items-center">
-                      Tên
-                      {sortField === "name" &&
-                        (sortDirection === "asc" ? (
-                          <ChevronUp className="ml-1 h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="ml-1 h-4 w-4" />
-                        ))}
-                    </div>
+                  <TableHead onClick={() => handleSort("name")} className="cursor-pointer">
+                    Tên {sortField === "name" && (sortDirection === "asc" ? <ChevronUp /> : <ChevronDown />)}
                   </TableHead>
-                  {/* Cột Email (có thể sắp xếp) */}
-                  <TableHead className="cursor-pointer" onClick={() => handleSort("email")}>
-                    <div className="flex items-center">
-                      Email
-                      {sortField === "email" &&
-                        (sortDirection === "asc" ? (
-                          <ChevronUp className="ml-1 h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="ml-1 h-4 w-4" />
-                        ))}
-                    </div>
+
+                  <TableHead onClick={() => handleSort("email")} className="cursor-pointer">
+                    Email {sortField === "email" && (sortDirection === "asc" ? <ChevronUp /> : <ChevronDown />)}
                   </TableHead>
+
                   <TableHead>Vai trò</TableHead>
                   <TableHead>Trạng thái</TableHead>
-                  {/* Cột Ngày tạo (có thể sắp xếp) */}
-                  <TableHead className="cursor-pointer" onClick={() => handleSort("lastLogin")}>
-                    <div className="flex items-center">
-                      Ngày tạo
-                      {sortField === "lastLogin" &&
-                        (sortDirection === "asc" ? (
-                          <ChevronUp className="ml-1 h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="ml-1 h-4 w-4" />
-                        ))}
-                    </div>
+
+                  <TableHead onClick={() => handleSort("createdAt")} className="cursor-pointer">
+                    Ngày tạo {sortField === "createdAt" && (sortDirection === "asc" ? <ChevronUp /> : <ChevronDown />)}
                   </TableHead>
+
                   <TableHead className="text-right">Hành động</TableHead>
                 </TableRow>
               </TableHeader>
+
               <TableBody>
                 {paginatedUsers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
-                      Không tìm thấy người dùng nào.
+                    <TableCell colSpan={6} className="text-center py-10">
+                      Không tìm thấy người dùng.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  paginatedUsers.map((user) => (
-                    <TableRow key={user?._id}>
-                      <TableCell className="font-medium">{user?.fullName}</TableCell>
-                      <TableCell>{user?.email}</TableCell>
+                  paginatedUsers.map((u) => (
+                    <TableRow key={u._id}>
+                      <TableCell>{u.fullName}</TableCell>
+                      <TableCell>{u.email}</TableCell>
+
                       <TableCell>
-                        <Badge className={`${getRoleBadgeColor(user?.role)} capitalize`}>{user?.role}</Badge>
+                        <Badge className={`${getRoleBadgeColor(u.role)} capitalize`}>{u.role}</Badge>
                       </TableCell>
+
                       <TableCell>
-                        {user?.status === true ? (
-                          <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200">Hoạt động</Badge>
+                        {u.status ? (
+                          <Badge className="bg-emerald-100 text-emerald-800">Hoạt động</Badge>
                         ) : (
-                          <Badge className="bg-red-100 text-red-800 hover:bg-red-200">Bị khóa</Badge>
+                          <Badge className="bg-red-100 text-red-800">Bị khóa</Badge>
                         )}
                       </TableCell>
-                      <TableCell>{formatDate(user?.createdAt)}</TableCell>
-                      {user._id !== currentId && (
+
+                      <TableCell>{formatDate(u.createdAt)}</TableCell>
+
+                      {u._id !== currentId && (
                         <TableCell className="text-right">
-                          {/* Menu hành động cho từng người dùng */}
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" className="h-8 w-8 p-0">
-                                <span className="sr-only">Mở menu</span>
-                                <MoreHorizontal className="h-4 w-4" />
+                                <MoreHorizontal />
                               </Button>
                             </DropdownMenuTrigger>
+
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleEditUser(user)}>
+                              <DropdownMenuItem onClick={() => handleEditUser(u)}>
                                 <PenSquare className="mr-2 h-4 w-4" />
-                                Xem chi tiết
+                                Chi tiết
                               </DropdownMenuItem>
+
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => toggleUserStatus(user?._id)}>
-                                {user?.status === true ? (
+
+                              <DropdownMenuItem onClick={() => toggleUserStatus(u._id)}>
+                                {u.status ? (
                                   <>
                                     <Lock className="mr-2 h-4 w-4" />
-                                    Khóa tài khoản
+                                    Khóa
                                   </>
                                 ) : (
                                   <>
                                     <Unlock className="mr-2 h-4 w-4" />
-                                    Mở khóa tài khoản
+                                    Mở khóa
                                   </>
                                 )}
                               </DropdownMenuItem>
+
                               <DropdownMenuSeparator />
-                              {/* Dropdown con để thay đổi vai trò */}
+
                               <DropdownMenu>
-                                <DropdownMenuTrigger className="flex items-center w-full px-2 py-1.5 text-sm">
+                                <DropdownMenuTrigger className="px-2 py-1.5 text-sm flex gap-2">
                                   <Users className="mr-2 h-4 w-4" />
-                                  Thay đổi vai trò
+                                  Đổi vai trò
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
-                                  {roleOptions.map((role) => (
-                                    <DropdownMenuItem
-                                      key={role[1].name}
-                                      onClick={() => changeUserRole(user?._id, `${role[1].name}`)}
-                                    >
-                                      Đặt làm<span className="capitalize">{role[1].name}</span>
+                                  {roleOptions.map(([k, r]) => (
+                                    <DropdownMenuItem key={k} onClick={() => changeUserRole(u._id, r.name)}>
+                                      Đặt làm {r.name}
                                     </DropdownMenuItem>
                                   ))}
                                 </DropdownMenuContent>
                               </DropdownMenu>
+
                               <DropdownMenuSeparator />
+
                               <DropdownMenuItem
-                                onClick={() => handleDeleteUser(user)}
-                                className="text-red-600 focus:text-red-600"
+                                className="text-red-600"
+                                onClick={() => handleDeleteUser(u)}
                               >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Xóa
+                                <Trash2 className="mr-2 h-4 w-4" /> Xóa
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -612,49 +379,31 @@ export default function UserManagement() {
             </Table>
           </div>
 
-          {/* Thanh phân trang */}
-          <div className="mt-4 flex items-center justify-between">
-            <div className="text-sm text-muted-foreground">
-              Hiển thị <strong>{paginatedUsers?.length}</strong> trên tổng số <strong>{users?.length}</strong> người dùng
+          {/* Pagination */}
+          <div className="mt-4 flex justify-between">
+            <div className="text-sm block w-[100px]">
+              Hiển thị <b>{paginatedUsers.length}</b> / <b>{users.length}</b>
             </div>
-            <Pagination className="mt-6">
+
+            <Pagination>
               <PaginationContent>
                 <PaginationItem>
-                  <PaginationPrevious
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePageChange(currentPage - 1);
-                    }}
-                  />
+                  <PaginationPrevious onClick={() => setCurrentPage(currentPage - 1)} />
                 </PaginationItem>
 
-                {[...Array(totalPages)].map((_, idx) => {
-                  const page = idx + 1;
-                  return (
-                    <PaginationItem key={page}>
-                      <PaginationLink
-                        href="#"
-                        className={page === currentPage ? "bg-primary text-white" : ""}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handlePageChange(page);
-                        }}
-                      >
-                        {page}
-                      </PaginationLink>
-                    </PaginationItem>
-                  );
-                })}
+                {Array.from({ length: totalPages }).map((_, i) => (
+                  <PaginationItem key={i}>
+                    <PaginationLink
+                      onClick={() => setCurrentPage(i + 1)}
+                      className={currentPage === i + 1 ? "bg-primary text-white" : ""}
+                    >
+                      {i + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
 
                 <PaginationItem>
-                  <PaginationNext
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePageChange(currentPage + 1);
-                    }}
-                  />
+                  <PaginationNext onClick={() => setCurrentPage(currentPage + 1)} />
                 </PaginationItem>
               </PaginationContent>
             </Pagination>
@@ -662,17 +411,16 @@ export default function UserManagement() {
         </CardContent>
       </Card>
 
-      {/* Dialog thêm/sửa người dùng */}
+      {/* User Dialog */}
       <UserDialog
         open={isUserDialogOpen}
         onOpenChange={setIsUserDialogOpen}
         user={currentUser}
         roleOptions={roleOptions}
         onSave={handleSaveUser}
-        loading={loading}
       />
 
-      {/* Dialog xác nhận xóa */}
+      {/* Delete Dialog */}
       <DeleteConfirmDialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}

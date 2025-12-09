@@ -5,8 +5,15 @@ class CourseRepository {
     return Course.create(courseData);
   }
 
-  async findAll(query: any = {}): Promise<any[]> {
-    return Course.find(query)
+  async findAll(query: any = {}, options: any = {}): Promise<any[]> {
+    const queryBuilder = Course.find(query);
+    
+    // Apply select if provided
+    if (options.select) {
+      queryBuilder.select(options.select);
+    }
+    
+    return queryBuilder
       .populate("instructorId", "fullName email image")
       .sort({ createdAt: -1 })
       .lean();

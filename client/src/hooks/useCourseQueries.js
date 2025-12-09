@@ -1,0 +1,520 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { courseService } from '../services/admin/courseService';
+import sectionService from '../services/admin/sectionService';
+import lessonService from '../services/admin/lessonService';
+import { toast } from 'react-toastify';
+
+// Query keys
+export const courseKeys = {
+  all: ['courses'],
+  lists: () => [...courseKeys.all, 'list'],
+  list: (filters) => [...courseKeys.lists(), filters],
+  details: () => [...courseKeys.all, 'detail'],
+  detail: (id) => [...courseKeys.details(), id],
+  bySlug: (slug) => [...courseKeys.all, 'slug', slug],
+};
+
+export const sectionKeys = {
+  all: ['sections'],
+  byCourse: (courseId) => [...sectionKeys.all, 'course', courseId],
+  withLessons: (courseId) => [...sectionKeys.all, 'course', courseId, 'with-lessons'],
+  detail: (id) => [...sectionKeys.all, 'detail', id],
+};
+
+export const lessonKeys = {
+  all: ['lessons'],
+  byCourse: (courseId) => [...lessonKeys.all, 'course', courseId],
+  bySection: (sectionId) => [...lessonKeys.all, 'section', sectionId],
+  detail: (id) => [...lessonKeys.all, 'detail', id],
+};
+
+/**
+ * Hook to fetch courses list with filters
+ */
+export const useCourses = (filters = {}) => {
+  return useQuery({
+    queryKey: courseKeys.list(filters),
+    queryFn: async () => {
+      const response = await courseService.getCourses(filters);
+      
+      // Handle different response formats
+      if (Array.isArray(response)) {
+        return response;
+      } else if (response?.data) {
+        return Array.isArray(response.data) ? response.data : [];
+      }
+      return [];
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    retry: 2,
+  });
+};
+
+/**
+ * Hook to fetch single course by ID
+ */
+export const useCourse = (id, options = {}) => {
+  return useQuery({
+    queryKey: courseKeys.detail(id),
+    queryFn: async () => {
+      const response = await courseService.getCourseById(id);
+      return response?.data || response;
+    },
+    enabled: !!id,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes cache
+    refetchOnWindowFocus: false,
+    ...options,
+  });
+};
+
+/**
+ * Hook to fetch course by slug
+ */
+export const useCourseBySlug = (slug, options = {}) => {
+  return useQuery({
+    queryKey: courseKeys.bySlug(slug),
+    queryFn: async () => {
+      const response = await courseService.getCourseBySlug(slug);
+      return response?.data || response;
+    },
+    enabled: !!slug,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes cache
+    refetchOnWindowFocus: false,
+    ...options,
+  });
+};
+
+/**
+ * Hook to create new course
+ */
+export const useCreateCourse = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (courseData) => {
+      const response = await courseService.createCourse(courseData);
+      return response?.data || response;
+    },
+    onSuccess: () => {
+      // Invalidate courses list to refetch
+      queryClient.invalidateQueries({ queryKey: courseKeys.lists() });
+      toast.success('Tạo khóa học thành công!');
+    },
+    onError: (error) => {
+      console.error('Error creating course:', error);
+      toast.error(error?.message || 'Tạo khóa học thất bại!');
+    },
+  });
+};
+
+/**
+ * Hook to update course
+ */
+export const useUpdateCourse = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, data }) => {
+      const response = await courseService.updateCourse(id, data);
+      return response?.data || response;
+    },
+    onSuccess: (data, variables) => {
+      // Optimistic update: Set cache data immediately
+      queryClient.setQueryData(courseKeys.detail(variables.id), data);
+      
+      // Only invalidate lists if needed (not detail)
+      queryClient.invalidateQueries({ 
+        queryKey: courseKeys.lists(),
+        refetchType: 'active' // Only refetch if currently being watched
+      });
+      
+      toast.success('Cập nhật khóa học thành công!');
+    },
+    onError: (error) => {
+      console.error('Error updating course:', error);
+      toast.error(error?.message || 'Cập nhật khóa học thất bại!');
+    },
+  });
+};
+
+/**
+ * Hook to delete course
+ */
+export const useDeleteCourse = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id) => {
+      const response = await courseService.deleteCourse(id);
+      return response?.data || response;
+    },
+    onSuccess: () => {
+      // Invalidate courses list
+      queryClient.invalidateQueries({ queryKey: courseKeys.lists() });
+      toast.success('Xóa khóa học thành công!');
+    },
+    onError: (error) => {
+      console.error('Error deleting course:', error);
+      toast.error(error?.message || 'Xóa khóa học thất bại!');
+    },
+  });
+};
+
+/**
+ * Hook to submit course for review
+ */
+export const useSubmitCourseForReview = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, approvalMessage }) => {
+      const response = await courseService.submitCourseForApproval(id, approvalMessage);
+      return response?.data || response;
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: courseKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: courseKeys.detail(variables.id) });
+      toast.success('Gửi duyệt khóa học thành công!');
+    },
+    onError: (error) => {
+      console.error('Error submitting course:', error);
+      toast.error(error?.message || 'Gửi duyệt khóa học thất bại!');
+    },
+  });
+};
+
+/**
+ * Hook to review course (approve/reject)
+ */
+export const useReviewCourse = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, action, adminNote }) => {
+      const response = await courseService.reviewCourse(id, action, adminNote);
+      return response?.data || response;
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: courseKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: courseKeys.detail(variables.id) });
+      
+      const actionText = variables.action === 'approve' ? 'Phê duyệt' : 'Từ chối';
+      toast.success(`${actionText} khóa học thành công!`);
+    },
+    onError: (error) => {
+      console.error('Error reviewing course:', error);
+      toast.error(error?.message || 'Thao tác thất bại!');
+    },
+  });
+};
+
+// ==================== SECTION HOOKS ====================
+
+/**
+ * Hook to fetch sections with lessons by course ID
+ */
+export const useSectionsWithLessons = (courseId, options = {}) => {
+  return useQuery({
+    queryKey: sectionKeys.withLessons(courseId),
+    queryFn: async () => {
+      const response = await sectionService.getSectionsWithLessons(courseId);
+      return response?.data || response;
+    },
+    enabled: !!courseId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes cache
+    refetchOnWindowFocus: false,
+    select: (data) => Array.isArray(data) ? data : [], // Transform data in query
+    ...options,
+  });
+};
+
+/**
+ * Hook to fetch sections by course ID
+ */
+export const useSections = (courseId, options = {}) => {
+  return useQuery({
+    queryKey: sectionKeys.byCourse(courseId),
+    queryFn: async () => {
+      const response = await sectionService.getSectionsByCourseId(courseId);
+      return response?.data || response;
+    },
+    enabled: !!courseId,
+    staleTime: 1000 * 60 * 5,
+    ...options,
+  });
+};
+
+/**
+ * Hook to fetch single section by ID
+ */
+export const useSection = (sectionId, options = {}) => {
+  return useQuery({
+    queryKey: sectionKeys.detail(sectionId),
+    queryFn: async () => {
+      const response = await sectionService.getSectionById(sectionId);
+      return response?.data || response;
+    },
+    enabled: !!sectionId,
+    ...options,
+  });
+};
+
+/**
+ * Hook to create new section
+ */
+export const useCreateSection = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (sectionData) => {
+      const response = await sectionService.createSection(sectionData);
+      return response?.data || response;
+    },
+    onSuccess: (data, variables) => {
+      // Invalidate sections for this course
+      queryClient.invalidateQueries({ queryKey: sectionKeys.byCourse(variables.courseId) });
+      queryClient.invalidateQueries({ queryKey: sectionKeys.withLessons(variables.courseId) });
+      toast.success('Thêm chương mới thành công!');
+    },
+    onError: (error) => {
+      console.error('Error creating section:', error);
+      toast.error(error?.message || 'Không thể thêm chương mới!');
+    },
+  });
+};
+
+/**
+ * Hook to update section
+ */
+export const useUpdateSection = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, data }) => {
+      const response = await sectionService.updateSection(id, data);
+      return response?.data || response;
+    },
+    onSuccess: (data, variables) => {
+      // Get courseId from the response or cache
+      const courseId = data?.courseId;
+      
+      // Only invalidate withLessons (includes section detail)
+      if (courseId) {
+        queryClient.invalidateQueries({ 
+          queryKey: sectionKeys.withLessons(courseId),
+          refetchType: 'active'
+        });
+      }
+      toast.success('Cập nhật chương thành công!');
+    },
+    onError: (error) => {
+      console.error('Error updating section:', error);
+      toast.error(error?.message || 'Không thể cập nhật chương!');
+    },
+  });
+};
+
+/**
+ * Hook to delete section
+ */
+export const useDeleteSection = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, courseId }) => {
+      const response = await sectionService.deleteSection(id);
+      return { ...response, courseId };
+    },
+    onSuccess: (data) => {
+      const courseId = data?.courseId;
+      
+      if (courseId) {
+        queryClient.invalidateQueries({ queryKey: sectionKeys.byCourse(courseId) });
+        queryClient.invalidateQueries({ queryKey: sectionKeys.withLessons(courseId) });
+      }
+      toast.success('Xóa chương thành công!');
+    },
+    onError: (error) => {
+      console.error('Error deleting section:', error);
+      toast.error(error?.message || 'Không thể xóa chương!');
+    },
+  });
+};
+
+/**
+ * Hook to add lesson to section
+ */
+export const useAddLessonToSection = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ sectionId, lessonId, courseId }) => {
+      const response = await sectionService.addLessonToSection(sectionId, lessonId);
+      return { ...response, sectionId, courseId };
+    },
+    onSuccess: (data) => {
+      const { sectionId, courseId } = data;
+      
+      queryClient.invalidateQueries({ queryKey: sectionKeys.detail(sectionId) });
+      if (courseId) {
+        queryClient.invalidateQueries({ queryKey: sectionKeys.withLessons(courseId) });
+      }
+    },
+    onError: (error) => {
+      console.error('Error adding lesson to section:', error);
+      toast.error(error?.message || 'Không thể thêm bài học vào chương!');
+    },
+  });
+};
+
+// ==================== LESSON HOOKS ====================
+
+/**
+ * Hook to fetch lessons by course ID
+ */
+export const useLessonsByCourse = (courseId, options = {}) => {
+  return useQuery({
+    queryKey: lessonKeys.byCourse(courseId),
+    queryFn: async () => {
+      const response = await lessonService.getLessonsByCourseId(courseId);
+      return response?.data || response;
+    },
+    enabled: !!courseId,
+    ...options,
+  });
+};
+
+/**
+ * Hook to fetch lessons by section ID
+ */
+export const useLessonsBySection = (sectionId, options = {}) => {
+  return useQuery({
+    queryKey: lessonKeys.bySection(sectionId),
+    queryFn: async () => {
+      const response = await lessonService.getLessonsBySectionId(sectionId);
+      return response?.data || response;
+    },
+    enabled: !!sectionId,
+    ...options,
+  });
+};
+
+/**
+ * Hook to fetch single lesson by ID
+ */
+export const useLesson = (lessonId, options = {}) => {
+  return useQuery({
+    queryKey: lessonKeys.detail(lessonId),
+    queryFn: async () => {
+      const response = await lessonService.getLessonById(lessonId);
+      return response?.data || response;
+    },
+    enabled: !!lessonId,
+    ...options,
+  });
+};
+
+/**
+ * Hook to create new lesson
+ */
+export const useCreateLesson = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (lessonData) => {
+      const response = await lessonService.createLesson(lessonData);
+      return response?.data || response;
+    },
+    onSuccess: (data, variables) => {
+      const { courseId, sectionId } = variables;
+      
+      // Invalidate relevant queries
+      if (courseId) {
+        queryClient.invalidateQueries({ queryKey: lessonKeys.byCourse(courseId) });
+        queryClient.invalidateQueries({ queryKey: sectionKeys.withLessons(courseId) });
+      }
+      if (sectionId) {
+        queryClient.invalidateQueries({ queryKey: lessonKeys.bySection(sectionId) });
+        queryClient.invalidateQueries({ queryKey: sectionKeys.detail(sectionId) });
+      }
+      
+      toast.success('Thêm bài học mới thành công!');
+    },
+    onError: (error) => {
+      console.error('Error creating lesson:', error);
+      toast.error(error?.message || 'Không thể thêm bài học!');
+    },
+  });
+};
+
+/**
+ * Hook to update lesson
+ */
+export const useUpdateLesson = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, data }) => {
+      const response = await lessonService.updateLesson(id, data);
+      return response?.data || response;
+    },
+    onSuccess: (data, variables) => {
+      const courseId = data?.courseId;
+      const sectionId = data?.sectionId;
+      
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: lessonKeys.detail(variables.id) });
+      if (courseId) {
+        queryClient.invalidateQueries({ queryKey: lessonKeys.byCourse(courseId) });
+        queryClient.invalidateQueries({ queryKey: sectionKeys.withLessons(courseId) });
+      }
+      if (sectionId) {
+        queryClient.invalidateQueries({ queryKey: lessonKeys.bySection(sectionId) });
+      }
+      
+      toast.success('Cập nhật bài học thành công!');
+    },
+    onError: (error) => {
+      console.error('Error updating lesson:', error);
+      toast.error(error?.message || 'Không thể cập nhật bài học!');
+    },
+  });
+};
+
+/**
+ * Hook to delete lesson
+ */
+export const useDeleteLesson = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, courseId, sectionId }) => {
+      const response = await lessonService.deleteLesson(id);
+      return { ...response, courseId, sectionId };
+    },
+    onSuccess: (data) => {
+      const { courseId, sectionId } = data;
+      
+      // Invalidate relevant queries
+      if (courseId) {
+        queryClient.invalidateQueries({ queryKey: lessonKeys.byCourse(courseId) });
+        queryClient.invalidateQueries({ queryKey: sectionKeys.withLessons(courseId) });
+      }
+      if (sectionId) {
+        queryClient.invalidateQueries({ queryKey: lessonKeys.bySection(sectionId) });
+        queryClient.invalidateQueries({ queryKey: sectionKeys.detail(sectionId) });
+      }
+      
+      toast.success('Xóa bài học thành công!');
+    },
+    onError: (error) => {
+      console.error('Error deleting lesson:', error);
+      toast.error(error?.message || 'Không thể xóa bài học!');
+    },
+  });
+};

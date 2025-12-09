@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,30 +22,55 @@ import {
   FileText,
   Clock,
   Eye,
-  EyeOff,
   Save,
-  MoreVertical,
   Film,
   CheckCircle2,
   AlertCircle,
   BookOpen,
   HelpCircle,
   Video,
-  Type
+  Type,
+  Loader2
 } from 'lucide-react';
-import { courseService } from '../../../services/admin/courseService';
-import sectionService from '../../../services/admin/sectionService';
-import lessonService from '../../../services/admin/lessonService';
+import {
+  useCourseBySlug,
+  useSectionsWithLessons,
+  useCreateSection,
+  useUpdateSection,
+  useDeleteSection,
+  useCreateLesson,
+  useUpdateLesson,
+  useDeleteLesson,
+  useAddLessonToSection
+} from '../../../hooks/useCourseQueries';
 
 const CourseBuilder = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
   
+  // TanStack Query hooks
+  const { data: course, isLoading: courseLoading, error: courseError } = useCourseBySlug(slug, {
+    onError: (error) => {
+      console.error('Error fetching course:', error);
+      toast.error('Không thể tải dữ liệu khóa học');
+      navigate('/admin/manager-courses');
+    }
+  });
+  
+  const courseId = course?._id;
+  const { data: sections = [], isLoading: sectionsLoading } = useSectionsWithLessons(courseId);
+  
+  // Mutations
+  const createSectionMutation = useCreateSection();
+  const updateSectionMutation = useUpdateSection();
+  const deleteSectionMutation = useDeleteSection();
+  const createLessonMutation = useCreateLesson();
+  const updateLessonMutation = useUpdateLesson();
+  const deleteLessonMutation = useDeleteLesson();
+  const addLessonToSectionMutation = useAddLessonToSection();
+  
   // State management
-  const [course, setCourse] = useState(null);
-  const [sections, setSections] = useState([]);
   const [expandedSections, setExpandedSections] = useState(new Set());
-  const [loading, setLoading] = useState(true);
   
   // Dialog states
   const [showAddSectionDialog, setShowAddSectionDialog] = useState(false);
@@ -77,161 +102,136 @@ const CourseBuilder = () => {
     order: 1
   });
 
-  useEffect(() => {
-    if (slug) {
-      fetchCourseData();
+  // Auto-expand first section when data loads
+  React.useEffect(() => {
+    if (sections.length > 0 && expandedSections.size === 0) {
+      setExpandedSections(new Set([sections[0]._id]));
     }
-  }, [slug]);
-
-  const fetchCourseData = async () => {
-    try {
-      setLoading(true);
-      
-      // Fetch course by slug first
-      const courseResponse = await courseService.getCourseBySlug(slug);
-      const courseData = courseResponse?.data || courseResponse;
-      
-      if (!courseData || !courseData._id) {
-        toast.error('Không tìm thấy khóa học');
-        navigate('/admin/manager-courses');
-        return;
-      }
-
-    //   console.log('Course data:', courseData);
-      setCourse(courseData);
-
-      // Then fetch sections using courseId
-      const sectionsResponse = await sectionService.getSectionsWithLessons(courseData._id);
-      const sectionsData = sectionsResponse?.data || sectionsResponse;
-
-    //   console.log('Sections data:', sectionsData);
-      setSections(Array.isArray(sectionsData) ? sectionsData : []);
-      
-      // Auto-expand first section
-      if (Array.isArray(sectionsData) && sectionsData.length > 0) {
-        setExpandedSections(new Set([sectionsData[0]._id]));
-      }
-    } catch (error) {
-    //   console.error('Error fetching course data:', error);
-      toast.error('Không thể tải dữ liệu khóa học');
-      navigate('/admin/manager-courses');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [sections, expandedSections]);
 
   // Section handlers
   const handleAddSection = async () => {
-    try {
-      if (!course?._id) {
-        toast.error('Không tìm thấy ID khóa học');
-        return;
-      }
-      
-      const response = await sectionService.createSection({
-        ...sectionForm,
-        courseId: course._id,
-        order: sections.length + 1
-      });
-      
-      const newSection = response?.data || response;
-      toast.success('Thêm chương mới thành công');
-      setSections([...sections, newSection]);
-      setShowAddSectionDialog(false);
-      setSectionForm({ title: '', description: '', order: 1 });
-    } catch (error) {
-    //   console.error('Error adding section:', error);
-      toast.error('Không thể thêm chương mới');
+    if (!courseId) {
+      toast.error('Không tìm thấy ID khóa học');
+      return;
     }
+    
+    createSectionMutation.mutate(
+      {
+        ...sectionForm,
+        courseId: courseId,
+        order: sections.length + 1
+      },
+      {
+        onSuccess: () => {
+          setShowAddSectionDialog(false);
+          setSectionForm({ title: '', description: '', order: 1 });
+        }
+      }
+    );
   };
 
   const handleUpdateSection = async () => {
-    try {
-      const response = await sectionService.updateSection(selectedSection._id, sectionForm);
-      
-      const updatedSection = response?.data || response;
-      toast.success('Cập nhật chương thành công');
-      setSections(sections.map(s => s._id === selectedSection._id ? updatedSection : s));
-      setShowEditSectionDialog(false);
-      setSelectedSection(null);
-    } catch (error) {
-    //   console.error('Error updating section:', error);
-      toast.error('Không thể cập nhật chương');
-    }
+    updateSectionMutation.mutate(
+      {
+        id: selectedSection._id,
+        data: sectionForm
+      },
+      {
+        onSuccess: () => {
+          setShowEditSectionDialog(false);
+          setSelectedSection(null);
+        }
+      }
+    );
   };
 
   // Lesson handlers
   const handleAddLesson = async () => {
-    try {
-      if (!course?._id) {
-        toast.error('Không tìm thấy ID khóa học');
-        return;
-      }
-      
-      const response = await lessonService.createLesson({
+    if (!courseId) {
+      toast.error('Không tìm thấy ID khóa học');
+      return;
+    }
+    
+    // Create lesson first
+    createLessonMutation.mutate(
+      {
         ...lessonForm,
-        courseId: course._id,
+        courseId: courseId,
         sectionId: selectedSection._id,
         order: (selectedSection.lessons?.length || 0) + 1
-      });
-      
-      const newLesson = response?.data || response;
-      // Add lesson to section
-      await sectionService.addLessonToSection(selectedSection._id, newLesson._id);
-      
-      toast.success('Thêm bài học mới thành công');
-      await fetchCourseData();
-      setShowAddLessonDialog(false);
-      setLessonForm({
-        title: '',
-        description: '',
-        type: 'video',
-        videoUrl: '',
-        videoDuration: 0,
-        content: '',
-        readingTime: 0,
-        isFree: false,
-        order: 1
-      });
-    } catch (error) {
-      console.error('Error adding lesson:', error);
-      toast.error('Không thể thêm bài học');
-    }
+      },
+      {
+        onSuccess: (newLesson) => {
+          // Then add lesson to section
+          addLessonToSectionMutation.mutate(
+            {
+              sectionId: selectedSection._id,
+              lessonId: newLesson._id,
+              courseId: courseId
+            },
+            {
+              onSuccess: () => {
+                setShowAddLessonDialog(false);
+                setLessonForm({
+                  title: '',
+                  description: '',
+                  type: 'video',
+                  videoUrl: '',
+                  videoDuration: 0,
+                  content: '',
+                  readingTime: 0,
+                  isFree: false,
+                  order: 1
+                });
+              }
+            }
+          );
+        }
+      }
+    );
   };
 
   const handleUpdateLesson = async () => {
-    try {
-      const response = await lessonService.updateLesson(selectedLesson._id, lessonForm);
-      
-      toast.success('Cập nhật bài học thành công');
-      await fetchCourseData();
-      setShowEditLessonDialog(false);
-      setSelectedLesson(null);
-    } catch (error) {
-      console.error('Error updating lesson:', error);
-      toast.error('Không thể cập nhật bài học');
-    }
+    updateLessonMutation.mutate(
+      {
+        id: selectedLesson._id,
+        data: lessonForm
+      },
+      {
+        onSuccess: () => {
+          setShowEditLessonDialog(false);
+          setSelectedLesson(null);
+        }
+      }
+    );
   };
 
-  const handleDelete = async () => {
-    try {
-      if (deleteTarget.type === 'section') {
-        await sectionService.deleteSection(deleteTarget.id);
-        toast.success('Xóa chương thành công');
-        setSections(sections.filter(s => s._id !== deleteTarget.id));
-      } else if (deleteTarget.type === 'lesson') {
-        await lessonService.deleteLesson(deleteTarget.id);
-        toast.success('Xóa bài học thành công');
-        await fetchCourseData();
-      }
-      
+  const handleDelete = React.useCallback(() => {
+    const resetDeleteState = () => {
       setShowDeleteDialog(false);
       setDeleteTarget({ type: null, id: null, name: null });
-    } catch (error) {
-      console.error('Error deleting:', error);
-      toast.error('Không thể xóa');
+    };
+
+    if (deleteTarget.type === 'section') {
+      deleteSectionMutation.mutate(
+        {
+          id: deleteTarget.id,
+          courseId: courseId
+        },
+        { onSuccess: resetDeleteState }
+      );
+    } else if (deleteTarget.type === 'lesson') {
+      deleteLessonMutation.mutate(
+        {
+          id: deleteTarget.id,
+          courseId: courseId,
+          sectionId: selectedSection?._id
+        },
+        { onSuccess: resetDeleteState }
+      );
     }
-  };
+  }, [deleteTarget, courseId, selectedSection, deleteSectionMutation, deleteLessonMutation]);
 
   // Toggle section expand/collapse
   const toggleSection = (sectionId) => {
@@ -297,10 +297,33 @@ const CourseBuilder = () => {
     return `${minutes}m`;
   };
 
-  if (loading) {
+  // Loading states
+  const isLoading = courseLoading || sectionsLoading;
+  const isMutating = createSectionMutation.isPending || 
+                     updateSectionMutation.isPending || 
+                     deleteSectionMutation.isPending ||
+                     createLessonMutation.isPending || 
+                     updateLessonMutation.isPending || 
+                     deleteLessonMutation.isPending ||
+                     addLessonToSectionMutation.isPending;
+
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex flex-col items-center justify-center h-screen gap-3">
+        <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
+        <p className="text-gray-600">Đang tải dữ liệu khóa học...</p>
+      </div>
+    );
+  }
+
+  if (courseError || !course) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen gap-3">
+        <AlertCircle className="w-12 h-12 text-red-600" />
+        <p className="text-gray-600">Không thể tải khóa học</p>
+        <Button onClick={() => navigate('/admin/manager-courses')}>
+          Quay lại
+        </Button>
       </div>
     );
   }
@@ -652,8 +675,18 @@ const CourseBuilder = () => {
             <Button variant="outline" onClick={() => setShowAddSectionDialog(false)}>
               Hủy
             </Button>
-            <Button onClick={handleAddSection} disabled={!sectionForm.title}>
-              Thêm chương
+            <Button 
+              onClick={handleAddSection} 
+              disabled={!sectionForm.title || createSectionMutation.isPending}
+            >
+              {createSectionMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Đang thêm...
+                </>
+              ) : (
+                'Thêm chương'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -688,8 +721,18 @@ const CourseBuilder = () => {
             <Button variant="outline" onClick={() => setShowEditSectionDialog(false)}>
               Hủy
             </Button>
-            <Button onClick={handleUpdateSection} disabled={!sectionForm.title}>
-              Lưu thay đổi
+            <Button 
+              onClick={handleUpdateSection} 
+              disabled={!sectionForm.title || updateSectionMutation.isPending}
+            >
+              {updateSectionMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Đang lưu...
+                </>
+              ) : (
+                'Lưu thay đổi'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -907,10 +950,19 @@ const CourseBuilder = () => {
             </Button>
             <Button 
               onClick={handleAddLesson} 
-              disabled={!lessonForm.title || lessonForm.type === 'quiz'}
+              disabled={!lessonForm.title || lessonForm.type === 'quiz' || createLessonMutation.isPending || addLessonToSectionMutation.isPending}
             >
-              <Plus className="w-4 h-4 mr-2" />
-              Thêm bài học
+              {(createLessonMutation.isPending || addLessonToSectionMutation.isPending) ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Đang thêm...
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Thêm bài học
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1170,9 +1222,16 @@ const CourseBuilder = () => {
             </Button>
             <Button 
               onClick={handleUpdateLesson} 
-              disabled={!lessonForm.title || lessonForm.type === 'quiz'}
+              disabled={!lessonForm.title || lessonForm.type === 'quiz' || updateLessonMutation.isPending}
             >
-              Lưu thay đổi
+              {updateLessonMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Đang lưu...
+                </>
+              ) : (
+                'Lưu thay đổi'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1197,8 +1256,19 @@ const CourseBuilder = () => {
             <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
               Hủy
             </Button>
-            <Button variant="destructive" onClick={handleDelete}>
-              Xóa
+            <Button 
+              variant="destructive" 
+              onClick={handleDelete}
+              disabled={deleteSectionMutation.isPending || deleteLessonMutation.isPending}
+            >
+              {(deleteSectionMutation.isPending || deleteLessonMutation.isPending) ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Đang xóa...
+                </>
+              ) : (
+                'Xóa'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

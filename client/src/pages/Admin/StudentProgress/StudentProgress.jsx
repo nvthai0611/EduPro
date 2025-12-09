@@ -27,6 +27,20 @@ const StudentProgress = () => {
   const [courseFilter, setCourseFilter] = useState('');
   const [progressFilter, setProgressFilter] = useState('');
 
+  const handleIssueCertificate = async (progressId) => {
+    try {
+      const response = await progressService.issueCertificate(progressId);
+      if (response.success) {
+        // Refresh data
+        fetchStudentProgress();
+        alert('Cấp chứng chỉ thành công!');
+      }
+    } catch (error) {
+      console.error('Error issuing certificate:', error);
+      alert('Có lỗi khi cấp chứng chỉ');
+    }
+  };
+
   useEffect(() => {
     fetchStudentProgress();
   }, [searchTerm, courseFilter, progressFilter]);
@@ -34,80 +48,19 @@ const StudentProgress = () => {
   const fetchStudentProgress = async () => {
     try {
       setLoading(true);
-      // Mock data for now - in real app, this would be an admin API
-      const mockData = [
-        {
-          _id: '1',
-          user: {
-            _id: 'u1',
-            fullName: 'Nguyễn Văn A',
-            email: 'nguyenvana@email.com',
-            image: 'https://via.placeholder.com/40x40'
-          },
-          course: {
-            _id: 'c1',
-            title: 'React từ cơ bản đến nâng cao',
-            thumbnail: 'https://via.placeholder.com/60x40'
-          },
-          progress: 75,
-          completedLessons: 15,
-          totalLessons: 20,
-          enrolledAt: '2024-01-15',
-          lastActivity: '2024-01-20',
-          certificate: {
-            issued: false
-          }
-        },
-        {
-          _id: '2',
-          user: {
-            _id: 'u2',
-            fullName: 'Trần Thị B',
-            email: 'tranthib@email.com',
-            image: 'https://via.placeholder.com/40x40'
-          },
-          course: {
-            _id: 'c2',
-            title: 'Node.js Backend Development',
-            thumbnail: 'https://via.placeholder.com/60x40'
-          },
-          progress: 100,
-          completedLessons: 25,
-          totalLessons: 25,
-          enrolledAt: '2024-01-10',
-          lastActivity: '2024-01-22',
-          certificate: {
-            issued: true,
-            issuedAt: '2024-01-22'
-          }
-        },
-        {
-          _id: '3',
-          user: {
-            _id: 'u3',
-            fullName: 'Lê Văn C',
-            email: 'levanc@email.com',
-            image: 'https://via.placeholder.com/40x40'
-          },
-          course: {
-            _id: 'c3',
-            title: 'JavaScript Fundamentals',
-            thumbnail: 'https://via.placeholder.com/60x40'
-          },
-          progress: 30,
-          completedLessons: 6,
-          totalLessons: 20,
-          enrolledAt: '2024-01-18',
-          lastActivity: '2024-01-19',
-          certificate: {
-            issued: false
-          }
-        }
-      ];
+      const params = {};
+      if (courseFilter) params.courseId = courseFilter;
+      if (progressFilter) params.progressFilter = progressFilter;
       
-      setStudents(mockData);
+      const response = await progressService.getAllStudentProgress(params);
+      
+      if (response.success) {
+        setStudents(response.data || []);
+      }
     } catch (error) {
       console.error('Error fetching student progress:', error);
+      // Keep empty array on error
+      setStudents([]);
     } finally {
       setLoading(false);
     }
@@ -401,10 +354,7 @@ const StudentProgress = () => {
                               variant="ghost"
                               size="sm"
                               className="text-green-600 hover:text-green-700"
-                              onClick={() => {
-                                // Issue certificate
-                                console.log('Issue certificate for:', student._id);
-                              }}
+                              onClick={() => handleIssueCertificate(student._id)}
                             >
                               <Award className="w-4 h-4" />
                             </Button>

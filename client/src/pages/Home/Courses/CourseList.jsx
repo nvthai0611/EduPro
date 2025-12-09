@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   Users,
@@ -11,7 +11,9 @@ import {
   Loader2,
   Star,
 } from "lucide-react";
-import { courseService } from "../../../services/courseService";
+import { useCourses } from "../../../hooks/useCourseQueries";
+
+
 
 // Dữ liệu các chuyên môn
 const professions = [
@@ -49,6 +51,7 @@ const professions = [
   };
 
 const formatPrice = (price) => {
+  if (price === undefined || price === null) return "Miễn phí";
   if (price === 0) return "Miễn phí";
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
@@ -118,50 +121,83 @@ const CourseCard = ({ course }) => {
   return (
     <Link
       to={`/courses/${course.slug}`}
-       onClick={handleClick}
-      className="rounded-2xl shadow-md overflow-hidden bg-white hover:shadow-xl transition-shadow duration-300 transform hover:-translate-y-1 cursor-pointer"
+      onClick={handleClick}
+      className="group rounded-2xl shadow-lg overflow-hidden bg-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer border border-gray-100"
     >
+      {/* Header with gradient background */}
       <div
-        className={`h-48 bg-gradient-to-br ${color} flex items-center justify-center text-white text-lg font-semibold p-4 text-center`}
-        style={{ lineHeight: '1.2' }}
+        className={`h-52 bg-gradient-to-br ${color} flex items-center justify-center text-white p-6 text-center relative overflow-hidden`}
       >
-        <div className="flex flex-col">
-          <h3 className="text-2xl font-bold mb-2 whitespace-pre-line">
+        {/* Decorative circles */}
+        <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full"></div>
+        <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-white/5 rounded-full"></div>
+        
+        <div className="relative z-10">
+          <h3 className="text-2xl font-bold mb-2 whitespace-pre-line leading-tight drop-shadow-sm">
             {labelLines}
           </h3>
         </div>
       </div>
 
-      <div className="p-5">
-        <h4 className="font-semibold text-gray-900 mb-2 text-base line-clamp-2 min-h-[40px]">
+      {/* Card content */}
+      <div className="p-6">
+        {/* Course title */}
+        <h4 className="font-bold text-gray-900 mb-3 text-lg line-clamp-2 min-h-[56px] group-hover:text-blue-600 transition-colors">
           {course.title}
         </h4>
+        
+        {/* Price and rating section */}
         <div className="flex items-center justify-between mb-4">
-          <p className="text-orange-500 font-medium">{formatPrice(course.salePrice)}</p>
-          <div>
-            <span className="text-lg font-semibold flex items-center justify-between gap-1">
-              {star.toFixed(1) || "5.0"} <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+          <div className="flex flex-col">
+            <p className="text-2xl font-bold text-orange-500 mb-1">
+              {formatPrice(course.salePrice)}
+            </p>
+            {course.price && course.price > 0 && (
+              <p className="text-sm text-gray-400 line-through">
+                {formatPrice(course.price)}
+              </p>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-1 bg-yellow-50 px-3 py-1 rounded-full">
+            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+            <span className="text-sm font-semibold text-gray-700">
+              {star?.toFixed(1) || "5.0"}
             </span>
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="flex items-center justify-between text-sm text-gray-600">
-          <div className="flex items-center gap-1">
-            <Users className="w-4 h-4 text-blue-500" />
-            <span>
+        {/* Divider */}
+        <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-4"></div>
+        
+        {/* Stats section */}
+        <div className="grid grid-cols-3 gap-4 text-sm">
+          <div className="flex flex-col items-center text-center">
+            <div className="flex items-center justify-center w-8 h-8 bg-blue-50 rounded-full mb-1">
+              <Users className="w-4 h-4 text-blue-500" />
+            </div>
+            <span className="text-xs text-gray-500">Học viên</span>
+            <span className="font-semibold text-gray-700">
               {typeof students === "number"
                 ? students.toLocaleString("en-US")
                 : students}
             </span>
           </div>
-          <div className="flex items-center gap-1">
-            <PlayCircle className="w-4 h-4 text-green-500" />
-            <span>{lessons}</span>
+          
+          <div className="flex flex-col items-center text-center">
+            <div className="flex items-center justify-center w-8 h-8 bg-green-50 rounded-full mb-1">
+              <PlayCircle className="w-4 h-4 text-green-500" />
+            </div>
+            <span className="text-xs text-gray-500">Bài học</span>
+            <span className="font-semibold text-gray-700">{lessons}</span>
           </div>
-          <div className="flex items-center gap-1">
-            <Clock className="w-4 h-4 text-orange-500" />
-            <span>{duration}</span>
+          
+          <div className="flex flex-col items-center text-center">
+            <div className="flex items-center justify-center w-8 h-8 bg-orange-50 rounded-full mb-1">
+              <Clock className="w-4 h-4 text-orange-500" />
+            </div>
+            <span className="text-xs text-gray-500">Thời lượng</span>
+            <span className="font-semibold text-gray-700">{duration}</span>
           </div>
         </div>
       </div>
@@ -175,34 +211,19 @@ export default function CourseList() {
   const isCategoryPage = !!categorySlug;
   const courseListRef = useRef(null);
 
-  // State management
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [courseData, setCourseData] = useState([]);
+  // Sử dụng TanStack Query để fetch courses
+  const filters = {
+    status: "published",
+    ...(categorySlug && { category: categorySlug }),
+  };
 
-  // Fetch courses từ backend
-  useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const params = {};
-        params.status = "published"; // Chỉ lấy khóa học đã xuất bản
-        if (categorySlug) {
-          params.category = categorySlug;
-        }
-        const response = await courseService.getCourses(params);
-        setCourseData(response.data || []); // Đảm bảo luôn là array
-      } catch (error) {
-        console.error("Lỗi khi lấy danh sách khóa học:", error);
-        setError("Không thể tải danh sách khóa học. Vui lòng thử lại sau.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const { 
+    data: courseData = [], 
+    isLoading, 
+    error: queryError 
+  } = useCourses(filters);
 
-    fetchCourses();
-  }, [categorySlug]);
+  const error = queryError ? "Không thể tải danh sách khóa học. Vui lòng thử lại sau." : null;
 
   // Logic lọc khóa học
   const filteredCourses = useMemo(() => {
