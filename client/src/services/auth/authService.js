@@ -105,7 +105,7 @@ class AuthService {
       if (credentials.type === TYPE_AUTH.MANAGER) {
         url = "/auth/login/manager";
       }
-      const response = await apiClient.post(url, { data: credentials });
+      const response = await apiClient.post(url, credentials);
       const res = response.data;
 
       if (response.success && res.accessToken && res.user) {
