@@ -23,13 +23,17 @@ import {
 import { useAuth } from "../../../hooks/useAuth";
 import { useCourseBySlug, useCourses } from "../../../hooks/useCourseQueries";
 import * as orderService from "../../../services/user/orderService";
+import * as freeCourseService from "../../../services/user/freeCourseService";
 import { Link, useParams } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const CourseDetail = () => {
   const { slug } = useParams();
   const { user } = useAuth();
   const [isPurchased, setIsPurchased] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [isEnrolling, setIsEnrolling] = useState(false);
 
   // Sử dụng TanStack Query để fetch course by slug
   const {
@@ -252,8 +256,46 @@ const CourseDetail = () => {
       return;
     }
 
-    // Redirect to checkout
+    // Check if course is free
+    if (freeCourseService.isFreeCourse(course)) {
+      handleEnrollFreeCourse();
+      return;
+    }
+
+    // Redirect to checkout for paid courses
     window.location.href = `/checkout?course=${course._id}`;
+  };
+
+  const handleEnrollFreeCourse = async () => {
+    if (!user || !course) return;
+
+    setIsEnrolling(true);
+    try {
+      const response = await freeCourseService.enrollFreeCourse(
+        user.userId,
+        course._id,
+        course.title
+      );
+
+      if (response.success) {
+        toast.success("Đăng ký khóa học thành công!");
+        setIsPurchased(true);
+        
+        // Redirect to learning page after 1.5 seconds
+        setTimeout(() => {
+          window.location.href = `/courses/learn/${course.slug}`;
+        }, 1500);
+      } else {
+        toast.error(response.message || "Đăng ký khóa học thất bại");
+      }
+    } catch (error) {
+      console.error("Error enrolling free course:", error);
+      toast.error(
+        error?.response?.data?.message || "Đã xảy ra lỗi khi đăng ký khóa học"
+      );
+    } finally {
+      setIsEnrolling(false);
+    }
   };
 
   const handleStartLearning = () => {
@@ -322,6 +364,7 @@ const CourseDetail = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <ToastContainer position="top-right" autoClose={3000} />
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -373,11 +416,21 @@ const CourseDetail = () => {
                   size="lg"
                   className="bg-white text-blue-600 hover:bg-gray-100"
                   onClick={handleStartLearning}
+                  disabled={isEnrolling}
                 >
-                  <Play className="w-5 h-5 mr-2" />
-                  {course.price === 0 || isPurchased
-                    ? "Bắt đầu học"
-                    : "Mua khóa học"}
+                  {isEnrolling ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Đang xử lý...
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-5 h-5 mr-2" />
+                      {freeCourseService.isFreeCourse(course) || isPurchased
+                        ? "Bắt đầu học"
+                        : "Mua khóa học"}
+                    </>
+                  )}
                 </Button>
 
                 <Button
@@ -753,14 +806,22 @@ const CourseDetail = () => {
                   className="w-full mb-4"
                   size="lg"
                   onClick={handleStartLearning}
+                  disabled={isEnrolling}
                 >
-
-                  <Play className="w-5 h-5 mr-2" />
-                  {course.price === 0 ||
-                    course.price === undefined ||
-                    isPurchased
-                    ? "Bắt đầu học"
-                    : "Mua khóa học"}
+                  {isEnrolling ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Đang xử lý...
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-5 h-5 mr-2" />
+                      {freeCourseService.isFreeCourse(course) ||
+                      isPurchased
+                        ? "Bắt đầu học"
+                        : "Mua khóa học"}
+                    </>
+                  )}
                 </Button>
 
                 {!isPurchased && (
