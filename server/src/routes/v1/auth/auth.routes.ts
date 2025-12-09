@@ -77,12 +77,7 @@ router.get(
       // Dùng tên ngắn gọn 'auth' thay vì 'token' để không lộ ý định
       const redirectUrl = `${process.env.FRONTEND_URL}?auth=${accessToken}`;
       return res.redirect(redirectUrl);
-    } catch (error: any) {
-      console.error("Google callback error:", error);
-      // Redirect to frontend with error message
-      const errorUrl = `${process.env.FRONTEND_URL}?error=auth_failed`;
-      return res.redirect(errorUrl);
-    }
+    } catch (error) {
       console.error("Google Callback Error:", error);
       return res.redirect(`${process.env.FRONTEND_URL}?error=Server Error`);
     }
