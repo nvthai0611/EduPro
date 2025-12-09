@@ -4,7 +4,7 @@ import { courseService } from "../../services/courseService";
 import { lessonService } from "../../services/lessonService";
 import * as orderService from "../../services/user/orderService";
 import { useAuth } from "../../hooks/useAuth";
-// Đảm bảo đường dẫn import courseData đúng với cấu trúc của bạn
+import VideoPlayer from "../../components/Video/VideoPlayer";
 
 // Component cho từng bài học trong danh sách bên phải
 const LessonItem = ({ item, isCurrent, onClick }) => (
@@ -190,7 +190,7 @@ export default function CourseLearnDetail() {
 
   // Video Embed URL
   const videoEmbedUrl = currentPlayingVideo?.videoId
-    ? `https://www.youtube.com/embed/${currentPlayingVideo?.videoId}?autoplay=1&rel=0`
+    ? `https://www.youtu.be/${currentPlayingVideo?.videoId}`
     : "";
 
   return (
@@ -214,13 +214,11 @@ export default function CourseLearnDetail() {
         <div className="w-full bg-black">
           <div className="aspect-video">
             {videoEmbedUrl ? (
-              <iframe
-                className="w-full h-full"
-                src={videoEmbedUrl}
+              <VideoPlayer
+                src={`${videoEmbedUrl}`}
                 title={currentPlayingVideo?.title}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              ></iframe>
+                className="w-full h-full"
+              />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-white text-3xl font-bold p-10">
                 <div className="text-center">

@@ -1,6 +1,6 @@
 import {
   createCourse,
-  getAllCourses,
+  getAllCoursesPublic,
   getCourseById,
   getCourseBySlug,
   getAllCoursesByInstructor,
@@ -17,8 +17,8 @@ import { getLessonsByCourseId } from "../../../modules/lesson/lesson.controller"
 
 const router: Router = Router();
 
-// Public routes
-router.get("/", getAllCourses);
+// Public routes with optional auth (guest có thể xem, nhưng chỉ có fields giới hạn)
+router.get("/", getAllCoursesPublic);
 router.get("/slug/:slug", getCourseBySlug);
 
 // Specific routes (must be before :id route)

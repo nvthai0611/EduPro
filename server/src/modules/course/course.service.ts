@@ -58,6 +58,105 @@ class CourseService {
     return courses;
   }
 
+  async getAllCoursesPublic(filters: any = {}): Promise<any> {
+    const query: any = { isDeleted: { $ne: true } };
+
+    if (filters.search) {
+      query.$or = [
+        { title: { $regex: filters.search, $options: "i" } },
+        { description: { $regex: filters.search, $options: "i" } },
+      ];
+    }
+
+    if (filters.status) {
+      query.status = filters.status;
+    }
+
+    if (filters.level) {
+      query.level = filters.level;
+    }
+
+    if (filters.category) {
+      query.category = filters.category;
+    }
+
+    if (filters.isFeatured !== undefined) {
+      query.isFeatured = filters.isFeatured === "true";
+    }
+
+    if (filters.price !== undefined) {
+      query.price = filters.price;
+    }
+
+    // Chỉ select các fields cần thiết cho public
+    const courses = await CourseRepository.findAll(query, {
+      select: {
+        title: 1,
+        slug: 1,
+        description: 1,
+        thumbnail: 1,
+        category: 1,
+        level: 1,
+        price: 1,
+        salePrice: 1,
+        currency: 1,
+        status: 1,
+        isFeatured: 1,
+        totalStudents: 1,
+        totalReviews: 1,
+        averageRating: 1,
+        rating: 1,
+        reviewCount: 1,
+        totalDuration: 1,
+        totalLessons: 1,
+        instructorId: 1,
+        instructorName: 1,
+        label: 1,
+        color: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        // Không trả về: sessionToken, approvalMessage, submittedBy, adminNote, etc.
+      }
+    });
+    return courses;
+  }
+
+  // Admin API - Trả về đầy đủ tất cả fields
+  async getAllCoursesAdmin(filters: any = {}): Promise<any> {
+    const query: any = { isDeleted: { $ne: true } };
+
+    if (filters.search) {
+      query.$or = [
+        { title: { $regex: filters.search, $options: "i" } },
+        { description: { $regex: filters.search, $options: "i" } },
+      ];
+    }
+
+    if (filters.status) {
+      query.status = filters.status;
+    }
+
+    if (filters.level) {
+      query.level = filters.level;
+    }
+
+    if (filters.category) {
+      query.category = filters.category;
+    }
+
+    if (filters.isFeatured !== undefined) {
+      query.isFeatured = filters.isFeatured === "true";
+    }
+
+    if (filters.price !== undefined) {
+      query.price = filters.price;
+    }
+
+    // Trả về tất cả fields cho admin (không select)
+    const courses = await CourseRepository.findAll(query);
+    return courses;
+  }
+
   async getCourseById(courseId: string): Promise<any> {
     const course = await CourseRepository.getCourseById(courseId);
     return course;

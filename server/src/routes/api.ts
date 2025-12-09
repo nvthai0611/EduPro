@@ -13,15 +13,23 @@ import { userRoutes } from "./v1/users.routes";
 import { sectionRoutes } from "./v1/admin/section.routes";
 import { lessonRoutes } from "./v1/admin/lesson.routes";
 import { orderAdminRoutes } from "./v1/admin/order.route";
+import { limitRequestsMiddleware } from "../middlewares/auth/limitRequest.middleware";
+import blockDirectAccess from "../middlewares/auth/blockDirectAccess";
 
 export const apiRouter = (io?: Server) => {
+  // Block direct browser access to API
+  router.use(blockDirectAccess);
+  
+  // Apply rate limiting to all API routes
+  router.use(limitRequestsMiddleware);
+
   // Authentication routes
   router.use("/auth", authRoutes);
 
   // Category routes
   router.use("/category", categoryRoutes);
 
-  // Course routes
+  // Course routes (public with optional auth + rate limiting)
   router.use("/courses", courseRoutes);
 
   // Order routes
@@ -47,7 +55,6 @@ export const apiRouter = (io?: Server) => {
 
   // Lesson routes
   router.use("/admin/lessons", lessonRoutes);
-  
   // Course routes
   router.use("/admin/order", orderAdminRoutes);
 

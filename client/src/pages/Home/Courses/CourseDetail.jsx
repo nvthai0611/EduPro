@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import {
   Star,
@@ -19,98 +18,160 @@ import {
   Target,
   Users2,
   PlayCircle,
+  Loader2,
 } from "lucide-react";
 import { useAuth } from "../../../hooks/useAuth";
-import { courseService } from "../../../services/courseService";
+import { useCourseBySlug, useCourses } from "../../../hooks/useCourseQueries";
 import * as orderService from "../../../services/user/orderService";
 import { Link, useParams } from "react-router-dom";
 
 const CourseDetail = () => {
   const { slug } = useParams();
   const { user } = useAuth();
-  const [course, setCourse] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [isPurchased, setIsPurchased] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
-  const [relatedCourses, setRelatedCourses] = useState([]);
 
-  useEffect(() => {
-    fetchRelatedCourse();
-  }, [slug, course]);
+  // Sử dụng TanStack Query để fetch course by slug
+  const {
+    data: course,
+    isLoading: loading,
+    error: courseError
+  } = useCourseBySlug(slug);
 
-  const fetchRelatedCourse = async () => {
-    try {
+  // Fetch related courses
+  const { data: allCourses = [] } = useCourses({ status: "published" });
 
-      const response = await courseService.getCourses();
-      const related = response.data.filter(c => c.slug !== slug && c.category === course?.category);
-      setRelatedCourses(related.slice(0, 4)); // Lấy tối đa 4 khóa học liên quan
+  // Filter related courses based on category
+  const relatedCourses = React.useMemo(() => {
+    if (!course || !allCourses.length) return [];
+    return allCourses
+      .filter(c => c.slug !== slug && c.category === course.category)
+      .slice(0, 4);
+  }, [course, allCourses, slug]);
 
-    } catch (error) {
-      console.error("Error fetching course detail:", error);
-    } finally {
-      setLoading(false);
-    }
+  const handleClick = () => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
   // Component Course Card
   const CourseCard = ({ course }) => {
-    const labelToUse = course.title;
+    const gradientColors = [
+      "from-blue-400 to-blue-600",
+      "from-purple-400 to-purple-600",
+      "from-pink-400 to-pink-600",
+      "from-green-400 to-green-600",
+      "from-yellow-400 to-yellow-600",
+      "from-red-400 to-red-600",
+      "from-indigo-400 to-indigo-600",
+      "from-teal-400 to-teal-600",
+      "from-orange-400 to-orange-600",
+      "from-cyan-400 to-cyan-600",
+      "from-violet-400 to-violet-600",
+      "from-fuchsia-400 to-fuchsia-600",
+      "from-rose-400 to-rose-600",
+      "from-sky-400 to-sky-600",
+      "from-emerald-400 to-emerald-600",
+      "from-amber-400 to-amber-600",
+      "from-lime-400 to-lime-600",
+    ];
+    const labelToUse = course.label || course.title;
     const labelLines = labelToUse
       .split("\n")
       .map((line, index) => <span key={index}>{line}</span>);
 
-    const students = course?.totalStudents || 0;
-    const lessons = course?.totalLessons || 0;
-    const duration = course?.duration || "N/A";
+    const students = course.totalStudents || 0;
+    const lessons = course.totalLessons || 0;
+    const duration = course.duration || "N/A";
     const star = course?.averageRating;
-    const color = course.color || "from-gray-300 to-gray-500";
+
+    const getRandomGradient = () => {
+      return gradientColors[Math.floor(Math.random() * gradientColors.length)];
+    };
+
+    const color = useMemo(() => {
+      return course.color || getRandomGradient();
+    }, [course.color]);
 
     return (
       <Link
         to={`/courses/${course.slug}`}
-        className="rounded-2xl shadow-md overflow-hidden bg-white hover:shadow-xl transition-shadow duration-300 transform hover:-translate-y-1 cursor-pointer"
+        onClick={handleClick}
+        className="group rounded-2xl shadow-lg overflow-hidden bg-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer border border-gray-100"
       >
+        {/* Header with gradient background */}
         <div
-          className={`h-48 bg-gradient-to-br ${color} flex items-center justify-center text-white text-lg font-semibold p-4 text-center`}
-          style={{ lineHeight: '1.2' }}
+          className={`h-52 bg-gradient-to-br ${color} flex items-center justify-center text-white p-6 text-center relative overflow-hidden`}
         >
-          <div className="flex flex-col">
-            <h3 className="text-2xl font-bold mb-2 whitespace-pre-line">
+          {/* Decorative circles */}
+          <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full"></div>
+          <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-white/5 rounded-full"></div>
+
+          <div className="relative z-10">
+            <h3 className="text-2xl font-bold mb-2 whitespace-pre-line leading-tight drop-shadow-sm">
               {labelLines}
             </h3>
           </div>
         </div>
 
-        <div className="p-5">
-          <h4 className="font-semibold text-gray-900 mb-2 text-base line-clamp-2 min-h-[40px]">
+        {/* Card content */}
+        <div className="p-6">
+          {/* Course title */}
+          <h4 className="font-bold text-gray-900 mb-3 text-lg line-clamp-2 min-h-[56px] group-hover:text-blue-600 transition-colors">
             {course.title}
           </h4>
+
+          {/* Price and rating section */}
           <div className="flex items-center justify-between mb-4">
-            <p className="text-orange-500 font-medium">{formatPrice(course.salePrice ? course.salePrice : course.price)}</p>
-            <div>
-              <span className="text-lg font-semibold flex items-center justify-between gap-1">
-                {star.toFixed(1) || "5.0"} <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+            <div className="flex flex-col">
+              <p className="text-2xl font-bold text-orange-500 mb-1">
+                {formatPrice(course.salePrice)}
+              </p>
+              {course.price && course.price > 0 && (
+                <p className="text-sm text-gray-400 line-through">
+                  {formatPrice(course.price)}
+                </p>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1 bg-yellow-50 px-3 py-1 rounded-full">
+              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+              <span className="text-sm font-semibold text-gray-700">
+                {star?.toFixed(1) || "5.0"}
               </span>
             </div>
           </div>
 
-          {/* Stats */}
-          <div className="flex items-center justify-between text-sm text-gray-600">
-            <div className="flex items-center gap-1">
-              <Users className="w-4 h-4 text-blue-500" />
-              <span>
+          {/* Divider */}
+          <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-4"></div>
+
+          {/* Stats section */}
+          <div className="grid grid-cols-3 gap-4 text-sm">
+            <div className="flex flex-col items-center text-center">
+              <div className="flex items-center justify-center w-8 h-8 bg-blue-50 rounded-full mb-1">
+                <Users className="w-4 h-4 text-blue-500" />
+              </div>
+              <span className="text-xs text-gray-500">Học viên</span>
+              <span className="font-semibold text-gray-700">
                 {typeof students === "number"
                   ? students.toLocaleString("en-US")
                   : students}
               </span>
             </div>
-            <div className="flex items-center gap-1">
-              <PlayCircle className="w-4 h-4 text-green-500" />
-              <span>{lessons}</span>
+
+            <div className="flex flex-col items-center text-center">
+              <div className="flex items-center justify-center w-8 h-8 bg-green-50 rounded-full mb-1">
+                <PlayCircle className="w-4 h-4 text-green-500" />
+              </div>
+              <span className="text-xs text-gray-500">Bài học</span>
+              <span className="font-semibold text-gray-700">{lessons}</span>
             </div>
-            <div className="flex items-center gap-1">
-              <Clock className="w-4 h-4 text-orange-500" />
-              <span>{duration}</span>
+
+            <div className="flex flex-col items-center text-center">
+              <div className="flex items-center justify-center w-8 h-8 bg-orange-50 rounded-full mb-1">
+                <Clock className="w-4 h-4 text-orange-500" />
+              </div>
+              <span className="text-xs text-gray-500">Thời lượng</span>
+              <span className="font-semibold text-gray-700">{duration}</span>
             </div>
           </div>
         </div>
@@ -165,31 +226,24 @@ const CourseDetail = () => {
     setRating(0);
   };
 
+  // Check if user has purchased this course
   useEffect(() => {
-    fetchCourseDetail();
-  }, [slug, user]);
-
-  const fetchCourseDetail = async () => {
-    try {
-      setLoading(true);
-      const response = await courseService.getCourseBySlug(slug);
-      // Server trả về { success: true, data: course }
-      setCourse(response.data);
-
-      // Check if user has purchased this course
-      if (user) {
-        const hasPurchased = await orderService.checkPurchase(
-          user?.userId,
-          response.data._id
-        );
-        setIsPurchased(hasPurchased.purchased);
+    const checkPurchaseStatus = async () => {
+      if (user && course) {
+        try {
+          const hasPurchased = await orderService.checkPurchase(
+            user?.userId,
+            course._id
+          );
+          setIsPurchased(hasPurchased.purchased);
+        } catch (error) {
+          console.error("Error checking purchase status:", error);
+        }
       }
-    } catch (error) {
-      console.error("Error fetching course detail:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    checkPurchaseStatus();
+  }, [user, course]);
 
   const handlePurchase = () => {
     if (!user) {
@@ -211,6 +265,7 @@ const CourseDetail = () => {
   };
 
   const formatPrice = (price) => {
+    if (price === undefined || price === null) return "Miễn phí";
     if (price === 0) return "Miễn phí";
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
@@ -247,7 +302,7 @@ const CourseDetail = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
       </div>
     );
   }
@@ -659,7 +714,18 @@ const CourseDetail = () => {
                 {!isPurchased && (
                   <>
                     <div className="text-center mb-4">
-                      {course.salePrice > 0 &&
+                      {course.salePrice === 0 || course.salePrice === undefined || course.salePrice === null ? (
+                        <div className="text-3xl font-bold text-red-600">
+                          Miễn phí
+                          {course.price && course.price > 0 ? (
+                            <>
+                              <div className="text-lg text-gray-500 line-through">
+                                {formatPrice(course.price)}
+                              </div>
+                            </>
+                          ) : null}
+                        </div>
+                      ) : course.salePrice && course.salePrice > 0 &&
                         course.salePrice < course.price ? (
                         <div className="space-y-2">
                           <div className="text-3xl font-bold text-red-600">
@@ -678,11 +744,7 @@ const CourseDetail = () => {
                             %
                           </Badge>
                         </div>
-                      ) : (
-                        <div className="text-3xl font-bold text-blue-600">
-                          {formatPrice(course.price || 0)}
-                        </div>
-                      )}
+                      ) : null}
                     </div>
                   </>
                 )}
@@ -692,7 +754,7 @@ const CourseDetail = () => {
                   size="lg"
                   onClick={handleStartLearning}
                 >
-                  
+
                   <Play className="w-5 h-5 mr-2" />
                   {course.price === 0 ||
                     course.price === undefined ||
@@ -775,8 +837,8 @@ const CourseDetail = () => {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-6 mt-12 justify-between">
-          <h1 className="w-full text-center text-2xl font-bold text-gray-900">Khóa học liên quan</h1>
+        <h1 className="w-full text-center text-[30px] font-bold text-gray-900 py-8">Khóa học liên quan</h1>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {relatedCourses.map((course) => (
             <CourseCard key={course._id} course={course} />
           ))}

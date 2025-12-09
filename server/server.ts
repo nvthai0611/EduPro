@@ -1,6 +1,6 @@
 import express from "express";
 import http from "http";
-
+import helmet from "helmet";
 import morgan from "morgan";
 import { Server } from "socket.io";
 import SocketService from "./src/utils/socket/socket";
@@ -38,12 +38,38 @@ import { limitRequestsMiddleware } from "./src/middlewares/auth/limitRequest.mid
 // const couponEmailQueue = require("./src/utils/queue/couponEmail.queue");
 const app = express();
 
+// ================= Security Headers =================
+// Hide X-Powered-By header
+app.disable('x-powered-by');
+
+// Add security headers with Helmet
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable CSP for API
+  crossOriginEmbedderPolicy: false, // Allow embedding
+  crossOriginResourcePolicy: { policy: "cross-origin" }, // Allow CORS
+}));
+
+// Add custom security headers
+app.use((req, res, next) => {
+  // Remove Server header
+  res.removeHeader('Server');
+  res.removeHeader('X-Powered-By');
+  
+  // Add security headers
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  
+  next();
+});
+
 // ================= CORS =================
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
   "http://localhost:9999",
-  "https://muddiest-bob-veillike.ngrok-free.dev/",
+  "https://www.fuedupro.com",
   "https://edu-pro-delta.vercel.app",
 ];
 const corsOptions = {
@@ -103,6 +129,8 @@ passport.deserializeUser(async (id: any, done: any) => {
 // ================= Body Parser =================
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+
 
 // ================= Request Log =================
 app.use((req, res, next) => {

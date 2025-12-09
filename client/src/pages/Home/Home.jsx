@@ -9,13 +9,11 @@ import {
   Clock, 
   BookOpen, 
   Award,
-  ArrowRight,
   Database,
   Globe,
   Smartphone,
   Zap
 } from 'lucide-react';
-import { courseService } from '../../services/courseService';
 import { useAuth } from '../../hooks/useAuth';
 import { Link } from 'react-router-dom';
 import SkillsSection from './SkillsSection';
@@ -48,29 +46,20 @@ function Home() {
     // Xử lý auth param từ URL
     if (encodedAuth) {
       try {
-        // Server gửi plain JWT token, không cần decode Base64
-        const token = encodedAuth;
-        console.log("🔓 Received JWT token:", token.substring(0, 50) + "...");
         
-        // Lưu JWT token vào cookie với đúng cấu hình cho production
-        const isProduction = import.meta.env.VITE_PROD === "production" || window.location.hostname !== "localhost";
-        const maxAge = 24 * 60 * 60; // 1 day in seconds
-        let cookieOptions = `path=/; max-age=${maxAge}`;
-        
-        if (isProduction) {
-          cookieOptions += "; secure; samesite=none"; // secure và none cho cross-site
-        } else {
-          cookieOptions += "; samesite=lax"; // lax cho localhost
-        }
-        
-        document.cookie = `render_id=${token}; ${cookieOptions}`;
-        console.log("🍪 JWT Cookie saved");
+        // Lưu vào cookie
+        const isProduction = import.meta.env.VITE_PROD === "production";
+        const cookieOptions = `path=/; max-age=86400; ${
+          isProduction ? "secure; samesite=none" : "samesite=lax"
+        }`;
+        document.cookie = `render_id=${encodedAuth}; ${cookieOptions}`;
+        console.log("🍪 Cookie saved");
         toast.success("Đăng nhập thành công!");
         setTimeout(() => {
           window.location.href = "/";
         }, 500);
       } catch (err) {
-        console.error("❌ Save cookie error:", err);
+        console.error("❌ Decode error:", err);
         toast.error("Đăng nhập thất bại");
       }
     }
@@ -171,7 +160,7 @@ function Home() {
               Học Lập Trình Từ Cơ Bản Đến Nâng Cao
             </h1>
             <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
-              Khám phá thế giới lập trình với các khóa học chất lượng cao từ Hoàng An IT.
+              Khám phá thế giới lập trình với các khóa học chất lượng cao F8 - Học Lập Trình Để Đi Làm.
               Từ Frontend đến Backend, từ Web đến Mobile - chúng tôi có tất cả!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

@@ -1,4 +1,25 @@
-import React, { useState, useEffect } from 'react';
+/**
+ * Course Management Page
+ * 
+ * This page uses TanStack Query (React Query) for efficient data fetching and caching.
+ * 
+ * Key Features:
+ * - Auto-refetch on filter changes (search, status, level)
+ * - Optimistic updates and cache invalidation
+ * - Loading and error states handled by React Query
+ * - Mutations with automatic toast notifications
+ * 
+ * Custom Hooks Used:
+ * - useCourses(filters) - Fetch courses list with filters
+ * - useCreateCourse() - Create new course mutation
+ * - useUpdateCourse() - Update course mutation
+ * - useDeleteCourse() - Delete course mutation
+ * - useSubmitCourseForReview() - Submit course for approval
+ * 
+ * All hooks are defined in: src/hooks/useCourseQueries.js
+ */
+
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,14 +55,22 @@ import {
   CheckSquare,
   AlertCircle,
   UserCheck,
-  Layers
+  Layers,
+  Loader2
 } from 'lucide-react';
 import { courseService } from '../../../services/admin/courseService';
+import { 
+  useCourses, 
+  useCreateCourse, 
+  useUpdateCourse, 
+  useDeleteCourse,
+  useSubmitCourseForReview 
+} from '../../../hooks/useCourseQueries';
 
 const CourseManagement = () => {
   const navigate = useNavigate();
-  const [courses, setCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
+  
+  // State
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [levelFilter, setLevelFilter] = useState('all');
@@ -61,40 +90,19 @@ const CourseManagement = () => {
   });
   const [activeTab, setActiveTab] = useState('basic');
 
-  useEffect(() => {
-    fetchCourses();
-  }, [searchTerm, statusFilter, levelFilter]);
+  // Build filters object for React Query
+  const filters = useMemo(() => ({
+    search: searchTerm,
+    status: statusFilter === 'all' ? '' : statusFilter,
+    level: levelFilter === 'all' ? '' : levelFilter,
+  }), [searchTerm, statusFilter, levelFilter]);
 
-  const fetchCourses = async () => {
-    try {
-      setLoading(true);
-
-      const response = await courseService.getCourses({
-        search: searchTerm,
-        status: statusFilter === 'all' ? '' : statusFilter,
-        level: levelFilter === 'all' ? '' : levelFilter,
-      });
-
-      // Backend returns { success: true, data: [...] }
-      // But if response is already an array, use it directly
-      let coursesData;
-      if (Array.isArray(response)) {
-        coursesData = response;
-      } else if (response?.data) {
-        coursesData = Array.isArray(response.data) ? response.data : [];
-      } else {
-        coursesData = [];
-      }
-      
-      // console.log('Final coursesData:', coursesData);
-      setCourses(coursesData);
-    } catch (error) {
-      console.error('Error fetching courses:', error);
-      setCourses([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // React Query hooks
+  const { data: courses = [], isLoading: loading, error, refetch } = useCourses(filters);
+  const createCourseMutation = useCreateCourse();
+  const updateCourseMutation = useUpdateCourse();
+  const deleteCourseMutation = useDeleteCourse();
+  const submitForReviewMutation = useSubmitCourseForReview();
 
   const getStatusBadge = (status) => {
     const statusConfig = {
@@ -109,78 +117,72 @@ const CourseManagement = () => {
 
 
   const handleCreateCourse = async () => {
-    try {
-      await courseService.createCourse(newCourse);
-      setShowCreateDialog(false);
-      setNewCourse({
-        title: '',
-        description: '',
-        thumbnail: '',
-        category: 'frontend',
-        level: 'beginner',
-        price: 0,
-        status: 'draft'
-      });
-      await fetchCourses();
-    } catch (error) {
-      console.error('Error creating course:', error);
-    }
+    createCourseMutation.mutate(newCourse, {
+      onSuccess: () => {
+        setShowCreateDialog(false);
+        setNewCourse({
+          title: '',
+          description: '',
+          thumbnail: '',
+          category: 'frontend',
+          level: 'beginner',
+          price: 0,
+          status: 'draft'
+        });
+      }
+    });
   };
+
   const handleToggleDelete = async (course) => {
-    try {
-      const isDeleted = course?.isDeleted ? false : true;
-      const updatedCourse = { ...course, isDeleted: isDeleted };
-      await courseService.updateCourse(course._id, updatedCourse);
-      await fetchCourses();
-    } catch (error) {
-      console.error('Error updating course status:', error);
-    }
+    const isDeleted = course?.isDeleted ? false : true;
+    const updatedCourse = { ...course, isDeleted: isDeleted };
+    
+    updateCourseMutation.mutate({ 
+      id: course._id, 
+      data: updatedCourse 
+    });
   };
+
   const handleEditCourse = async () => {
-    try {
-      await courseService.updateCourse(selectedCourse._id, selectedCourse);
-      setShowEditDialog(false);
-      setSelectedCourse(null);
-      await fetchCourses();
-    } catch (error) {
-      console.error('Error updating course:', error);
-    }
+    updateCourseMutation.mutate({
+      id: selectedCourse._id,
+      data: selectedCourse
+    }, {
+      onSuccess: () => {
+        setShowEditDialog(false);
+        setSelectedCourse(null);
+      }
+    });
   };
 
   const handleDeleteCourse = async (courseId) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa khóa học này?')) {
-      try {
-        await courseService.deleteCourse(courseId);
-        await fetchCourses();
-      } catch (error) {
-        console.error('Error deleting course:', error);
-      }
+      deleteCourseMutation.mutate(courseId);
     }
   };
 
   const handleToggleStatus = async (course, newStatus) => {
-    try {
-
-      const updatedCourse = { ...course, status: newStatus };
-      await courseService.updateCourse(course._id, updatedCourse);
-      await fetchCourses();
-    } catch (error) {
-      console.error('Error updating course status:', error);
-    }
+    const updatedCourse = { ...course, status: newStatus };
+    updateCourseMutation.mutate({ 
+      id: course._id, 
+      data: updatedCourse 
+    });
   };
 
   const handleSubmitForApproval = async (approvalMessage) => {
-    try {
-      await courseService.submitCourseForApproval(selectedCourse._id, approvalMessage);
-      toast.success('Your course has been submitted for approval.');
-      setShowSubmitModal(false);
-      setSelectedCourse(null);
-      await fetchCourses();
-    } catch (error) {
-      console.error('Error submitting course for approval:', error);
-      toast.error(error.response?.data?.message || 'Failed to submit course for approval.');
-      throw error;
-    }
+    submitForReviewMutation.mutate({
+      id: selectedCourse._id,
+      approvalMessage
+    }, {
+      onSuccess: () => {
+        setShowSubmitModal(false);
+        setSelectedCourse(null);
+      },
+      onError: (error) => {
+        // Error already handled in mutation
+        throw error;
+      }
+    });
   };
 
   const formatPrice = (price) => {
@@ -346,8 +348,22 @@ const CourseManagement = () => {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="flex flex-col items-center justify-center py-12">
+              <Loader2 className="w-10 h-10 text-blue-600 animate-spin mb-4" />
+              <p className="text-gray-600">Đang tải khóa học...</p>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <AlertCircle className="w-10 h-10 text-red-600 mb-4" />
+              <p className="text-gray-600 mb-4">Có lỗi xảy ra khi tải khóa học</p>
+              <Button variant="outline" onClick={() => window.location.reload()}>
+                Thử lại
+              </Button>
+            </div>
+          ) : courses.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <BookOpen className="w-10 h-10 text-gray-400 mb-4" />
+              <p className="text-gray-600">Không có khóa học nào</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -612,8 +628,18 @@ const CourseManagement = () => {
             <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
               Hủy
             </Button>
-            <Button onClick={handleCreateCourse}>
-              Tạo khóa học
+            <Button 
+              onClick={handleCreateCourse}
+              disabled={createCourseMutation.isPending}
+            >
+              {createCourseMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Đang tạo...
+                </>
+              ) : (
+                'Tạo khóa học'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -926,9 +952,18 @@ const CourseManagement = () => {
                   >
                     Hủy
                   </Button>
-                  <Button onClick={handleEditCourse}>
-                    <CheckSquare className="w-4 h-4 mr-2" />
-                    Cập nhật khóa học
+                  <Button onClick={handleEditCourse} disabled={updateCourseMutation.isPending}>
+                    {updateCourseMutation.isPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Đang cập nhật...
+                      </>
+                    ) : (
+                      <>
+                        <CheckSquare className="w-4 h-4 mr-2" />
+                        Cập nhật khóa học
+                      </>
+                    )}
                   </Button>
                 </div>
               </DialogFooter>

@@ -153,5 +153,27 @@ export const progressService = {
       console.error('Error fetching bookmarks:', error);
       throw error;
     }
+  },
+
+  // Admin: Lấy tất cả tiến độ học viên
+  getAllStudentProgress: async (params = {}) => {
+    try {
+      const response = await apiClient.get('/api/v1/progress/all', { params });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching all student progress:', error);
+      throw error;
+    }
+  },
+
+  // Admin: Cấp chứng chỉ cho học viên
+  issueCertificate: async (progressId) => {
+    try {
+      const response = await apiClient.post(`/api/v1/progress/${progressId}/certificate`);
+      return response.data;
+    } catch (error) {
+      console.error('Error issuing certificate:', error);
+      throw error;
+    }
   }
 };

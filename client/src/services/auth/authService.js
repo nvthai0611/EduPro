@@ -17,19 +17,8 @@ class AuthService {
   getUser() {
     if (typeof window === "undefined") return null;
     try {
-      const token = Cookies.get(this.accessTokenKey);
-      console.log("🔑 Token from cookie:", token);
-      
-      if (!token) {
-        console.log("⚠️ No token found in cookie");
-        return null;
-      }
-      
-      const decoded = decodeJWT(token);
-      console.log("👤 Decoded user:", decoded);
-      return decoded;
-    } catch (error) {
-      console.error("❌ Error decoding token:", error);
+      return decodeJWT(Cookies.get(this.accessTokenKey));
+    } catch {
       return null;
     }
   }
@@ -40,10 +29,10 @@ class AuthService {
   }
 
   storeUserData(user, refreshToken = null) {
-    const isProduction = import.meta.env.VITE_PROD === "production" || window.location.hostname !== "localhost";
+    const isProduction = import.meta.env.VITE_PROD === "production";
     const cookieOptions = {
-      sameSite: isProduction ? "None" : "Lax", // None cho cross-site trong production
-      secure: isProduction || window.location.protocol === "https:", // bắt buộc true khi sameSite=None
+      sameSite: isProduction ? "None" : "Lax",
+      secure: isProduction,
       path: "/",
     };
 
