@@ -3,7 +3,10 @@ import { Request, Response } from "express";
 import OrderService from "./order.service";
 import axios from "axios";
 
-const BASE_URL = process.env.NODE_ENV === 'development' ? "https://muddiest-bob-veillike.ngrok-free.dev/" : "https://edu-pro-delta.vercel.app/";
+const BASE_URL =
+  process.env.NODE_ENV === "development"
+    ? "https://muddiest-bob-veillike.ngrok-free.dev/"
+    : "https://edupro-qnsy.onrender.com/";
 
 class OrderController {
   async getOrders(req: Request, res: Response) {
@@ -19,7 +22,6 @@ class OrderController {
   // Tạo order cho 1 khóa học
   async createOrder(req: Request, res: Response) {
     try {
-
       const order = await OrderService.createOrder(req.body);
 
       return res.json({
@@ -37,15 +39,12 @@ class OrderController {
     try {
       const newOrder = await OrderService.createOrder(req.body);
       const order = await OrderService.getOrderById(newOrder._id.toString());
-      await axios.post(
-        `${BASE_URL}api/v1/admin/user/purchase/course`,
-        {
-          userId: order.userId,
-          courseId: order.courseId,
-          price: order.price,
-          orderId: order._id
-        }
-      );
+      await axios.post(`${BASE_URL}api/v1/admin/user/purchase/course`, {
+        userId: order.userId,
+        courseId: order.courseId,
+        price: order.price,
+        orderId: order._id,
+      });
 
       return res.json({
         message: "Tạo order thành công",
@@ -60,7 +59,7 @@ class OrderController {
   async deleteOrder(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      
+
       await OrderService.deleteOrder(id);
 
       return res.json({
