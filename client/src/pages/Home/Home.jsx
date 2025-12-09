@@ -9,13 +9,11 @@ import {
   Clock, 
   BookOpen, 
   Award,
-  ArrowRight,
   Database,
   Globe,
   Smartphone,
   Zap
 } from 'lucide-react';
-import { courseService } from '../../services/courseService';
 import { useAuth } from '../../hooks/useAuth';
 import { Link } from 'react-router-dom';
 import SkillsSection from './SkillsSection';
@@ -162,7 +160,7 @@ function Home() {
               Học Lập Trình Từ Cơ Bản Đến Nâng Cao
             </h1>
             <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
-              Khám phá thế giới lập trình với các khóa học chất lượng cao từ Hoàng An IT.
+              Khám phá thế giới lập trình với các khóa học chất lượng cao F8 - Học Lập Trình Để Đi Làm.
               Từ Frontend đến Backend, từ Web đến Mobile - chúng tôi có tất cả!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
