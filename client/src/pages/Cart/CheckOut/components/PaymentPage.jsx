@@ -19,9 +19,9 @@ const PaymentPage = () => {
     const courseId = query.get("course");
 
     const bankInfo = {
-        bankName: "MBBank",
-        accountName: "NGUYEN QUANG THUAN",
-        accountNumber: "0961378056",
+        bankName: "BIDV",
+        accountName: "NGUYEN VAN TIEN HAI",
+        accountNumber: "96247232323232323",
     };
 
     // Lấy thông tin khóa học
