@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { courseService } from "../../services/courseService";
 import { lessonService } from "../../services/lessonService";
 import * as orderService from "../../services/user/orderService";
+import * as freeCourseService from "../../services/user/freeCourseService";
 import { useAuth } from "../../hooks/useAuth";
 import VideoPlayer from "../../components/Video/VideoPlayer";
 
@@ -98,8 +99,11 @@ export default function CourseLearnDetail() {
             responeCourse.data._id
           );
 
-          if (!hasPurchased.purchased) {
-            window.location.href = `/checkout?course=${responeCourse.data._id}`;
+          // Check if course is free
+          const isFree = freeCourseService.isFreeCourse(responeCourse.data);
+
+          if (!hasPurchased.purchased && !isFree) {
+            window.location.href = `/courses/${slug}`;
             return;
           } else {
             const sectionsMap = {};

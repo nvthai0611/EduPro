@@ -16,4 +16,7 @@ router.get("/check", orderController.checkPurchased);
 // Xác nhận thanh toán thành công (webhook hoặc notify)
 router.post("/mark-paid", authenticateToken, orderController.markAsPaid);
 
+// Đăng ký khóa học miễn phí
+router.post("/enroll-free", authenticateToken, orderController.enrollFreeCourse);
+
 export const orderRoutes: Router = router;

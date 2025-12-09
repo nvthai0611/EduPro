@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
 
 export type OrderStatus = "pending" | "processing" | "completed" | "cancelled" | "failed";
-export type PaymentMethod = "payos" | "zalo" | "momo" | "bank_transfer";
+export type PaymentMethod = "payos" | "zalo" | "momo" | "bank_transfer" | "sepay" | "free";
 export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
 
 export interface IOrder extends Document {
@@ -43,7 +43,7 @@ const orderSchema = new Schema<IOrder>(
 
     paymentMethod: {
       type: String,
-      enum: ["payos", "zalo", "momo", "sepay"],
+      enum: ["payos", "zalo", "momo", "sepay", "free"],
       required: true,
     },
 
