@@ -20,6 +20,7 @@ const PaymentPage = () => {
 
     const bankInfo = {
         bankName: "BIDV",
+        bankLogo: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Logo_BIDV.svg/2560px-Logo_BIDV.svg.png",
         accountName: "NGUYEN VAN TIEN HAI",
         accountNumber: "96247232323232323",
     };
@@ -44,6 +45,11 @@ const PaymentPage = () => {
         // Kết nối với socket server
         SocketService.connect();
 
+        // Join room theo userId
+        if (user?.userId) {
+            SocketService.emit("join-room", user?.userId);
+        }
+
         // Lắng nghe sự kiện từ server
         SocketService.on("payment-webhook", (data) => {
             if (data.status === "completed") {
@@ -58,7 +64,7 @@ const PaymentPage = () => {
             SocketService.off("payment-webhook", () => { });
             SocketService.disconnect();
         };
-    }, []);
+    }, [user?.userId]);
 
     useEffect(() => {
         if (paymentStatus === "Đang xác nhận..." && course && user) {
@@ -169,7 +175,7 @@ const PaymentPage = () => {
 
                                 {/* Header ngân hàng */}
                                 <div className="flex items-center mb-4">
-                                    <img src="https://upload.wikimedia.org/wikipedia/commons/2/25/Logo_MB_new.png" alt="{bankInfo.bankName}" className="w-10 h-10 mr-3 object-contain" />
+                                    <img src={bankInfo.bankLogo} alt={bankInfo.bankName} className="w-10 h-10 mr-3 object-contain" />
                                     <div>
                                         <p className="font-medium">{bankInfo.bankName}</p>
                                         <p className="text-sm text-gray-500">Chuyển khoản ngân hàng</p>
