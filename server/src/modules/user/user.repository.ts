@@ -10,15 +10,7 @@ class UserRepository {
   }
 
   async create(data: Partial<IUser>): Promise<IUser> {
-    try {
-      return await User.create(data);
-    } catch (error: any) {
-      // Catch duplicate key error
-      if (error.code === 11000) {
-        throw new Error("User with this email or phone number already exists");
-      }
-      throw error;
-    }
+    return User.create(data);
   }
 
   async update(id: string, data: Partial<IUser>): Promise<IUser | null> {
