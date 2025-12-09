@@ -26,9 +26,13 @@ passport.use(
 
         if (!user) return done(null, false);
         return done(null, user);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Google login error:", error);
-        return done(error, undefined);
+        // Don't expose detailed error to user
+        const userFriendlyError = new Error(
+          "Authentication failed. Please try again."
+        );
+        return done(userFriendlyError, undefined);
       }
     }
   )
