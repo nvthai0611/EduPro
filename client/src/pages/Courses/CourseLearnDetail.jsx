@@ -3,8 +3,11 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { courseService } from "../../services/courseService";
 import { lessonService } from "../../services/lessonService";
 import * as orderService from "../../services/user/orderService";
+import * as freeCourseService from "../../services/user/freeCourseService";
 import { useAuth } from "../../hooks/useAuth";
-// Đảm bảo đường dẫn import courseData đúng với cấu trúc của bạn
+import VideoPlayer from "../../components/Video/VideoPlayer";
+import AssignmentSubmission from "../../components/Assignment/AssignmentSubmission";
+import { Loader2 } from "lucide-react";
 
 // Component cho từng bài học trong danh sách bên phải
 const LessonItem = ({ item, isCurrent, onClick }) => (
@@ -124,8 +127,11 @@ export default function CourseLearnDetail() {
             responeCourse.data._id
           );
 
-          if (!hasPurchased.purchased) {
-            window.location.href = `/checkout?course=${responeCourse.data._id}`;
+          // Check if course is free
+          const isFree = freeCourseService.isFreeCourse(responeCourse.data);
+
+          if (!hasPurchased.purchased && !isFree) {
+            window.location.href = `/courses/${slug}`;
             return;
           } else {
             const sectionsMap = {};
@@ -164,6 +170,8 @@ export default function CourseLearnDetail() {
 
   // State để quản lý video hiện tại đang phát
   const [currentPlayingVideo, setCurrentPlayingVideo] = useState(null);
+  const [isAssignmentOpen, setAssignmentOpen] = useState(false);
+  const [assignmentSubmissions, setAssignmentSubmissions] = useState([]);
 
   useEffect(() => {
     if (!course || !course.sections) return;
@@ -196,32 +204,36 @@ export default function CourseLearnDetail() {
     }
   };
 
+  const handleAssignmentSubmit = ({ note, attachment }) => {
+    if (!attachment) return;
+
+    const newSubmission = {
+      id: `${Date.now()}`,
+      fileName: attachment.name,
+      note,
+      submittedAt: new Date().toISOString(),
+      status: "pending",
+    };
+
+    setAssignmentSubmissions((prev) => [newSubmission, ...prev]);
+  };
+
   if (!course) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6 text-center">
-        <h1 className="text-3xl font-bold text-gray-800 mb-4">
-          Khóa học với slug ${slug} không tìm thấy!
-        </h1>
-        <p className="text-lg text-gray-600 mb-6">
-          Có vẻ như khóa học bạn đang tìm kiếm không tồn tại hoặc đã bị gỡ.
-        </p>
-        <Link
-          to="/courses"
-          className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-        >
-          <i className="fas fa-arrow-left mr-2"></i> Quay lại danh sách khóa học
-        </Link>
+      <div className="flex justify-center items-center py-20">
+        <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
       </div>
     );
   }
 
   // Video Embed URL
   const videoEmbedUrl = currentPlayingVideo?.videoId
-    ? `https://www.youtube.com/embed/${currentPlayingVideo?.videoId}?autoplay=1&rel=0`
+    ? `https://www.youtu.be/${currentPlayingVideo?.videoId}`
     : "";
 
   return (
-    <div className="flex flex-col lg:flex-row w-full min-h-screen bg-gray-100">
+    <>
+      <div className="flex flex-col lg:flex-row w-full min-h-screen bg-gray-100">
       {/* Left - Video Player & Lesson Info */}
       <div className="flex-1 flex flex-col overflow-y-auto">
         {/* Header (Nút Back Desktop) */}
@@ -241,13 +253,11 @@ export default function CourseLearnDetail() {
         <div className="w-full bg-black">
           <div className="aspect-video">
             {videoEmbedUrl ? (
-              <iframe
-                className="w-full h-full"
-                src={videoEmbedUrl}
+              <VideoPlayer
+                src={`${videoEmbedUrl}`}
                 title={currentPlayingVideo?.title}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              ></iframe>
+                className="w-full h-full"
+              />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-white text-3xl font-bold p-10">
                 <div className="text-center">
@@ -278,12 +288,17 @@ export default function CourseLearnDetail() {
             <button className="flex items-center gap-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-100 transition">
               <i className="fas fa-plus text-xs"></i> Thêm ghi chú
             </button>
-            <button
-              className="flex items-center gap-1 bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600 transition"
-              onClick={() => setShowQABox(true)}
-            >
-              <i className="fas fa-comments"></i> Hỏi đáp
-            </button>
+            <div className="flex items-center gap-2">
+              <button className="flex items-center gap-1 bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600 transition">
+                <i className="fas fa-comments"></i> Hỏi đáp
+              </button>
+              <button
+                className="flex items-center gap-1 bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition"
+                onClick={() => setAssignmentOpen(true)}
+              >
+                <i className="fas fa-upload"></i> Nộp bài tập
+              </button>
+            </div>
           </div>
         </div>
 
@@ -387,6 +402,14 @@ export default function CourseLearnDetail() {
             />
           ))}
       </div>
-    </div>
+      </div>
+      <AssignmentSubmission
+        open={isAssignmentOpen}
+        onOpenChange={setAssignmentOpen}
+        onSubmit={handleAssignmentSubmit}
+        submissions={assignmentSubmissions}
+        lessonTitle={currentPlayingVideo?.title}
+      />
+    </>
   );
 }

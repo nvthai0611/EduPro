@@ -5,9 +5,15 @@ import { Request, Response, NextFunction } from "express";
  * Only allow requests from whitelisted origins (your frontend)
  */
 const blockDirectAccess = (req: Request, res: Response, next: NextFunction) => {
+  // Bypass Google OAuth + Payment
+  if (req.path.startsWith("/auth/google") || req.path.startsWith("/payment/webhook") || req.path.startsWith("/admin/user/purchase/course")) {
+    return next();
+  }
+
   const allowedOrigins = [
     "http://localhost:5173",
     "http://localhost:3000",
+    "https://www.fuedupro.com",
     "https://edu-pro-delta.vercel.app",
   ];
 
@@ -21,7 +27,7 @@ const blockDirectAccess = (req: Request, res: Response, next: NextFunction) => {
 
   // Allow if referer is from allowed domain
   if (referer) {
-    const isAllowed = allowedOrigins.some(allowed => 
+    const isAllowed = allowedOrigins.some(allowed =>
       referer.startsWith(allowed)
     );
     if (isAllowed) {
@@ -29,8 +35,7 @@ const blockDirectAccess = (req: Request, res: Response, next: NextFunction) => {
     }
   }
 
-  // Return 405 Method Not Allowed để Chrome hiển thị "This page isn't working"
-  res.status(405).end();
+  res.status(404).end();
 };
 
 export default blockDirectAccess;

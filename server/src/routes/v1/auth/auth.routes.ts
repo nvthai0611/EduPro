@@ -3,8 +3,15 @@ import passport from "passport";
 
 import { createAccessToken, decodeToken } from "../../../utils/jwt";
 import userService from "../../../modules/user/user.service";
+import authController from "../../../modules/auth/auth.controller";
 
 const router: Router = Router();
+
+// ===============================
+//     MANAGER/ADMIN LOGIN
+// ===============================
+
+router.post("/login/manager", authController.loginManager);
 
 // ===============================
 //        GOOGLE AUTH

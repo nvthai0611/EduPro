@@ -114,7 +114,7 @@ export default function LoginForm() {
         const decoded = jwtDecode(response.data.accessToken);
         if (decoded.role === TYPE_AUTH.ADMIN) {
           alert("Đăng nhập thành công với vai trò admin.");
-          window.location.href = "/admin";
+          window.location.href = "/admin/dashboard";
         } else if (decoded.role === TYPE_AUTH.STAFF || decoded.role === TYPE_AUTH.MANAGER) {
           alert("Đăng nhập thành công với vai trò staff/manager.");
           window.location.href = "/staff";
