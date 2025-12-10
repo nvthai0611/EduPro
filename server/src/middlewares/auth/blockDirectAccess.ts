@@ -35,7 +35,6 @@ const blockDirectAccess = (req: Request, res: Response, next: NextFunction) => {
     }
   }
 
-  // Return 405 Method Not Allowed để Chrome hiển thị "This page isn't working"
   res.status(404).end();
 };
 
