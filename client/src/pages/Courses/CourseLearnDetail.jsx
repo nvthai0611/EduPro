@@ -9,28 +9,27 @@ import { useAuth } from "../../hooks/useAuth";
 import VideoPlayer from "../../components/Video/VideoPlayer";
 import AssignmentSubmission from "../../components/Assignment/AssignmentSubmission";
 import { Loader2 } from "lucide-react";
+import parse from 'html-react-parser';
 
 // Component cho từng bài học trong danh sách bên phải
 const LessonItem = ({ item, isCurrent, onClick }) => (
   <div
-    className={`p-3 cursor-pointer border-b hover:bg-gray-50 transition ${
-      isCurrent
-        ? "bg-orange-100 text-orange-600 font-semibold"
-        : "text-gray-700"
-    }`}
+    className={`p-3 cursor-pointer border-b hover:bg-gray-50 transition ${isCurrent
+      ? "bg-orange-100 text-orange-600 font-semibold"
+      : "text-gray-700"
+      }`}
     onClick={() => onClick(item)}
   >
     <div className="flex items-center justify-between">
       <span className="flex items-center text-sm">
         <i
-          className={`mr-2 far fa-circle ${
-            isCurrent ? "text-orange-500" : "text-gray-400"
-          }`}
+          className={`mr-2 far fa-circle ${isCurrent ? "text-orange-500" : "text-gray-400"
+            }`}
         ></i>
         {item.title}
       </span>
       <span className="text-xs text-gray-500">
-        {item.videoDuration ? item.videoDuration / 60 + " ph" : ""}
+        {item.videoDuration ? item?.videoDuration / 60 + " ph" : item?.readingTime + " ph"}
       </span>
     </div>
   </div>
@@ -103,8 +102,9 @@ export default function CourseLearnDetail() {
   const [noteText, setNoteText] = useState("");
   const [notes, setNotes] = useState({}); // { [videoId]: [{id,text,createdAt}, ...] }
 
-  
-  
+  console.log(course);
+
+
   const handleSubmitQuestion = () => {
     if (!questionText.trim()) return;
 
@@ -313,12 +313,12 @@ export default function CourseLearnDetail() {
 
     for (const section of course.sections) {
       if (section.items?.length) {
-        const first = section.items.find((item) => item.videoUrl);
+        const first = section.items.find((item) => item.videoUrl ? item?.videoUrl : item?.content);
         if (first) {
           setCurrentPlayingVideo({
             title: first.title,
-            videoId:
-              first.videoUrl.split("/")[first.videoUrl.split("/").length - 1],
+            videoId: first.videoUrl.split("/")[first.videoUrl.split("/").length - 1],
+            content: first.content,
             updatedAt: first.updatedAt,
           });
           break;
@@ -329,11 +329,11 @@ export default function CourseLearnDetail() {
 
   // Xử lý khi click vào một bài học
   const handleLessonClick = (lesson) => {
-    if (lesson.videoUrl) {
+    if (lesson.videoUrl ? lesson.videoUrl : lesson.content) {
       setCurrentPlayingVideo({
         title: lesson.title,
-        videoId:
-          lesson.videoUrl.split("/")[lesson.videoUrl.split("/").length - 1],
+        videoId: lesson.videoUrl.split("/")[lesson.videoUrl.split("/").length - 1],
+        content: lesson.content,
         updatedAt: lesson.updatedAt,
       });
     }
@@ -366,6 +366,8 @@ export default function CourseLearnDetail() {
     ? `https://www.youtu.be/${currentPlayingVideo?.videoId}`
     : "";
 
+  const finalContent = currentPlayingVideo?.content;
+
   return (
     <>
       {/* --- NEW: Left fixed toggle button and panel --- */}
@@ -384,9 +386,8 @@ export default function CourseLearnDetail() {
       <div>
         {/* Panel cố định; bên trong có list nhiều bài tập cho 1 video */}
         <div
-          className={`fixed left-0 top-16 z-40 bg-white w-[910px] shadow-xl rounded-r transition-transform ${
-            showLeftAssignmentPanel ? "translate-x-0" : "-translate-x-full"
-          }`}
+          className={`fixed left-0 top-16 z-40 bg-white w-[910px] shadow-xl rounded-r transition-transform ${showLeftAssignmentPanel ? "translate-x-0" : "-translate-x-full"
+            }`}
           style={{ maxHeight: "calc(100vh - 4rem)", overflow: "auto" }}
         >
           <div className="p-4 border-b flex items-start justify-between">
@@ -415,11 +416,10 @@ export default function CourseLearnDetail() {
                   <button
                     key={a.id}
                     onClick={() => setSelectedAssignmentId(a.id)}
-                    className={`text-left px-3 py-2 rounded ${
-                      selectedAssignmentId === a.id
-                        ? "bg-orange-100 text-orange-700 font-semibold"
-                        : "hover:bg-gray-100 text-gray-700"
-                    }`}
+                    className={`text-left px-3 py-2 rounded ${selectedAssignmentId === a.id
+                      ? "bg-orange-100 text-orange-700 font-semibold"
+                      : "hover:bg-gray-100 text-gray-700"
+                      }`}
                   >
                     {a.title}
                   </button>
@@ -428,10 +428,10 @@ export default function CourseLearnDetail() {
 
               {getAssignmentsForVideo(currentPlayingVideo?.videoId).length ===
                 0 && (
-                <div className="text-sm text-gray-500 px-3 py-2">
-                  Chưa có bài tập cho video này.
-                </div>
-              )}
+                  <div className="text-sm text-gray-500 px-3 py-2">
+                    Chưa có bài tập cho video này.
+                  </div>
+                )}
             </div>
           </div>
 
@@ -581,22 +581,28 @@ export default function CourseLearnDetail() {
                   className="w-full h-full"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-white text-3xl font-bold p-10">
-                  <div className="text-center">
-                    <h1 className="text-4xl font-bold mb-4">
-                      Không có video để phát
-                    </h1>
-                    <p className="text-lg">
-                      Hãy chọn một bài học từ danh sách bên phải.
-                    </p>
-                  </div>
-                </div>
+                <>
+                  {finalContent ? (
+                    <p className="text-black bg-white p-[50px]">{parse(finalContent)}</p>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-white text-3xl font-bold p-10">
+                      <div className="text-center">
+                        <h1 className="text-4xl font-bold mb-4">
+                          Không có video để phát
+                        </h1>
+                        <p className="text-lg">
+                          Hãy chọn một bài học từ danh sách bên phải.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
-          </div>
+          </div >
 
           {/* Lesson Details */}
-          <div className="p-6 bg-white border-t border-gray-200 shadow-sm flex-1">
+          <div div className="p-6 bg-white border-t border-gray-200 shadow-sm flex-1" >
             <h1 className="text-3xl font-bold mb-1 text-gray-900">
               {currentPlayingVideo?.title}
             </h1>
@@ -631,35 +637,37 @@ export default function CourseLearnDetail() {
           </div>
 
           {/* Thêm ghi chú popup */}
-          {showNoteBox && (
-            <div className="p-6 border-t bg-white">
-              <h2 className="text-lg font-semibold mb-2">Ghi chú</h2>
+          {
+            showNoteBox && (
+              <div className="p-6 border-t bg-white">
+                <h2 className="text-lg font-semibold mb-2">Ghi chú</h2>
 
-              <textarea
-                value={noteText}
-                onChange={(e) => setNoteText(e.target.value)}
-                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-orange-400"
-                rows="6"
-                placeholder="Viết ghi chú của bạn cho video này..."
-              ></textarea>
+                <textarea
+                  value={noteText}
+                  onChange={(e) => setNoteText(e.target.value)}
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-orange-400"
+                  rows="6"
+                  placeholder="Viết ghi chú của bạn cho video này..."
+                ></textarea>
 
-              <div className="flex justify-end gap-3 mt-3">
-                <button
-                  onClick={() => setShowNoteBox(false)}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
-                >
-                  Hủy
-                </button>
+                <div className="flex justify-end gap-3 mt-3">
+                  <button
+                    onClick={() => setShowNoteBox(false)}
+                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
+                  >
+                    Hủy
+                  </button>
 
-                <button
-                  onClick={handleSaveNote}
-                  className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
-                >
-                  Lưu ghi chú
-                </button>
+                  <button
+                    onClick={handleSaveNote}
+                    className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
+                  >
+                    Lưu ghi chú
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
+            )
+          }
 
           {/* Hiển thị ghi chú đã lưu cho video hiện tại (in-memory) */}
           <div className="p-6 bg-white border-t mt-2">
@@ -667,8 +675,8 @@ export default function CourseLearnDetail() {
 
             {(!notes[currentPlayingVideo?.videoId] ||
               notes[currentPlayingVideo?.videoId].length === 0) && (
-              <p className="text-gray-500 text-sm">Chưa có ghi chú nào.</p>
-            )}
+                <p className="text-gray-500 text-sm">Chưa có ghi chú nào.</p>
+              )}
 
             <div className="space-y-4">
               {(notes[currentPlayingVideo?.videoId] || []).map((n) => (
@@ -686,35 +694,37 @@ export default function CourseLearnDetail() {
           </div>
 
           {/* Phần hỏi đáp */}
-          {showQABox && (
-            <div className="p-6 border-t bg-white">
-              <h2 className="text-lg font-semibold mb-2">Đặt câu hỏi</h2>
+          {
+            showQABox && (
+              <div className="p-6 border-t bg-white">
+                <h2 className="text-lg font-semibold mb-2">Đặt câu hỏi</h2>
 
-              <textarea
-                value={questionText}
-                onChange={(e) => setQuestionText(e.target.value)}
-                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-orange-400"
-                rows="4"
-                placeholder="Nhập câu hỏi của bạn..."
-              ></textarea>
+                <textarea
+                  value={questionText}
+                  onChange={(e) => setQuestionText(e.target.value)}
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-orange-400"
+                  rows="4"
+                  placeholder="Nhập câu hỏi của bạn..."
+                ></textarea>
 
-              <div className="flex justify-end gap-3 mt-3">
-                <button
-                  onClick={() => setShowQABox(false)}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
-                >
-                  Hủy
-                </button>
+                <div className="flex justify-end gap-3 mt-3">
+                  <button
+                    onClick={() => setShowQABox(false)}
+                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
+                  >
+                    Hủy
+                  </button>
 
-                <button
-                  onClick={handleSubmitQuestion}
-                  className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
-                >
-                  Gửi câu hỏi
-                </button>
+                  <button
+                    onClick={handleSubmitQuestion}
+                    className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
+                  >
+                    Gửi câu hỏi
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
+            )
+          }
 
           {/* Hiển thị câu hỏi đã gửi tạm thời */}
           <div className="p-6 bg-white border-t mt-2">
@@ -722,8 +732,8 @@ export default function CourseLearnDetail() {
 
             {(!questions[currentPlayingVideo?.videoId] ||
               questions[currentPlayingVideo?.videoId].length === 0) && (
-              <p className="text-gray-500 text-sm">Chưa có câu hỏi nào.</p>
-            )}
+                <p className="text-gray-500 text-sm">Chưa có câu hỏi nào.</p>
+              )}
 
             <div className="space-y-4">
               {(questions[currentPlayingVideo?.videoId] || []).map((q) => (
@@ -745,10 +755,10 @@ export default function CourseLearnDetail() {
               ))}
             </div>
           </div>
-        </div>
+        </div >
 
         {/* Right - Course Content List */}
-        <div className="w-full lg:w-[500px] flex-shrink-0 bg-white border-l overflow-y-auto p-4 shadow-inner">
+        < div className="w-full lg:w-[500px] flex-shrink-0 bg-white border-l overflow-y-auto p-4 shadow-inner" >
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-bold text-gray-800">
               Nội dung khóa học
@@ -777,7 +787,8 @@ export default function CourseLearnDetail() {
           </button>
 
           {/* List Sections */}
-          {course.sections &&
+          {
+            course.sections &&
             course.sections.map((section) => (
               <CourseSection
                 key={section._id}
@@ -785,9 +796,10 @@ export default function CourseLearnDetail() {
                 currentVideoId={currentPlayingVideo?.videoId}
                 onLessonClick={handleLessonClick}
               />
-            ))}
-        </div>
-      </div>
+            ))
+          }
+        </div >
+      </div >
       <AssignmentSubmission
         open={isAssignmentOpen}
         onOpenChange={setAssignmentOpen}
