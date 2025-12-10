@@ -9,16 +9,25 @@ import { useAuth } from "../../hooks/useAuth";
 // Component cho từng bài học trong danh sách bên phải
 const LessonItem = ({ item, isCurrent, onClick }) => (
   <div
-    className={`p-3 cursor-pointer border-b hover:bg-gray-50 transition ${isCurrent ? "bg-orange-100 text-orange-600 font-semibold" : "text-gray-700"
-      }`}
+    className={`p-3 cursor-pointer border-b hover:bg-gray-50 transition ${
+      isCurrent
+        ? "bg-orange-100 text-orange-600 font-semibold"
+        : "text-gray-700"
+    }`}
     onClick={() => onClick(item)}
   >
     <div className="flex items-center justify-between">
       <span className="flex items-center text-sm">
-        <i className={`mr-2 far fa-circle ${isCurrent ? "text-orange-500" : "text-gray-400"}`}></i>
+        <i
+          className={`mr-2 far fa-circle ${
+            isCurrent ? "text-orange-500" : "text-gray-400"
+          }`}
+        ></i>
         {item.title}
       </span>
-      <span className="text-xs text-gray-500">{item.videoDuration ? item.videoDuration / 60 + " ph" : ""}</span>
+      <span className="text-xs text-gray-500">
+        {item.videoDuration ? item.videoDuration / 60 + " ph" : ""}
+      </span>
     </div>
   </div>
 );
@@ -43,9 +52,7 @@ const CourseSection = ({ section, currentVideoId, onLessonClick }) => {
           {section.title}
         </div>
         <div className="flex items-center text-xs text-gray-500">
-          <span className="mr-2">
-            {totalItems} Bài Giảng
-          </span>
+          <span className="mr-2">{totalItems} Bài Giảng</span>
           <i
             className={`fas ${isOpen ? "fa-chevron-up" : "fa-chevron-down"}`}
           ></i>
@@ -57,9 +64,7 @@ const CourseSection = ({ section, currentVideoId, onLessonClick }) => {
             <LessonItem
               key={item._id || index}
               item={item}
-              isCurrent={
-                currentVideoId === item.videoUrl.split("/").pop()
-              }
+              isCurrent={currentVideoId === item.videoUrl.split("/").pop()}
               onClick={onLessonClick}
             />
           ))}
@@ -84,12 +89,33 @@ export default function CourseLearnDetail() {
   const [course, setCourse] = useState(null);
   const { user } = useAuth();
 
+  // Tạo pop up hỏi đáp
+  const [showQABox, setShowQABox] = useState(false);
+  const [questionText, setQuestionText] = useState("");
+  const [questions, setQuestions] = useState([]);
+
+  const handleSubmitQuestion = () => {
+    if (!questionText.trim()) return;
+
+    const newQuestion = {
+      id: Date.now(),
+      text: questionText,
+      createdAt: new Date(),
+    };
+
+    setQuestions((prev) => [newQuestion, ...prev]);
+    setQuestionText("");
+    setShowQABox(false);
+  };
+
   useEffect(() => {
     // Fetch course data from API
     const fetchCourse = async () => {
       try {
         const responeCourse = await courseService.getCourseBySlug(slug);
-        const responeLessons = await lessonService.getLessonsByCourse(responeCourse.data._id);
+        const responeLessons = await lessonService.getLessonsByCourse(
+          responeCourse.data._id
+        );
 
         // Check if user has purchased this course
         if (user) {
@@ -113,7 +139,7 @@ export default function CourseLearnDetail() {
                   _id: sec._id,
                   title: sec.title,
                   description: sec.description,
-                  items: []
+                  items: [],
                 };
               }
 
@@ -122,13 +148,12 @@ export default function CourseLearnDetail() {
 
             const dataFinal = {
               ...responeCourse.data,
-              sections: Object.values(sectionsMap)
-            }
+              sections: Object.values(sectionsMap),
+            };
 
             setCourse(dataFinal);
           }
         }
-
       } catch (error) {
         console.error("Error fetching course data:", error);
       }
@@ -145,12 +170,13 @@ export default function CourseLearnDetail() {
 
     for (const section of course.sections) {
       if (section.items?.length) {
-        const first = section.items.find(item => item.videoUrl);
+        const first = section.items.find((item) => item.videoUrl);
         if (first) {
           setCurrentPlayingVideo({
             title: first.title,
-            videoId: first.videoUrl.split("/")[first.videoUrl.split("/").length - 1],
-            updatedAt: first.updatedAt
+            videoId:
+              first.videoUrl.split("/")[first.videoUrl.split("/").length - 1],
+            updatedAt: first.updatedAt,
           });
           break;
         }
@@ -163,8 +189,9 @@ export default function CourseLearnDetail() {
     if (lesson.videoUrl) {
       setCurrentPlayingVideo({
         title: lesson.title,
-        videoId: lesson.videoUrl.split("/")[lesson.videoUrl.split("/").length - 1],
-        updatedAt: lesson.updatedAt
+        videoId:
+          lesson.videoUrl.split("/")[lesson.videoUrl.split("/").length - 1],
+        updatedAt: lesson.updatedAt,
       });
     }
   };
@@ -242,16 +269,75 @@ export default function CourseLearnDetail() {
             {currentPlayingVideo?.title}
           </h1>
           <p className="text-gray-500 text-sm">
-            Cập nhật lần cuối vào ngày {formatDate(currentPlayingVideo?.updatedAt) || "Chưa có thông tin cập nhật"}
+            Cập nhật lần cuối vào ngày{" "}
+            {formatDate(currentPlayingVideo?.updatedAt) ||
+              "Chưa có thông tin cập nhật"}
           </p>
 
           <div className="mt-4 flex items-center justify-between">
             <button className="flex items-center gap-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-100 transition">
               <i className="fas fa-plus text-xs"></i> Thêm ghi chú
             </button>
-            <button className="flex items-center gap-1 bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600 transition">
+            <button
+              className="flex items-center gap-1 bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600 transition"
+              onClick={() => setShowQABox(true)}
+            >
               <i className="fas fa-comments"></i> Hỏi đáp
             </button>
+          </div>
+        </div>
+
+        {/* Phần hỏi đáp */}
+        {showQABox && (
+          <div className="p-6 border-t bg-white">
+            <h2 className="text-lg font-semibold mb-2">Đặt câu hỏi</h2>
+
+            <textarea
+              value={questionText}
+              onChange={(e) => setQuestionText(e.target.value)}
+              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-orange-400"
+              rows="4"
+              placeholder="Nhập câu hỏi của bạn..."
+            ></textarea>
+
+            <div className="flex justify-end gap-3 mt-3">
+              <button
+                onClick={() => setShowQABox(false)}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
+              >
+                Hủy
+              </button>
+
+              <button
+                onClick={handleSubmitQuestion}
+                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
+              >
+                Gửi câu hỏi
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Hiển thị câu hỏi đã gửi tạm thời */}
+        <div className="p-6 bg-white border-t mt-2">
+          <h2 className="text-lg font-semibold mb-4">Câu hỏi của bạn</h2>
+
+          {questions.length === 0 && (
+            <p className="text-gray-500 text-sm">Chưa có câu hỏi nào.</p>
+          )}
+
+          <div className="space-y-4">
+            {questions.map((q) => (
+              <div
+                key={q.id}
+                className="p-4 border rounded-lg bg-gray-50 shadow-sm"
+              >
+                <p className="text-gray-800">{q.text}</p>
+                <p className="text-xs text-gray-400 mt-2">
+                  {formatDate(q.createdAt)}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
