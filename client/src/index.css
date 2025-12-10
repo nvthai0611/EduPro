@@ -153,3 +153,28 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* Quill Editor Styles */
+.quill-editor .ql-toolbar {
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  border-bottom: 1px solid #ddd;
+  background-color: #fafafa;
+}
+
+.quill-editor .ql-container {
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  font-family: inherit;
+  font-size: 14px;
+  min-height: 200px;
+}
+
+.quill-editor .ql-editor {
+  padding: 12px;
+}
+
+.quill-editor .ql-editor.ql-blank::before {
+  color: #999;
+  font-style: italic;
+}
