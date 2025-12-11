@@ -8,6 +8,7 @@ import * as freeCourseService from "../../services/user/freeCourseService";
 import { useAuth } from "../../hooks/useAuth";
 import VideoPlayer from "../../components/Video/VideoPlayer";
 import AssignmentSubmission from "../../components/Assignment/AssignmentSubmission";
+import { formatDuration } from "../../utils/format";
 import { Loader2 } from "lucide-react";
 import parse from 'html-react-parser';
 
@@ -204,6 +205,10 @@ export default function CourseLearnDetail() {
   const [currentPlayingVideo, setCurrentPlayingVideo] = useState(null);
   const [isAssignmentOpen, setAssignmentOpen] = useState(false);
   const [assignmentSubmissions, setAssignmentSubmissions] = useState([]);
+  
+  // State cho video controls
+  const [videoRef, setVideoRef] = useState(null);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
 
   // --- NEW: left assignment panel state (UI only, in-memory) ---
   const [showLeftAssignmentPanel, setShowLeftAssignmentPanel] = useState(false);
@@ -339,12 +344,12 @@ export default function CourseLearnDetail() {
     }
   };
 
-  const handleAssignmentSubmit = ({ note, attachment }) => {
-    if (!attachment) return;
+  const handleAssignmentSubmit = ({ link, note }) => {
+    if (!link) return;
 
     const newSubmission = {
       id: `${Date.now()}`,
-      fileName: attachment.name,
+      link,
       note,
       submittedAt: new Date().toISOString(),
       status: "pending",
@@ -352,6 +357,66 @@ export default function CourseLearnDetail() {
 
     setAssignmentSubmissions((prev) => [newSubmission, ...prev]);
   };
+
+  // Video control functions
+  const handleSpeedChange = (speed) => {
+    setPlaybackSpeed(speed);
+    if (videoRef && videoRef.setPlaybackRate) {
+      videoRef.setPlaybackRate(speed);
+    }
+  };
+
+  const handleVideoRef = (ref) => {
+    setVideoRef(ref);
+  };
+
+  // Keyboard shortcuts for video control
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      // Only work when video is focused or no input is focused
+      if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      switch (e.key) {
+        case 'ArrowLeft':
+          e.preventDefault();
+          // Skip backward 10 seconds
+          if (videoRef && videoRef.getCurrentTime && videoRef.seekTo) {
+            const currentTime = videoRef.getCurrentTime();
+            videoRef.seekTo(Math.max(0, currentTime - 10), true);
+          }
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          // Skip forward 10 seconds
+          if (videoRef && videoRef.getCurrentTime && videoRef.seekTo) {
+            const currentTime = videoRef.getCurrentTime();
+            const duration = videoRef.getDuration();
+            videoRef.seekTo(Math.min(duration, currentTime + 10), true);
+          }
+          break;
+        case ' ':
+          e.preventDefault();
+          if (videoRef && videoRef.getPlayerState) {
+            const state = videoRef.getPlayerState();
+            if (state === 1) { // playing
+              videoRef.pauseVideo();
+            } else if (state === 2) { // paused
+              videoRef.playVideo();
+            }
+          }
+          break;
+        default:
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyPress);
+    return () => {
+      document.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [videoRef]);
 
   if (!course) {
     return (
@@ -363,7 +428,7 @@ export default function CourseLearnDetail() {
 
   // Video Embed URL
   const videoEmbedUrl = currentPlayingVideo?.videoId
-    ? `https://www.youtu.be/${currentPlayingVideo?.videoId}`
+    ? `https://www.youtube.com/watch?v=${currentPlayingVideo?.videoId}`
     : "";
 
   const finalContent = currentPlayingVideo?.content;

@@ -10,6 +10,7 @@ import {
   Zap,
   Loader2,
   Star,
+  AlertCircle
 } from "lucide-react";
 import { useCourses } from "../../../hooks/useCourseQueries";
 
@@ -46,10 +47,11 @@ const professions = [
     color: "text-orange-600 bg-orange-100",
   },
 ];
- const handleClick = () => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
-  };
+const handleClick = () => {
+  window.scrollTo({ top: 0, behavior: 'instant' });
+};
 
+// Utility functions
 const formatPrice = (price) => {
   if (price === undefined || price === null) return "Miễn phí";
   if (price === 0) return "Miễn phí";
@@ -57,6 +59,56 @@ const formatPrice = (price) => {
     style: "currency",
     currency: "VND",
   }).format(price);
+};
+
+// AUTO TĂNG HỌC VIÊN 25% - Logic chính
+const calculateStudentsDisplay = (realStudents) => {
+  if (!realStudents || realStudents === 0) return 0;
+  // Tăng 25% và làm tròn
+  return Math.round(realStudents * 1.25);
+};
+
+// Tính tổng thời lượng từ sections và lessons
+const calculateTotalDuration = (sections = []) => {
+  let totalMinutes = 0;
+  
+  sections.forEach(section => {
+    if (section.lessons && Array.isArray(section.lessons)) {
+      section.lessons.forEach(lesson => {
+        if (lesson.videoDuration) {
+          totalMinutes += Math.round(lesson.videoDuration / 60); // Convert seconds to minutes
+        } else if (lesson.readingTime) {
+          totalMinutes += lesson.readingTime;
+        }
+      });
+    }
+  });
+  
+  if (totalMinutes === 0) return "N/A";
+  
+  const hours = Math.floor(totalMinutes / 60);
+  const mins = totalMinutes % 60;
+  
+  if (hours > 0 && mins > 0) {
+    return `${hours}h ${mins}m`;
+  } else if (hours > 0) {
+    return `${hours}h`;
+  } else {
+    return `${mins}m`;
+  }
+};
+
+// Đếm tổng số lessons từ sections
+const calculateTotalLessons = (sections = []) => {
+  let totalLessons = 0;
+  
+  sections.forEach(section => {
+    if (section.lessons && Array.isArray(section.lessons)) {
+      totalLessons += section.lessons.length;
+    }
+  });
+  
+  return totalLessons;
 };
 
 // Component box chuyên môn
@@ -79,7 +131,7 @@ const ProfessionBox = ({ profession }) => {
   );
 };
 
-// Component Course Card
+// Component Course Card với thông tin đầy đủ
 const CourseCard = ({ course }) => {
   const gradientColors = [
     "from-blue-400 to-blue-600",
@@ -100,15 +152,19 @@ const CourseCard = ({ course }) => {
     "from-amber-400 to-amber-600",
     "from-lime-400 to-lime-600",
   ];
+  
   const labelToUse = course.label || course.title;
   const labelLines = labelToUse
     .split("\n")
     .map((line, index) => <span key={index}>{line}</span>);
-
-  const students = course.students || 0;
-  const lessons = course.lessons || 0;
-  const duration = course.duration || "N/A";
-    const star = course?.averageRating;
+  const realStudents = course.totalStudents || course.students || 0;
+  const displayStudents = calculateStudentsDisplay(realStudents);
+  
+  // Tính toán thông tin từ sections và lessons
+  const totalLessons = calculateTotalLessons(course.sections) || course.totalLessons || course.lessons || 0;
+  const courseDuration = calculateTotalDuration(course.sections) || course.duration || "N/A";
+  
+  const averageRating = course?.averageRating || 5.0;
 
   const getRandomGradient = () => {
     return gradientColors[Math.floor(Math.random() * gradientColors.length)];
@@ -162,7 +218,7 @@ const CourseCard = ({ course }) => {
           <div className="flex items-center gap-1 bg-yellow-50 px-3 py-1 rounded-full">
             <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
             <span className="text-sm font-semibold text-gray-700">
-              {star?.toFixed(1) || "5.0"}
+              {averageRating?.toFixed(1)}
             </span>
           </div>
         </div>
@@ -170,17 +226,15 @@ const CourseCard = ({ course }) => {
         {/* Divider */}
         <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-4"></div>
         
-        {/* Stats section */}
+        {/* Stats section - Hiển thị thông tin đầy đủ */}
         <div className="grid grid-cols-3 gap-4 text-sm">
           <div className="flex flex-col items-center text-center">
             <div className="flex items-center justify-center w-8 h-8 bg-blue-50 rounded-full mb-1">
               <Users className="w-4 h-4 text-blue-500" />
             </div>
             <span className="text-xs text-gray-500">Học viên</span>
-            <span className="font-semibold text-gray-700">
-              {typeof students === "number"
-                ? students.toLocaleString("en-US")
-                : students}
+            <span className="font-semibold text-gray-700 text-xs">
+              {displayStudents > 0 ? displayStudents.toLocaleString("vi-VN") : "0"}
             </span>
           </div>
           
@@ -189,7 +243,9 @@ const CourseCard = ({ course }) => {
               <PlayCircle className="w-4 h-4 text-green-500" />
             </div>
             <span className="text-xs text-gray-500">Bài học</span>
-            <span className="font-semibold text-gray-700">{lessons}</span>
+            <span className="font-semibold text-gray-700">
+              {totalLessons > 0 ? totalLessons : "0"}
+            </span>
           </div>
           
           <div className="flex flex-col items-center text-center">
@@ -197,7 +253,9 @@ const CourseCard = ({ course }) => {
               <Clock className="w-4 h-4 text-orange-500" />
             </div>
             <span className="text-xs text-gray-500">Thời lượng</span>
-            <span className="font-semibold text-gray-700">{duration}</span>
+            <span className="font-semibold text-gray-700 text-xs">
+              {courseDuration}
+            </span>
           </div>
         </div>
       </div>
@@ -211,17 +269,34 @@ export default function CourseList() {
   const isCategoryPage = !!categorySlug;
   const courseListRef = useRef(null);
 
-  // Sử dụng TanStack Query để fetch courses
-  const filters = {
+  // ✅ TanStack Query với filters và data transformation
+  const filters = useMemo(() => ({
     status: "published",
     ...(categorySlug && { category: categorySlug }),
-  };
+  }), [categorySlug]);
 
   const { 
     data: courseData = [], 
     isLoading, 
-    error: queryError 
-  } = useCourses(filters);
+    error: queryError,
+    refetch 
+  } = useCourses(filters, {
+    // Transform data để bao gồm thông tin đầy đủ
+    select: (data) => {
+      if (!Array.isArray(data)) return [];
+      
+      return data.map(course => ({
+        ...course,
+        // Enhance course data với thông tin computed
+        displayStudents: calculateStudentsDisplay(course.totalStudents || course.students || 0),
+        computedLessons: calculateTotalLessons(course.sections) || course.totalLessons || course.lessons || 0,
+        computedDuration: calculateTotalDuration(course.sections) || course.duration || "N/A",
+        rating: course.averageRating || 5.0
+      }));
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnWindowFocus: false
+  });
 
   const error = queryError ? "Không thể tải danh sách khóa học. Vui lòng thử lại sau." : null;
 
@@ -301,23 +376,63 @@ export default function CourseList() {
           <h1 className="text-4xl font-extrabold mb-8">{headerTitle}</h1>
         </div>
 
-        {/* Loading state */}
+        {/* Loading state với skeleton */}
         {isLoading && (
-          <div className="flex justify-center items-center py-20">
-            <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
-          </div>
+          <>
+            <div className="flex justify-center items-center py-8">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-600 mr-3" />
+              <span className="text-gray-600">Đang tải khóa học...</span>
+            </div>
+            
+            {/* Skeleton loader */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="rounded-2xl shadow-lg overflow-hidden bg-white border border-gray-100 animate-pulse">
+                  <div className="h-52 bg-gray-200"></div>
+                  <div className="p-6">
+                    <div className="h-6 bg-gray-200 rounded mb-3"></div>
+                    <div className="flex justify-between mb-4">
+                      <div className="h-8 w-20 bg-gray-200 rounded"></div>
+                      <div className="h-6 w-12 bg-gray-200 rounded-full"></div>
+                    </div>
+                    <div className="h-px bg-gray-200 mb-4"></div>
+                    <div className="grid grid-cols-3 gap-4">
+                      {[...Array(3)].map((_, j) => (
+                        <div key={j} className="flex flex-col items-center">
+                          <div className="w-8 h-8 bg-gray-200 rounded-full mb-1"></div>
+                          <div className="h-3 w-12 bg-gray-200 rounded mb-1"></div>
+                          <div className="h-4 w-8 bg-gray-200 rounded"></div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
 
         {/* Error state */}
         {error && !isLoading && (
-          <div className="text-center py-10">
-            <p className="text-red-600 text-lg mb-4">{error}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-            >
-              Thử lại
-            </button>
+          <div className="text-center py-16">
+            <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Có lỗi xảy ra</h3>
+            <p className="text-red-600 text-base mb-6 max-w-md mx-auto">{error}</p>
+            <div className="space-x-3">
+              <button
+                onClick={() => refetch()}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition inline-flex items-center"
+              >
+                <Loader2 className="w-4 h-4 mr-2" />
+                Thử lại
+              </button>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+              >
+                Tải lại trang
+              </button>
+            </div>
           </div>
         )}
 

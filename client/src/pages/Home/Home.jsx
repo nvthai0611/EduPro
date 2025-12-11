@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,141 +13,90 @@ import {
   Database,
   Globe,
   Smartphone,
-  Zap
+  Zap,
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { Link } from 'react-router-dom';
 import SkillsSection from './SkillsSection';
 import LearningRoadmap from './LearningRoadmap';
 import { toast } from 'react-toastify';
+import { useHomeData } from '../../hooks/useHomeQueries';
+import { useOptimizedAuth } from '../../hooks/useOptimizedAuth';
+import { HomePageSkeleton, StatsSkeletonLoader, CategoriesSkeletonLoader, TestimonialsSkeletonLoader } from '../../components/LoadingSpinner/HomeSkeletonLoader';
+import { usePerformanceMonitor } from '../../hooks/usePerformanceMonitor';
 
 function Home() {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { handleOAuthSuccess, handleOAuthError } = useOptimizedAuth();
+  
+  // Performance monitoring
+  usePerformanceMonitor('Home Page');
+  
+  // Fetch all home data with TanStack Query
+  const { stats, categories, testimonials, isLoading, isError, error } = useHomeData();
+  
+  // Icon mapping for categories
+  const iconMap = useMemo(() => ({
+    Globe,
+    Database,
+    Smartphone,
+    Zap
+  }), []);
+  
+  // Icon mapping for stats
+  const statsIconMap = useMemo(() => ({
+    BookOpen,
+    Users,
+    Clock,
+    Award
+  }), []);
 
-  // Xử lý Google OAuth redirect
+  // Optimized OAuth redirect handling with immediate redirect
   useEffect(() => {
     const encodedAuth = searchParams.get("auth");
     const error = searchParams.get("error");
 
-    console.log("🏠 Home - OAuth Check:", {
-      hasAuth: !!encodedAuth,
-      hasError: !!error,
-      url: window.location.href
-    });
-
     if (error) {
-      toast.error("Đăng nhập thất bại: " + error);
-      navigate("/", { replace: true });
+      handleOAuthError(error);
       return;
     }
 
-    // Xử lý auth param từ URL
+    // Xử lý auth param từ URL với tối ưu hóa
     if (encodedAuth) {
-      try {
-        
-        // Lưu vào cookie
-        const isProduction = import.meta.env.VITE_PROD === "production";
-        const cookieOptions = `path=/; max-age=86400; ${
-          isProduction ? "secure; samesite=none" : "samesite=lax"
-        }`;
-        document.cookie = `render_id=${encodedAuth}; ${cookieOptions}`;
-        console.log("🍪 Cookie saved");
-        toast.success("Đăng nhập thành công!");
-        setTimeout(() => {
-          window.location.href = "/";
-        }, 500);
-      } catch (err) {
-        console.error("❌ Decode error:", err);
-        toast.error("Đăng nhập thất bại");
-      }
+      handleOAuthSuccess(encodedAuth);
     }
-  }, [searchParams, navigate]);
+  }, [searchParams, handleOAuthSuccess, handleOAuthError]);
 
-  useEffect(() => {
-    fetchHomeData();
-  }, []);
-
-  const fetchHomeData = async () => {
-    try {
-      setLoading(true);
-    } catch (error) {
-      console.error('Error fetching home data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Dữ liệu các chuyên môn
-  const categories = [
-    {
-      name: "Frontend",
-      slug: "frontend",
-      count: 7,
-      icon: Globe,
-      color: "text-blue-600 bg-blue-100",
-    },
-    {
-      name: "Backend",
-      slug: "backend",
-      count: 3,
-      icon: Database,
-      color: "text-green-600 bg-green-100",
-    },
-    {
-      name: "Mobile",
-      slug: "mobile",
-      count: 1,
-      icon: Smartphone,
-      color: "text-purple-600 bg-purple-100",
-    },
-    {
-      name: "DevOps",
-      slug: "devops",
-      count: 1,
-      icon: Zap,
-      color: "text-orange-600 bg-orange-100",
-    },
-  ];
-
-  const stats = [
-    { label: 'Khóa học', value: '50+', icon: BookOpen },
-    { label: 'Học viên', value: '10K+', icon: Users },
-    { label: 'Giờ học', value: '500+', icon: Clock },
-    { label: 'Chứng chỉ', value: '5K+', icon: Award },
-  ];
-
-  const testimonials = [
-    {
-      name: 'Nguyễn Văn A',
-      role: 'Frontend Developer',
-      content: 'Khóa học React của Hoàng An IT rất chi tiết và dễ hiểu. Tôi đã có thể tự tin apply vào các công ty lớn.',
-      rating: 5,
-      avatar: 'https://i.pravatar.cc/?img=4'
-    },
-    {
-      name: 'Trần Thị B',
-      role: 'Fullstack Developer',
-      content: 'Hệ thống học tập rất tốt, video chất lượng cao và có hỗ trợ 24/7. Rất đáng để đầu tư!',
-      rating: 5,
-      avatar: 'https://i.pravatar.cc/?img=5'
-    },
-    {
-      name: 'Lê Văn C',
-      role: 'Mobile Developer',
-      content: 'Sau khi học khóa Flutter, tôi đã có thể tự phát triển ứng dụng mobile và kiếm được thu nhập tốt.',
-      rating: 5,
-      avatar: 'https://i.pravatar.cc/?img=11'
-    }
-  ];
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+  // Error handling component
+  const ErrorState = ({ message, onRetry }) => (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center p-8">
+        <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Có lỗi xảy ra</h2>
+        <p className="text-gray-600 mb-6">{message}</p>
+        <Button onClick={onRetry} className="bg-blue-600 hover:bg-blue-700">
+          Thử lại
+        </Button>
       </div>
+    </div>
+  );
+
+  // Loading state with optimized skeleton UI
+  if (isLoading) {
+    return <HomePageSkeleton />;
+  }
+
+  // Error state
+  if (isError) {
+    return (
+      <ErrorState 
+        message={error?.message || "Không thể tải dữ liệu trang chủ"}
+        onRetry={() => window.location.reload()}
+      />
     );
   }
 
@@ -160,7 +110,7 @@ function Home() {
               Học Lập Trình Từ Cơ Bản Đến Nâng Cao
             </h1>
             <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
-              Khám phá thế giới lập trình với các khóa học chất lượng cao F8 - Học Lập Trình Để Đi Làm.
+              Khám phá thế giới lập trình với các khóa học chất lượng cao EduPro.
               Từ Frontend đến Backend, từ Web đến Mobile - chúng tôi có tất cả!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -181,19 +131,27 @@ function Home() {
       <section className="bg-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="flex items-center justify-center mb-4">
-                  <stat.icon className="w-8 h-8 text-blue-600" />
+            {stats?.data?.map((stat, index) => {
+              const IconComponent = statsIconMap[stat.icon];
+              return (
+                <div key={index} className="text-center group hover:scale-105 transition-transform duration-300">
+                  <div className="flex items-center justify-center mb-4">
+                    {IconComponent && (
+                      <IconComponent className="w-8 h-8 text-blue-600 group-hover:text-blue-700 transition-colors" />
+                    )}
+                  </div>
+                  <div className="text-3xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                    {stat.value}
+                  </div>
+                  <div className="text-gray-600 group-hover:text-gray-700 transition-colors">
+                    {stat.label}
+                  </div>
                 </div>
-                <div className="text-3xl font-bold text-gray-900 mb-2">
-                  {stat.value}
-                </div>
-                <div className="text-gray-600">
-                  {stat.label}
-                </div>
-              </div>
-            ))}
+              );
+            }) || (
+              // Fallback loading state for stats
+              <StatsSkeletonLoader />
+            )}
           </div>
         </div>
       </section>
@@ -211,23 +169,31 @@ function Home() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {categories.map((category, index) => (
-              <Link to={`/courses/category/${category.slug}`} key={index}>
-                <Card key={index} className="group hover:shadow-lg transition-all duration-300 cursor-pointer">
-                  <CardContent className="p-6 text-center">
-                    <div className={`w-16 h-16 ${category.color} rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform`}>
-                      <category.icon className="w-8 h-8" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      {category.name}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      {category.count} khóa học
-                    </p>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+            {categories?.data?.map((category, index) => {
+              const IconComponent = iconMap[category.iconName];
+              return (
+                <Link to={`/courses/category/${category.slug}`} key={index}>
+                  <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer hover:-translate-y-1">
+                    <CardContent className="p-6 text-center">
+                      <div className={`w-16 h-16 ${category.color} rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                        {IconComponent && (
+                          <IconComponent className="w-8 h-8" />
+                        )}
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                        {category.name}
+                      </h3>
+                      <p className="text-sm text-gray-600 group-hover:text-gray-700 transition-colors">
+                        {category.count} khóa học
+                      </p>
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            }) || (
+              // Fallback loading state for categories  
+              <CategoriesSkeletonLoader />
+            )}
           </div>
         </div>
       </section>
@@ -248,14 +214,15 @@ function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <Card key={index} className="bg-white/10 backdrop-blur-sm border-white/20">
+            {testimonials?.data?.map((testimonial, index) => (
+              <Card key={index} className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-300 hover:-translate-y-1">
                 <CardContent className="p-6">
                   <div className="flex items-center mb-4">
                     <img
                       src={testimonial.avatar}
                       alt={testimonial.name}
-                      className="w-12 h-12 rounded-full mr-4 bg-white object-cover"
+                      className="w-12 h-12 rounded-full mr-4 bg-white object-cover ring-2 ring-white/20"
+                      loading="lazy"
                     />
                     <div>
                       <h4 className="font-semibold text-white">
@@ -271,12 +238,15 @@ function Home() {
                       <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                     ))}
                   </div>
-                  <p className="text-blue-100 italic">
-                    {testimonial.content}
+                  <p className="text-blue-100 italic leading-relaxed">
+                    "{testimonial.content}"
                   </p>
                 </CardContent>
               </Card>
-            ))}
+            )) || (
+              // Fallback loading state for testimonials
+              <TestimonialsSkeletonLoader />
+            )}
           </div>
         </div>
       </section>

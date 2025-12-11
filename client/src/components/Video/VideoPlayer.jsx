@@ -1,10 +1,11 @@
 import React, { useRef, useEffect, useState } from "react";
 import YouTube from "react-youtube";
-import { Play, Pause, Volume2, VolumeX, Maximize } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, Maximize, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { formatDuration } from "../../utils/format";
 
-const VideoPlayer = ({ src, poster, title, className = "" }) => {
+const VideoPlayer = ({ src, poster, title, className = "", onRef, showCustomControls = false, speedControls }) => {
   const isYouTube = src.includes("youtube.com") || src.includes("youtu.be");
   const playerRef = useRef(null);
 
@@ -15,6 +16,7 @@ const VideoPlayer = ({ src, poster, title, className = "" }) => {
   const [isMuted, setIsMuted] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [isHovering, setIsHovering] = useState(true);
+  const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
   const hideTimerRef = useRef(null);
 
   // Auto hide controls
@@ -28,6 +30,20 @@ const VideoPlayer = ({ src, poster, title, className = "" }) => {
       setIsHovering(false);
     }, 2000); // 2 giây
   };
+
+  // Close settings dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showSettingsDropdown && !event.target.closest('.settings-dropdown')) {
+        setShowSettingsDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showSettingsDropdown]);
 
 
   const getYouTubeId = () => {
@@ -70,6 +86,11 @@ const VideoPlayer = ({ src, poster, title, className = "" }) => {
   /** Khi player sẵn sàng */
   const onReady = (event) => {
     playerRef.current = event.target;
+
+    // Call onRef callback if provided
+    if (onRef && typeof onRef === 'function') {
+      onRef(event.target);
+    }
 
     // Duration lúc này thường = 0, YouTube chưa load metadata
     const checkDuration = setInterval(() => {
@@ -160,10 +181,12 @@ const VideoPlayer = ({ src, poster, title, className = "" }) => {
   };
 
   /** Format time */
-  const formatTime = (t) => {
-    const m = Math.floor(t / 60);
-    const s = Math.floor(t % 60);
-    return `${m}:${s.toString().padStart(2, "0")}`;
+  const formatTime = (timeInSeconds) => {
+    if (!timeInSeconds || timeInSeconds === 0) return "0:00";
+    
+    // Convert seconds to minutes for formatDuration
+    const timeInMinutes = timeInSeconds / 60;
+    return formatDuration(timeInMinutes, 'time');
   };
 
   return (
@@ -250,9 +273,56 @@ const VideoPlayer = ({ src, poster, title, className = "" }) => {
                 </div>
               </div>
 
-              <Button variant="ghost" size="sm" onClick={toggleFullscreen}>
-                <Maximize />
-              </Button>
+              <div className="flex items-center gap-2 relative">
+                {/* Settings Button */}
+                {showCustomControls && speedControls && (
+                  <div className="relative">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setShowSettingsDropdown(!showSettingsDropdown)}
+                      className="text-white hover:bg-white/20"
+                    >
+                      <Settings className="w-4 h-4" />
+                    </Button>
+                    
+                    {/* Settings Dropdown */}
+                    {showSettingsDropdown && (
+                      <div className="absolute bottom-full right-0 mb-2 bg-black/90 backdrop-blur-sm rounded-lg p-3 min-w-[160px]">
+                        <div className="text-white text-sm mb-2 font-medium">Tốc độ phát</div>
+                        <div className="space-y-1">
+                          {speedControls.speedOptions.map(speed => (
+                            <button
+                              key={speed}
+                              onClick={() => {
+                                if (playerRef.current) {
+                                  playerRef.current.setPlaybackRate(speed);
+                                }
+                                speedControls.onSpeedChange?.(speed);
+                                setShowSettingsDropdown(false);
+                              }}
+                              className={`w-full text-left px-3 py-2 text-sm rounded hover:bg-white/20 transition ${
+                                speedControls.currentSpeed === speed
+                                  ? 'text-blue-400 font-medium'
+                                  : 'text-white'
+                              }`}
+                            >
+                              {speed === 1 ? 'Bình thường' : `${speed}x`}
+                              {speedControls.currentSpeed === speed && (
+                                <span className="ml-2">✓</span>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <Button variant="ghost" size="sm" onClick={toggleFullscreen}>
+                  <Maximize />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
