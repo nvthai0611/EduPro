@@ -644,6 +644,13 @@ export default function CourseLearnDetail() {
                   src={`${videoEmbedUrl}`}
                   title={currentPlayingVideo?.title}
                   className="w-full h-full"
+                  onRef={handleVideoRef}
+                  showCustomControls={true}
+                  speedControls={{
+                    speedOptions: [0.5, 0.75, 1, 1.25, 1.5, 2],
+                    currentSpeed: playbackSpeed,
+                    onSpeedChange: handleSpeedChange
+                  }}
                 />
               ) : (
                 <>
