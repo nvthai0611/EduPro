@@ -451,7 +451,6 @@ export default function CourseList() {
                 <strong>
                   {currentProfession ? currentProfession.name : "này"}
                 </strong>
-                .
               </p>
             )}
           </>

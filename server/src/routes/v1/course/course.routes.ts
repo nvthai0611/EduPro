@@ -36,6 +36,6 @@ router.patch("/:id/review", authenticateToken, reviewCourse);
 router.get("/:id", getCourseById);
 router.get("/:id/details", getCourseDetails);
 
-router.get("/:courseId/lessons", getLessonsByCourseId); // Get all lessons by course
+router.get("/:courseId/lessons", authenticateToken, getLessonsByCourseId); // Get all lessons by course
 
 export const courseRoutes: Router = router;
