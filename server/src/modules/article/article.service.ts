@@ -1,6 +1,7 @@
-import LessonRepository from "../lesson/lesson.repository";
+import ArticleRepository from "./article.repository";
 import SectionRepository from "../section/section.repository";
 import OrderService from "../order/order.service";
+import mongoose from "mongoose";
 import {
   CreateArticleLessonPayload,
   UpdateArticleLessonPayload,
@@ -8,7 +9,7 @@ import {
 
 const HTML_TAG_REGEX = /<[^>]+>/g;
 
-class ArticleLessonService {
+class ArticleService {
   private calculateReadingTime(content: string): number {
     const plainText = content.replace(HTML_TAG_REGEX, " ");
     const words = plainText
@@ -45,11 +46,13 @@ class ArticleLessonService {
       return requestedOrder;
     }
 
-    const lastOrder = await LessonRepository.getMaxOrderInSection(sectionId);
+    const lastOrder = await ArticleRepository.getMaxOrderInSection(sectionId);
     return lastOrder + 1;
   }
 
-  async createArticleLesson(payload: CreateArticleLessonPayload) {
+  async createArticle(payload: CreateArticleLessonPayload) {
+    console.log("🔍 [ArticleService] Creating article with payload:", payload);
+    
     await this.validateSectionAndCourse({
       sectionId: payload.sectionId,
       courseId: payload.courseId,
@@ -59,25 +62,34 @@ class ArticleLessonService {
     const readingTime =
       payload.readingTime ?? this.calculateReadingTime(payload.content);
 
-    const articleLesson = await LessonRepository.createLesson({
+    console.log("🔍 [ArticleService] Calculated order:", order, "readingTime:", readingTime);
+
+    const articleData = {
       ...payload,
+      sectionId: new mongoose.Types.ObjectId(payload.sectionId),
+      courseId: new mongoose.Types.ObjectId(payload.courseId),
       order,
       readingTime,
-      type: "article",
       isDeleted: false,
-    });
+    };
 
-    return articleLesson;
+    console.log("🔍 [ArticleService] Article data to save:", articleData);
+
+    const article = await ArticleRepository.createArticle(articleData);
+
+    console.log("🔍 [ArticleService] Article saved successfully:", article);
+
+    return article;
   }
 
-  async updateArticleLesson(
-    lessonId: string,
+  async updateArticle(
+    articleId: string,
     payload: UpdateArticleLessonPayload
   ) {
-    const existingLesson = await LessonRepository.findLessonById(lessonId);
+    const existingArticle = await ArticleRepository.findArticleById(articleId);
 
-    if (!existingLesson || existingLesson.type !== "article") {
-      throw new Error("Không tìm thấy bài học dạng article");
+    if (!existingArticle) {
+      throw new Error("Không tìm thấy bài viết");
     }
 
     const updatePayload: Record<string, unknown> = {
@@ -88,36 +100,33 @@ class ArticleLessonService {
       updatePayload.readingTime = this.calculateReadingTime(payload.content);
     }
 
-    const updated = await LessonRepository.updateLesson(lessonId, {
-      ...updatePayload,
-      type: "article",
-    });
+    const updated = await ArticleRepository.updateArticle(articleId, updatePayload);
 
     if (!updated) {
-      throw new Error("Cập nhật bài học thất bại");
+      throw new Error("Cập nhật bài viết thất bại");
     }
 
     return updated;
   }
 
-  async getArticleLessonById(lessonId: string) {
-    const existingLesson = await LessonRepository.findLessonById(lessonId);
+  async getArticleById(articleId: string) {
+    const article = await ArticleRepository.findArticleById(articleId);
 
-    if (!existingLesson || existingLesson.type !== "article") {
-      throw new Error("Không tìm thấy bài học dạng article");
+    if (!article) {
+      throw new Error("Không tìm thấy bài viết");
     }
 
-    return existingLesson;
+    return article;
   }
 
   async getPublishedArticleContent(
-    lessonId: string,
+    articleId: string,
     context?: { userId?: string; role?: string }
   ) {
-    const article = await LessonRepository.findPublishedArticleById(lessonId);
+    const article = await ArticleRepository.findPublishedArticleById(articleId);
 
     if (!article) {
-      throw new Error("Bài học chưa được xuất bản hoặc không tồn tại");
+      throw new Error("Bài viết chưa được xuất bản hoặc không tồn tại");
     }
 
     if (!article.isFree && !article.isPreviewed) {
@@ -126,11 +135,11 @@ class ArticleLessonService {
       }
 
       if (!context?.userId) {
-        throw new Error("Yêu cầu xác thực để truy cập bài học này");
+        throw new Error("Yêu cầu xác thực để truy cập bài viết này");
       }
 
       if (!article.courseId) {
-        throw new Error("Bài học không liên kết khóa học hợp lệ");
+        throw new Error("Bài viết không liên kết khóa học hợp lệ");
       }
 
       const hasPurchased = await OrderService.checkUserPurchased(
@@ -139,7 +148,7 @@ class ArticleLessonService {
       );
 
       if (!hasPurchased) {
-        throw new Error("Bạn không có quyền truy cập bài học này");
+        throw new Error("Bạn không có quyền truy cập bài viết này");
       }
     }
 
@@ -153,8 +162,38 @@ class ArticleLessonService {
       throw new Error("Section không tồn tại hoặc đã bị xóa");
     }
 
-    return LessonRepository.findArticlesBySection(sectionId);
+    return ArticleRepository.findArticlesBySection(sectionId);
+  }
+
+  async deleteArticle(articleId: string) {
+    const existingArticle = await ArticleRepository.findArticleById(articleId);
+
+    if (!existingArticle) {
+      throw new Error("Không tìm thấy bài viết");
+    }
+
+    return await ArticleRepository.deleteArticle(articleId);
+  }
+
+  async reorderArticles(sectionId: string, articleIds: string[]) {
+    // Validate section exists
+    const section = await SectionRepository.getSectionById(sectionId);
+    if (!section || section.isDeleted) {
+      throw new Error("Section không tồn tại hoặc đã bị xóa");
+    }
+
+    // Create update operations
+    const articleUpdates = articleIds.map((id, index) => ({
+      id,
+      order: index + 1,
+    }));
+
+    return await ArticleRepository.reorderArticles(articleUpdates);
+  }
+
+  async searchArticles(query: string, courseId?: string) {
+    return await ArticleRepository.searchArticles(query, courseId);
   }
 }
 
-export default new ArticleLessonService();
+export default new ArticleService();

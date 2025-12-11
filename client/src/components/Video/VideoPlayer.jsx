@@ -268,7 +268,7 @@ const VideoPlayer = ({ src, poster, title, className = "", onRef, showCustomCont
                   />
                 </div>
 
-                <div className="text-sm w-[100px]">
+                <div className="text-sm w-[100%]">
                   {formatTime(currentTime)} / {formatTime(duration)}
                 </div>
               </div>

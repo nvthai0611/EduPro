@@ -122,3 +122,14 @@ export const getSectionsWithLessons = async (req: any, res: any) => {
     res.status(400).json({ success: false, message: error.message });
   }
 };
+
+// Public endpoint - Get sections with content for learners (no auth required)
+export const getSectionsWithContentForLearners = async (req: any, res: any) => {
+  try {
+    const courseId = req.params.courseId;
+    const sections = await SectionService.getSectionsWithLessons(courseId);
+    res.status(200).json({ success: true, data: sections });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};

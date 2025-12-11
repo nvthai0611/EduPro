@@ -1,5 +1,6 @@
 import Section from "./section.model";
 import SectionRepository from "./section.repository";
+import ArticleRepository from "../article/article.repository";
 import { Types } from "mongoose";
 
 
@@ -54,15 +55,35 @@ class SectionService {
         return await SectionRepository.getSectionsByCourseId(courseId);
     }
 
-    // Get sections with populated lessons
+    // Get sections with populated lessons and articles
     async getSectionsWithLessons(courseId: string): Promise<any[]> {
         const sections = await SectionRepository.getSectionsByCourseId(courseId);
         
-        // Populate lessons for each section
+        // Populate lessons and get articles for each section
         const populatedSections = await Promise.all(
             sections.map(async (section: any) => {
-                const populated = await section.populate('lessons');
-                return populated;
+                // Populate lessons
+                const populatedSection = await section.populate('lessons');
+                
+                // Get articles for this section
+                const articles = await ArticleRepository.findArticlesBySection(section._id.toString());
+                
+                // Merge lessons and articles into a combined array, sorted by order
+                const combinedContent = [
+                    ...(populatedSection.lessons || []).map((lesson: any) => ({
+                        ...lesson.toObject(),
+                        type: lesson.type || 'video'
+                    })),
+                    ...articles.map((article: any) => ({
+                        ...article.toObject(),
+                        type: 'article'
+                    }))
+                ].sort((a, b) => (a.order || 0) - (b.order || 0));
+                
+                return {
+                    ...populatedSection.toObject(),
+                    lessons: combinedContent // Replace lessons array with combined content
+                };
             })
         );
 

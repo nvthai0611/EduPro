@@ -11,6 +11,7 @@ import { paymentRoutes } from "./v1/payment.routes";
 import { courseAdminRoutes } from "./v1/admin/course.routes";
 import { userRoutes } from "./v1/users.routes";
 import { sectionRoutes } from "./v1/admin/section.routes";
+import { publicSectionRoutes } from "./v1/section.routes";
 import { lessonRoutes } from "./v1/admin/lesson.routes";
 import { articleRoutes } from "./v1/article.routes";
 import { articleAdminRoutes } from "./v1/admin/article.routes";
@@ -33,6 +34,9 @@ export const apiRouter = (io?: Server) => {
 
   // Course routes (public with optional auth + rate limiting)
   router.use("/courses", courseRoutes);
+  
+  // Public sections routes (for learners)
+  router.use("/sections", publicSectionRoutes);
 
   // Order routes
   router.use("/orders", orderRoutes);
