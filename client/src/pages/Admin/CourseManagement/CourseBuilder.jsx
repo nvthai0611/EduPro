@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -47,7 +49,7 @@ import {
 const CourseBuilder = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
-  
+
   // TanStack Query hooks
   const { data: course, isLoading: courseLoading, error: courseError } = useCourseBySlug(slug, {
     onError: (error) => {
@@ -56,10 +58,30 @@ const CourseBuilder = () => {
       navigate('/admin/manager-courses');
     }
   });
-  
+
+  // Quill modules config
+  const quillModules = {
+    toolbar: [
+      [{ 'header': [1, 2, 3, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      ['blockquote', 'code-block'],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+      ['link', 'image'],
+      ['clean']
+    ],
+  };
+
+  const quillFormats = [
+    'header',
+    'bold', 'italic', 'underline', 'strike',
+    'blockquote', 'code-block',
+    'list', 'bullet',
+    'link', 'image'
+  ];
+
   const courseId = course?._id;
   const { data: sections = [], isLoading: sectionsLoading } = useSectionsWithLessons(courseId);
-  
+
   // Mutations
   const createSectionMutation = useCreateSection();
   const updateSectionMutation = useUpdateSection();
@@ -68,28 +90,28 @@ const CourseBuilder = () => {
   const updateLessonMutation = useUpdateLesson();
   const deleteLessonMutation = useDeleteLesson();
   const addLessonToSectionMutation = useAddLessonToSection();
-  
+
   // State management
-  const [expandedSections, setExpandedSections] = useState(new Set());
-  
+  const [expandedSections, setExpandedSections] = useState({});
+
   // Dialog states
   const [showAddSectionDialog, setShowAddSectionDialog] = useState(false);
   const [showEditSectionDialog, setShowEditSectionDialog] = useState(false);
   const [showAddLessonDialog, setShowAddLessonDialog] = useState(false);
   const [showEditLessonDialog, setShowEditLessonDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  
+
   // Form states
   const [selectedSection, setSelectedSection] = useState(null);
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState({ type: null, id: null, name: null });
-  
+
   const [sectionForm, setSectionForm] = useState({
     title: '',
     description: '',
     order: 1
   });
-  
+
   const [lessonForm, setLessonForm] = useState({
     title: '',
     description: '',
@@ -102,12 +124,12 @@ const CourseBuilder = () => {
     order: 1
   });
 
-  // Auto-expand first section when data loads
+  // Auto-expand first section
   React.useEffect(() => {
-    if (sections.length > 0 && expandedSections.size === 0) {
-      setExpandedSections(new Set([sections[0]._id]));
+    if (sections.length > 0 && Object.keys(expandedSections).length === 0) {
+      setExpandedSections({ [sections[0]._id]: true });
     }
-  }, [sections, expandedSections]);
+  }, [sections]);
 
   // Section handlers
   const handleAddSection = async () => {
@@ -115,7 +137,7 @@ const CourseBuilder = () => {
       toast.error('Không tìm thấy ID khóa học');
       return;
     }
-    
+
     createSectionMutation.mutate(
       {
         ...sectionForm,
@@ -152,7 +174,7 @@ const CourseBuilder = () => {
       toast.error('Không tìm thấy ID khóa học');
       return;
     }
-    
+
     // Create lesson first
     createLessonMutation.mutate(
       {
@@ -235,13 +257,10 @@ const CourseBuilder = () => {
 
   // Toggle section expand/collapse
   const toggleSection = (sectionId) => {
-    const newExpanded = new Set(expandedSections);
-    if (newExpanded.has(sectionId)) {
-      newExpanded.delete(sectionId);
-    } else {
-      newExpanded.add(sectionId);
-    }
-    setExpandedSections(newExpanded);
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionId]: !prev[sectionId]
+    }));
   };
 
   // Open dialogs
@@ -299,13 +318,13 @@ const CourseBuilder = () => {
 
   // Loading states
   const isLoading = courseLoading || sectionsLoading;
-  const isMutating = createSectionMutation.isPending || 
-                     updateSectionMutation.isPending || 
-                     deleteSectionMutation.isPending ||
-                     createLessonMutation.isPending || 
-                     updateLessonMutation.isPending || 
-                     deleteLessonMutation.isPending ||
-                     addLessonToSectionMutation.isPending;
+  const isMutating = createSectionMutation.isPending ||
+    updateSectionMutation.isPending ||
+    deleteSectionMutation.isPending ||
+    createLessonMutation.isPending ||
+    updateLessonMutation.isPending ||
+    deleteLessonMutation.isPending ||
+    addLessonToSectionMutation.isPending;
 
   if (isLoading) {
     return (
@@ -383,7 +402,7 @@ const CourseBuilder = () => {
               <CardHeader className="border-b">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">Nội dung khóa học</CardTitle>
-                  <Button 
+                  <Button
                     size="sm"
                     onClick={() => setShowAddSectionDialog(true)}
                   >
@@ -421,12 +440,12 @@ const CourseBuilder = () => {
                           >
                             <GripVertical className="w-4 h-4 text-gray-400" />
                           </button>
-                          
+
                           <button
                             onClick={() => toggleSection(section._id)}
                             className="flex-1 flex items-center gap-3 text-left"
                           >
-                            {expandedSections.has(section._id) ? (
+                            {expandedSections[section._id] ? (
                               <ChevronDown className="w-5 h-5 text-gray-500" />
                             ) : (
                               <ChevronRight className="w-5 h-5 text-gray-500" />
@@ -471,7 +490,7 @@ const CourseBuilder = () => {
                         </div>
 
                         {/* Lessons List */}
-                        {expandedSections.has(section._id) && (
+                        {expandedSections[section._id] && (
                           <div className="bg-gray-50 border-t">
                             {section.lessons && section.lessons.length > 0 ? (
                               <div className="divide-y divide-gray-200">
@@ -483,7 +502,7 @@ const CourseBuilder = () => {
                                     <button className="p-1 hover:bg-gray-100 rounded cursor-move">
                                       <GripVertical className="w-4 h-4 text-gray-400" />
                                     </button>
-                                    
+
                                     <div className="w-8 h-8 bg-white border rounded flex items-center justify-center">
                                       {lesson.type === 'video' ? (
                                         <Play className="w-4 h-4 text-blue-600" />
@@ -508,7 +527,7 @@ const CourseBuilder = () => {
                                       </div>
                                       <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
                                         <Clock className="w-3 h-3" />
-                                        <span>{formatDuration(lesson.videoDuration || 0)}</span>
+                                        <span>{lesson.videoDuration ? formatDuration(lesson.videoDuration) : lesson.readingTime + "m"}</span>
                                       </div>
                                     </div>
 
@@ -532,7 +551,7 @@ const CourseBuilder = () => {
                                 ))}
                               </div>
                             ) : null}
-                            
+
                             {/* Add Lesson Button */}
                             <div className="p-4 pl-16">
                               <Button
@@ -675,8 +694,8 @@ const CourseBuilder = () => {
             <Button variant="outline" onClick={() => setShowAddSectionDialog(false)}>
               Hủy
             </Button>
-            <Button 
-              onClick={handleAddSection} 
+            <Button
+              onClick={handleAddSection}
               disabled={!sectionForm.title || createSectionMutation.isPending}
             >
               {createSectionMutation.isPending ? (
@@ -721,8 +740,8 @@ const CourseBuilder = () => {
             <Button variant="outline" onClick={() => setShowEditSectionDialog(false)}>
               Hủy
             </Button>
-            <Button 
-              onClick={handleUpdateSection} 
+            <Button
+              onClick={handleUpdateSection}
               disabled={!sectionForm.title || updateSectionMutation.isPending}
             >
               {updateSectionMutation.isPending ? (
@@ -762,7 +781,7 @@ const CourseBuilder = () => {
                   className="text-base"
                 />
               </div>
-              
+
               {/* Description */}
               <div className="space-y-2">
                 <Label htmlFor="lesson-description">Mô tả ngắn</Label>
@@ -782,45 +801,39 @@ const CourseBuilder = () => {
                   <button
                     type="button"
                     onClick={() => setLessonForm({ ...lessonForm, type: 'video' })}
-                    className={`p-4 border-2 rounded-lg transition-all ${
-                      lessonForm.type === 'video'
-                        ? 'border-blue-500 bg-blue-50 shadow-sm'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
+                    className={`p-4 border-2 rounded-lg transition-all ${lessonForm.type === 'video'
+                      ? 'border-blue-500 bg-blue-50 shadow-sm'
+                      : 'border-gray-200 hover:border-gray-300'
+                      }`}
                   >
-                    <Video className={`w-6 h-6 mx-auto mb-2 ${
-                      lessonForm.type === 'video' ? 'text-blue-600' : 'text-gray-400'
-                    }`} />
+                    <Video className={`w-6 h-6 mx-auto mb-2 ${lessonForm.type === 'video' ? 'text-blue-600' : 'text-gray-400'
+                      }`} />
                     <div className="text-sm font-medium text-center">Video</div>
                   </button>
-                  
+
                   <button
                     type="button"
                     onClick={() => setLessonForm({ ...lessonForm, type: 'article' })}
-                    className={`p-4 border-2 rounded-lg transition-all ${
-                      lessonForm.type === 'article'
-                        ? 'border-green-500 bg-green-50 shadow-sm'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
+                    className={`p-4 border-2 rounded-lg transition-all ${lessonForm.type === 'article'
+                      ? 'border-green-500 bg-green-50 shadow-sm'
+                      : 'border-gray-200 hover:border-gray-300'
+                      }`}
                   >
-                    <BookOpen className={`w-6 h-6 mx-auto mb-2 ${
-                      lessonForm.type === 'article' ? 'text-green-600' : 'text-gray-400'
-                    }`} />
+                    <BookOpen className={`w-6 h-6 mx-auto mb-2 ${lessonForm.type === 'article' ? 'text-green-600' : 'text-gray-400'
+                      }`} />
                     <div className="text-sm font-medium text-center">Bài viết</div>
                   </button>
-                  
+
                   <button
                     type="button"
                     onClick={() => setLessonForm({ ...lessonForm, type: 'quiz' })}
-                    className={`p-4 border-2 rounded-lg transition-all ${
-                      lessonForm.type === 'quiz'
-                        ? 'border-purple-500 bg-purple-50 shadow-sm'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
+                    className={`p-4 border-2 rounded-lg transition-all ${lessonForm.type === 'quiz'
+                      ? 'border-purple-500 bg-purple-50 shadow-sm'
+                      : 'border-gray-200 hover:border-gray-300'
+                      }`}
                   >
-                    <HelpCircle className={`w-6 h-6 mx-auto mb-2 ${
-                      lessonForm.type === 'quiz' ? 'text-purple-600' : 'text-gray-400'
-                    }`} />
+                    <HelpCircle className={`w-6 h-6 mx-auto mb-2 ${lessonForm.type === 'quiz' ? 'text-purple-600' : 'text-gray-400'
+                      }`} />
                     <div className="text-sm font-medium text-center">Quiz</div>
                   </button>
                 </div>
@@ -833,7 +846,7 @@ const CourseBuilder = () => {
                     <Video className="w-5 h-5" />
                     <span>Nội dung Video</span>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="lesson-video">URL Video</Label>
                     <Input
@@ -856,9 +869,9 @@ const CourseBuilder = () => {
                       type="number"
                       placeholder="15"
                       value={lessonForm.videoDuration / 60}
-                      onChange={(e) => setLessonForm({ 
-                        ...lessonForm, 
-                        videoDuration: parseInt(e.target.value || 0) * 60 
+                      onChange={(e) => setLessonForm({
+                        ...lessonForm,
+                        videoDuration: parseInt(e.target.value || 0) * 60
                       })}
                       className="bg-white"
                     />
@@ -872,21 +885,19 @@ const CourseBuilder = () => {
                     <BookOpen className="w-5 h-5" />
                     <span>Nội dung Bài viết</span>
                   </div>
-                  
+
                   <div className="space-y-2">
-                    <Label htmlFor="lesson-content">Nội dung bài viết</Label>
-                    <Textarea
-                      id="lesson-content"
-                      placeholder="Nhập nội dung bài viết ở đây... (hỗ trợ Markdown)"
-                      rows={8}
-                      value={lessonForm.content}
-                      onChange={(e) => setLessonForm({ ...lessonForm, content: e.target.value })}
-                      className="bg-white font-mono text-sm"
-                    />
-                    <p className="text-xs text-green-600 flex items-center gap-1">
-                      <Type className="w-3 h-3" />
-                      Hỗ trợ Markdown và HTML. Trình soạn thảo WYSIWYG sẽ được thêm vào sau
-                    </p>
+                    <Label htmlFor="lesson-content" className="text-sm font-medium">Nội dung bài viết</Label>
+                    <div className="bg-white rounded border border-gray-300 quill-editor">
+                      <ReactQuill
+                        value={lessonForm.content}
+                        onChange={(content) => setLessonForm({ ...lessonForm, content })}
+                        modules={quillModules}
+                        formats={quillFormats}
+                        placeholder="Nhập nội dung bài viết ở đây..."
+                        theme="snow"
+                      />
+                    </div>
                   </div>
 
                   <div className="space-y-2">
@@ -896,8 +907,8 @@ const CourseBuilder = () => {
                       type="number"
                       placeholder="5"
                       value={lessonForm.readingTime}
-                      onChange={(e) => setLessonForm({ 
-                        ...lessonForm, 
+                      onChange={(e) => setLessonForm({
+                        ...lessonForm,
                         readingTime: parseInt(e.target.value || 0)
                       })}
                       className="bg-white"
@@ -948,8 +959,8 @@ const CourseBuilder = () => {
             <Button variant="outline" onClick={() => setShowAddLessonDialog(false)}>
               Hủy
             </Button>
-            <Button 
-              onClick={handleAddLesson} 
+            <Button
+              onClick={handleAddLesson}
               disabled={!lessonForm.title || lessonForm.type === 'quiz' || createLessonMutation.isPending || addLessonToSectionMutation.isPending}
             >
               {(createLessonMutation.isPending || addLessonToSectionMutation.isPending) ? (
@@ -990,7 +1001,7 @@ const CourseBuilder = () => {
                     className="text-base"
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="edit-lesson-description" className="text-sm font-medium">
                     Mô tả
@@ -1017,18 +1028,16 @@ const CourseBuilder = () => {
                     onClick={() => setLessonForm({ ...lessonForm, type: 'video' })}
                     className={`
                       p-4 rounded-lg border-2 transition-all duration-200
-                      ${lessonForm.type === 'video' 
-                        ? '' 
+                      ${lessonForm.type === 'video'
+                        ? ''
                         : 'border-gray-200 hover:border-blue-300 bg-white'
                       }
                     `}
                   >
-                    <Video className={`w-6 h-6 mx-auto mb-2 ${
-                      lessonForm.type === 'video' ? 'text-blue-500' : 'text-gray-400'
-                    }`} />
-                    <p className={`text-sm font-medium ${
-                      lessonForm.type === 'video' ? 'text-blue-700' : 'text-gray-600'
-                    }`}>
+                    <Video className={`w-6 h-6 mx-auto mb-2 ${lessonForm.type === 'video' ? 'text-blue-500' : 'text-gray-400'
+                      }`} />
+                    <p className={`text-sm font-medium ${lessonForm.type === 'video' ? 'text-blue-700' : 'text-gray-600'
+                      }`}>
                       Video
                     </p>
                   </button>
@@ -1038,18 +1047,16 @@ const CourseBuilder = () => {
                     onClick={() => setLessonForm({ ...lessonForm, type: 'article' })}
                     className={`
                       p-4 rounded-lg border-2 transition-all duration-200
-                      ${lessonForm.type === 'article' 
-                        ? '' 
+                      ${lessonForm.type === 'article'
+                        ? ''
                         : 'border-gray-200 hover:border-green-300 bg-white'
                       }
                     `}
                   >
-                    <BookOpen className={`w-6 h-6 mx-auto mb-2 ${
-                      lessonForm.type === 'article' ? 'text-green-500' : 'text-gray-400'
-                    }`} />
-                    <p className={`text-sm font-medium ${
-                      lessonForm.type === 'article' ? 'text-green-700' : 'text-gray-600'
-                    }`}>
+                    <BookOpen className={`w-6 h-6 mx-auto mb-2 ${lessonForm.type === 'article' ? 'text-green-500' : 'text-gray-400'
+                      }`} />
+                    <p className={`text-sm font-medium ${lessonForm.type === 'article' ? 'text-green-700' : 'text-gray-600'
+                      }`}>
                       Bài viết
                     </p>
                   </button>
@@ -1059,18 +1066,16 @@ const CourseBuilder = () => {
                     onClick={() => setLessonForm({ ...lessonForm, type: 'quiz' })}
                     className={`
                       p-4 rounded-lg border-2 transition-all duration-200
-                      ${lessonForm.type === 'quiz' 
-                        ? '' 
+                      ${lessonForm.type === 'quiz'
+                        ? ''
                         : 'border-gray-200 hover:border-purple-300 bg-white'
                       }
                     `}
                   >
-                    <HelpCircle className={`w-6 h-6 mx-auto mb-2 ${
-                      lessonForm.type === 'quiz' ? 'text-purple-500' : 'text-gray-400'
-                    }`} />
-                    <p className={`text-sm font-medium ${
-                      lessonForm.type === 'quiz' ? 'text-purple-700' : 'text-gray-600'
-                    }`}>
+                    <HelpCircle className={`w-6 h-6 mx-auto mb-2 ${lessonForm.type === 'quiz' ? 'text-purple-500' : 'text-gray-400'
+                      }`} />
+                    <p className={`text-sm font-medium ${lessonForm.type === 'quiz' ? 'text-purple-700' : 'text-gray-600'
+                      }`}>
                       Quiz
                     </p>
                   </button>
@@ -1086,7 +1091,7 @@ const CourseBuilder = () => {
                     <Video className="w-5 h-5 text-blue-500" />
                     <h4 className="font-medium text-blue-900">Nội dung Video</h4>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="edit-lesson-video" className="text-sm font-medium">
                       URL Video
@@ -1110,9 +1115,9 @@ const CourseBuilder = () => {
                       min="0"
                       placeholder="15"
                       value={lessonForm.videoDuration ? lessonForm.videoDuration / 60 : ''}
-                      onChange={(e) => setLessonForm({ 
-                        ...lessonForm, 
-                        videoDuration: parseInt(e.target.value || 0) * 60 
+                      onChange={(e) => setLessonForm({
+                        ...lessonForm,
+                        videoDuration: parseInt(e.target.value || 0) * 60
                       })}
                       className="bg-white"
                     />
@@ -1134,18 +1139,15 @@ const CourseBuilder = () => {
                     <BookOpen className="w-5 h-5 text-green-500" />
                     <h4 className="font-medium text-green-900">Nội dung Bài viết</h4>
                   </div>
-                  
+
                   <div className="space-y-2">
-                    <Label htmlFor="edit-lesson-content" className="text-sm font-medium">
-                      Nội dung bài viết
-                    </Label>
-                    <Textarea
-                      id="edit-lesson-content"
-                      placeholder="Nhập nội dung bài viết (hỗ trợ Markdown)..."
-                      rows={8}
+                    <ReactQuill
                       value={lessonForm.content || ''}
-                      onChange={(e) => setLessonForm({ ...lessonForm, content: e.target.value })}
-                      className="bg-white resize-none font-mono text-sm"
+                      onChange={(content) => setLessonForm({ ...lessonForm, content })}
+                      modules={quillModules}
+                      formats={quillFormats}
+                      placeholder="Nhập nội dung bài viết ở đây..."
+                      theme="snow"
                     />
                   </div>
 
@@ -1159,8 +1161,8 @@ const CourseBuilder = () => {
                       min="0"
                       placeholder="5"
                       value={lessonForm.readingTime || ''}
-                      onChange={(e) => setLessonForm({ 
-                        ...lessonForm, 
+                      onChange={(e) => setLessonForm({
+                        ...lessonForm,
                         readingTime: parseInt(e.target.value || 0)
                       })}
                       className="bg-white"
@@ -1220,8 +1222,8 @@ const CourseBuilder = () => {
             <Button variant="outline" onClick={() => setShowEditLessonDialog(false)}>
               Hủy
             </Button>
-            <Button 
-              onClick={handleUpdateLesson} 
+            <Button
+              onClick={handleUpdateLesson}
               disabled={!lessonForm.title || lessonForm.type === 'quiz' || updateLessonMutation.isPending}
             >
               {updateLessonMutation.isPending ? (
@@ -1256,8 +1258,8 @@ const CourseBuilder = () => {
             <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
               Hủy
             </Button>
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               onClick={handleDelete}
               disabled={deleteSectionMutation.isPending || deleteLessonMutation.isPending}
             >
