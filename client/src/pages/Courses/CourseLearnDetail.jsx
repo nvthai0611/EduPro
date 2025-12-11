@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { courseService } from "../../services/courseService";
-import { lessonService } from "../../services/lessonService";
+import { useCourseBySlug, useSectionsWithLessons } from "../../hooks/useCourseQueries";
 import * as orderService from "../../services/user/orderService";
 import * as freeCourseService from "../../services/user/freeCourseService";
 import { useAuth } from "../../hooks/useAuth";
@@ -39,7 +38,7 @@ const LessonItem = ({ item, isCurrent, onClick }) => (
 
 // Component cho từng Section (Chương)
 const CourseSection = ({ section, currentPlayingVideo, onLessonClick }) => {
-  const sectionItems = section.items || [];
+  const sectionItems = section.lessons || []; // Sử dụng lessons thay vì items
 
   // Tính toán số bài đã hoàn thành và tổng số bài trong section
   const totalItems = sectionItems.length;
@@ -91,8 +90,20 @@ const formatDate = (isoDate) => {
 export default function CourseLearnDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const [course, setCourse] = useState(null);
   const { user } = useAuth();
+
+  // TanStack Query hooks - giống CourseBuilder
+  const { data: course, isLoading: courseLoading, error: courseError } = useCourseBySlug(slug, {
+    onError: (error) => {
+      console.error('Error fetching course:', error);
+    }
+  });
+
+  const courseId = course?._id;
+  const { data: sections = [], isLoading: sectionsLoading, error: sectionsError } = useSectionsWithLessons(courseId);
+
+  // Local states
+  const [accessChecked, setAccessChecked] = useState(false);
 
   // Tạo pop up hỏi đáp
   const [showQABox, setShowQABox] = useState(false);
@@ -151,62 +162,34 @@ export default function CourseLearnDetail() {
     setShowNoteBox(false);
   };
 
+  // Access checking logic using TanStack Query data
   useEffect(() => {
-    // Fetch course data from API
-    const fetchCourse = async () => {
+    const checkCourseAccess = async () => {
+      if (!course || !user || accessChecked) return;
+
       try {
-        const responeCourse = await courseService.getCourseBySlug(slug);
-        const responeLessons = await lessonService.getLessonsByCourse(
-          responeCourse.data._id
+        // Check if user has purchased this course
+        const hasPurchased = await orderService.checkPurchase(
+          user?.userId,
+          course._id
         );
 
-        // Check if user has purchased this course
-        if (user) {
-          const hasPurchased = await orderService.checkPurchase(
-            user?.userId,
-            responeCourse.data._id
-          );
+        // Check if course is free
+        const isFree = freeCourseService.isFreeCourse(course);
 
-          // Check if course is free
-          const isFree = freeCourseService.isFreeCourse(responeCourse.data);
-
-          if (!hasPurchased.purchased && !isFree) {
-            window.location.href = `/courses/${slug}`;
-            return;
-          } else {
-            const sectionsMap = {};
-
-            for (const lesson of responeLessons) {
-              const sec = lesson.sectionId; // thông tin section trong từng lession
-
-              // nhóm lesson theo id của section
-              if (!sectionsMap[sec._id]) {
-                sectionsMap[sec._id] = {
-                  _id: sec._id,
-                  title: sec.title,
-                  description: sec.description,
-                  items: [],
-                };
-              }
-
-              sectionsMap[sec._id].items.push(lesson);
-            }
-
-            const dataFinal = {
-              ...responeCourse.data,
-              sections: Object.values(sectionsMap),
-            };
-
-            setCourse(dataFinal);
-          }
+        if (!hasPurchased.purchased && !isFree) {
+          window.location.href = `/courses/${slug}`;
+          return;
         }
+
+        setAccessChecked(true);
       } catch (error) {
-        console.error("Error fetching course data:", error);
+        console.error("Error checking course access:", error);
       }
     };
 
-    fetchCourse();
-  }, [slug, user]);
+    checkCourseAccess();
+  }, [course, user, slug, accessChecked]);
 
   // --- NEW: left assignment panel state (UI only, in-memory) ---
   const [showLeftAssignmentPanel, setShowLeftAssignmentPanel] = useState(false);
@@ -312,11 +295,11 @@ export default function CourseLearnDetail() {
   // --- END NEW ---
 
   useEffect(() => {
-    if (!course || !course.sections) return;
+    if (!sections || sections.length === 0) return;
 
-    for (const section of course.sections) {
-      if (section.items?.length) {
-        const first = section.items.find((item) => item.videoUrl ? item?.videoUrl : item?.content);
+    for (const section of sections) {
+      if (section.lessons?.length) {
+        const first = section.lessons.find((item) => item.videoUrl ? item?.videoUrl : item?.content);
         if (first) {
           setCurrentPlayingVideo({
             _id: first._id,
@@ -330,7 +313,7 @@ export default function CourseLearnDetail() {
         }
       }
     }
-  }, [course]);
+  }, [sections]);
 
   // Xử lý khi click vào một bài học hoặc article
   const handleLessonClick = (item) => {
@@ -440,6 +423,35 @@ export default function CourseLearnDetail() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showVideoSettings]);
+
+  // Loading và error handling
+  if (courseLoading || sectionsLoading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
+        <span className="ml-2 text-gray-600">Đang tải khóa học...</span>
+      </div>
+    );
+  }
+
+  if (courseError || sectionsError) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-2">Có lỗi xảy ra</h2>
+          <p className="text-gray-600 mb-4">
+            {courseError?.message || sectionsError?.message || "Không thể tải dữ liệu khóa học"}
+          </p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Thử lại
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!course) {
     return (
@@ -889,8 +901,8 @@ export default function CourseLearnDetail() {
 
           {/* List Sections */}
           {
-            course.sections &&
-            course.sections.map((section) => (
+            sections &&
+            sections.map((section) => (
               <CourseSection
                 key={section._id}
                 section={section}
