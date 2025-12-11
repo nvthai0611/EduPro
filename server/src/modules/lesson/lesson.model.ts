@@ -7,17 +7,13 @@ export interface ILesson {
   title: string;
   description?: string;
 
-  type: "video" | "article" | "quiz";
+  type: "video" | "quiz"; // Removed "article" since articles now use separate collection
 
   order: number;
 
   // video specific
   videoUrl?: string;
   videoDuration?: number; // in seconds
-  
-  // article specific
-  content?: string; // HTML content for article
-  readingTime?: number; // in minutes
   
   // quiz specific (upcoming)
   // quizId?: mongoose.Types.ObjectId;
@@ -54,19 +50,15 @@ const lessonSchema = new mongoose.Schema<ILessonDocument>(
     description: { type: String, trim: true },
     order: { type: Number, required: true, min: 1 },
     
-    // Video fields (optional - only for video type)
+    // Video fields (only for video type)
     videoUrl: { type: String },
     videoDuration: { type: Number, min: 0 },
-    
-    // Article fields (optional - only for article type)
-    content: { type: String },
-    readingTime: { type: Number, min: 0 },
     
     isFree: { type: Boolean, default: false },
 
     type: {
       type: String,
-      enum: ["video", "article", "quiz"],
+      enum: ["video", "quiz"], // Removed "article"
       required: true,
     },
     isPublished: { type: Boolean, default: false },
@@ -78,9 +70,9 @@ const lessonSchema = new mongoose.Schema<ILessonDocument>(
 
 // Indexes
 lessonSchema.index({ courseId: 1, order: 1 });
-lessonSchema.index({ moduleId: 1, order: 1 });
-lessonSchema.index({courseId: 1});// tối ưu truy vấn
-lessonSchema.index({moduleId: 1});
+lessonSchema.index({ sectionId: 1, order: 1 });
+lessonSchema.index({ courseId: 1 });
+lessonSchema.index({ sectionId: 1 });
 // Virtual for formatted duration
 lessonSchema.virtual("formattedDuration").get(function () {
   const minutes = Math.floor(this.videoDuration / 60);
