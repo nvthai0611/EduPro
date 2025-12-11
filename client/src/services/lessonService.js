@@ -26,7 +26,7 @@ export const lessonService = {
   // Lấy nội dung bài học (video, quiz, etc.)
   getLessonContent: async (lessonId) => {
     try {
-      const response = await apiClient.get(`/api/v1/lessons/${lessonId}/content`);
+      const response = await apiClient.get(`/articles/${lessonId}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching lesson content:', error);
@@ -150,5 +150,56 @@ export const lessonService = {
       console.error('Error deleting comment:', error);
       throw error;
     }
-  }
+  },
+
+  // Article lesson APIs
+  getArticleContent: async (lessonId) => {
+    try {
+      const response = await apiClient.get(`/articles/${lessonId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching article content:', error);
+      throw error;
+    }
+  },
+
+  createArticleLesson: async (payload) => {
+    try {
+      const response = await apiClient.post(`/admin/articles`, payload);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating article lesson:', error);
+      throw error;
+    }
+  },
+
+  updateArticleLesson: async (lessonId, payload) => {
+    try {
+      const response = await apiClient.patch(`/admin/articles/${lessonId}`, payload);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating article lesson:', error);
+      throw error;
+    }
+  },
+
+  getAdminArticleLesson: async (lessonId) => {
+    try {
+      const response = await apiClient.get(`/admin/articles/${lessonId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching article lesson:', error);
+      throw error;
+    }
+  },
+
+  getArticlesBySection: async (sectionId) => {
+    try {
+      const response = await apiClient.get(`/admin/articles/section/${sectionId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching section articles:', error);
+      throw error;
+    }
+  },
 };

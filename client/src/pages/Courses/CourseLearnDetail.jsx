@@ -8,6 +8,7 @@ import * as freeCourseService from "../../services/user/freeCourseService";
 import { useAuth } from "../../hooks/useAuth";
 import VideoPlayer from "../../components/Video/VideoPlayer";
 import AssignmentSubmission from "../../components/Assignment/AssignmentSubmission";
+import { formatDuration } from "../../utils/format";
 import { Loader2 } from "lucide-react";
 import parse from 'html-react-parser';
 
@@ -37,7 +38,7 @@ const LessonItem = ({ item, isCurrent, onClick }) => (
 
 
 // Component cho từng Section (Chương)
-const CourseSection = ({ section, currentVideoId, onLessonClick }) => {
+const CourseSection = ({ section, currentPlayingVideo, onLessonClick }) => {
   const sectionItems = section.items || [];
 
   // Tính toán số bài đã hoàn thành và tổng số bài trong section
@@ -65,10 +66,12 @@ const CourseSection = ({ section, currentVideoId, onLessonClick }) => {
       {isOpen && sectionItems.length > 0 && (
         <div>
           {sectionItems.map((item, index) => (
+            console.log(item),
+
             <LessonItem
               key={item._id || index}
               item={item}
-              isCurrent={currentVideoId === item.videoUrl.split("/").pop()}
+              isCurrent={item.title === currentPlayingVideo?.title}
               onClick={onLessonClick}
             />
           ))}
@@ -102,8 +105,10 @@ export default function CourseLearnDetail() {
   const [noteText, setNoteText] = useState("");
   const [notes, setNotes] = useState({}); // { [videoId]: [{id,text,createdAt}, ...] }
 
-  console.log(course);
-
+  // State để quản lý video hiện tại đang phát
+  const [currentPlayingVideo, setCurrentPlayingVideo] = useState(null);
+  const [isAssignmentOpen, setAssignmentOpen] = useState(false);
+  const [assignmentSubmissions, setAssignmentSubmissions] = useState([]);
 
   const handleSubmitQuestion = () => {
     if (!questionText.trim()) return;
@@ -200,10 +205,9 @@ export default function CourseLearnDetail() {
     fetchCourse();
   }, [slug, user]);
 
-  // State để quản lý video hiện tại đang phát
-  const [currentPlayingVideo, setCurrentPlayingVideo] = useState(null);
-  const [isAssignmentOpen, setAssignmentOpen] = useState(false);
-  const [assignmentSubmissions, setAssignmentSubmissions] = useState([]);
+  // State cho video controls
+  const [videoRef, setVideoRef] = useState(null);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
 
   // --- NEW: left assignment panel state (UI only, in-memory) ---
   const [showLeftAssignmentPanel, setShowLeftAssignmentPanel] = useState(false);
@@ -339,12 +343,12 @@ export default function CourseLearnDetail() {
     }
   };
 
-  const handleAssignmentSubmit = ({ note, attachment }) => {
-    if (!attachment) return;
+  const handleAssignmentSubmit = ({ link, note }) => {
+    if (!link) return;
 
     const newSubmission = {
       id: `${Date.now()}`,
-      fileName: attachment.name,
+      link,
       note,
       submittedAt: new Date().toISOString(),
       status: "pending",
@@ -352,6 +356,66 @@ export default function CourseLearnDetail() {
 
     setAssignmentSubmissions((prev) => [newSubmission, ...prev]);
   };
+
+  // Video control functions
+  const handleSpeedChange = (speed) => {
+    setPlaybackSpeed(speed);
+    if (videoRef && videoRef.setPlaybackRate) {
+      videoRef.setPlaybackRate(speed);
+    }
+  };
+
+  const handleVideoRef = (ref) => {
+    setVideoRef(ref);
+  };
+
+  // Keyboard shortcuts for video control
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      // Only work when video is focused or no input is focused
+      if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      switch (e.key) {
+        case 'ArrowLeft':
+          e.preventDefault();
+          // Skip backward 10 seconds
+          if (videoRef && videoRef.getCurrentTime && videoRef.seekTo) {
+            const currentTime = videoRef.getCurrentTime();
+            videoRef.seekTo(Math.max(0, currentTime - 10), true);
+          }
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          // Skip forward 10 seconds
+          if (videoRef && videoRef.getCurrentTime && videoRef.seekTo) {
+            const currentTime = videoRef.getCurrentTime();
+            const duration = videoRef.getDuration();
+            videoRef.seekTo(Math.min(duration, currentTime + 10), true);
+          }
+          break;
+        case ' ':
+          e.preventDefault();
+          if (videoRef && videoRef.getPlayerState) {
+            const state = videoRef.getPlayerState();
+            if (state === 1) { // playing
+              videoRef.pauseVideo();
+            } else if (state === 2) { // paused
+              videoRef.playVideo();
+            }
+          }
+          break;
+        default:
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyPress);
+    return () => {
+      document.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [videoRef]);
 
   if (!course) {
     return (
@@ -363,7 +427,7 @@ export default function CourseLearnDetail() {
 
   // Video Embed URL
   const videoEmbedUrl = currentPlayingVideo?.videoId
-    ? `https://www.youtu.be/${currentPlayingVideo?.videoId}`
+    ? `https://www.youtube.com/watch?v=${currentPlayingVideo?.videoId}`
     : "";
 
   const finalContent = currentPlayingVideo?.content;
@@ -572,7 +636,7 @@ export default function CourseLearnDetail() {
           </div>
 
           {/* Video Player - Sử dụng aspect-video để responsive */}
-          <div className="w-full bg-black">
+          <div className="w-full bg-white">
             <div className="aspect-video">
               {videoEmbedUrl ? (
                 <VideoPlayer
@@ -583,7 +647,7 @@ export default function CourseLearnDetail() {
               ) : (
                 <>
                   {finalContent ? (
-                    <p className="text-black bg-white p-[50px]">{parse(finalContent)}</p>
+                    <div className="text-black bg-white p-[50px]">{parse(finalContent)}</div>
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-white text-3xl font-bold p-10">
                       <div className="text-center">
@@ -602,7 +666,7 @@ export default function CourseLearnDetail() {
           </div >
 
           {/* Lesson Details */}
-          <div div className="p-6 bg-white border-t border-gray-200 shadow-sm flex-1" >
+          <div className="p-6 bg-white border-t border-gray-200 shadow-sm flex-1" >
             <h1 className="text-3xl font-bold mb-1 text-gray-900">
               {currentPlayingVideo?.title}
             </h1>
@@ -793,7 +857,7 @@ export default function CourseLearnDetail() {
               <CourseSection
                 key={section._id}
                 section={section}
-                currentVideoId={currentPlayingVideo?.videoId}
+                currentPlayingVideo={currentPlayingVideo}
                 onLessonClick={handleLessonClick}
               />
             ))
