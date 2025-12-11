@@ -38,7 +38,7 @@ const LessonItem = ({ item, isCurrent, onClick }) => (
 
 
 // Component cho từng Section (Chương)
-const CourseSection = ({ section, currentVideoId, onLessonClick }) => {
+const CourseSection = ({ section, currentPlayingVideo, onLessonClick }) => {
   const sectionItems = section.items || [];
 
   // Tính toán số bài đã hoàn thành và tổng số bài trong section
@@ -66,10 +66,12 @@ const CourseSection = ({ section, currentVideoId, onLessonClick }) => {
       {isOpen && sectionItems.length > 0 && (
         <div>
           {sectionItems.map((item, index) => (
+            console.log(item),
+
             <LessonItem
               key={item._id || index}
               item={item}
-              isCurrent={currentVideoId === item.videoUrl.split("/").pop()}
+              isCurrent={item.title === currentPlayingVideo?.title}
               onClick={onLessonClick}
             />
           ))}
@@ -103,8 +105,10 @@ export default function CourseLearnDetail() {
   const [noteText, setNoteText] = useState("");
   const [notes, setNotes] = useState({}); // { [videoId]: [{id,text,createdAt}, ...] }
 
-  console.log(course);
-
+  // State để quản lý video hiện tại đang phát
+  const [currentPlayingVideo, setCurrentPlayingVideo] = useState(null);
+  const [isAssignmentOpen, setAssignmentOpen] = useState(false);
+  const [assignmentSubmissions, setAssignmentSubmissions] = useState([]);
 
   const handleSubmitQuestion = () => {
     if (!questionText.trim()) return;
@@ -201,11 +205,6 @@ export default function CourseLearnDetail() {
     fetchCourse();
   }, [slug, user]);
 
-  // State để quản lý video hiện tại đang phát
-  const [currentPlayingVideo, setCurrentPlayingVideo] = useState(null);
-  const [isAssignmentOpen, setAssignmentOpen] = useState(false);
-  const [assignmentSubmissions, setAssignmentSubmissions] = useState([]);
-  
   // State cho video controls
   const [videoRef, setVideoRef] = useState(null);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
@@ -648,7 +647,7 @@ export default function CourseLearnDetail() {
               ) : (
                 <>
                   {finalContent ? (
-                    <p className="text-black bg-white p-[50px]">{parse(finalContent)}</p>
+                    <div className="text-black bg-white p-[50px]">{parse(finalContent)}</div>
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-white text-3xl font-bold p-10">
                       <div className="text-center">
@@ -667,7 +666,7 @@ export default function CourseLearnDetail() {
           </div >
 
           {/* Lesson Details */}
-          <div div className="p-6 bg-white border-t border-gray-200 shadow-sm flex-1" >
+          <div className="p-6 bg-white border-t border-gray-200 shadow-sm flex-1" >
             <h1 className="text-3xl font-bold mb-1 text-gray-900">
               {currentPlayingVideo?.title}
             </h1>
@@ -858,7 +857,7 @@ export default function CourseLearnDetail() {
               <CourseSection
                 key={section._id}
                 section={section}
-                currentVideoId={currentPlayingVideo?.videoId}
+                currentPlayingVideo={currentPlayingVideo}
                 onLessonClick={handleLessonClick}
               />
             ))
