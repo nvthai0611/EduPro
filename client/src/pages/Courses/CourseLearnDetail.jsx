@@ -636,7 +636,7 @@ export default function CourseLearnDetail() {
           </div>
 
           {/* Video Player - Sử dụng aspect-video để responsive */}
-          <div className="w-full bg-black">
+          <div className="w-full bg-white">
             <div className="aspect-video">
               {videoEmbedUrl ? (
                 <VideoPlayer
