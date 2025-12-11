@@ -66,12 +66,10 @@ const CourseSection = ({ section, currentPlayingVideo, onLessonClick }) => {
       {isOpen && sectionItems.length > 0 && (
         <div>
           {sectionItems.map((item, index) => (
-            console.log(item),
-
             <LessonItem
               key={item._id || index}
               item={item}
-              isCurrent={item.title === currentPlayingVideo?.title}
+              isCurrent={item._id === currentPlayingVideo?._id}
               onClick={onLessonClick}
             />
           ))}
@@ -109,6 +107,11 @@ export default function CourseLearnDetail() {
   const [currentPlayingVideo, setCurrentPlayingVideo] = useState(null);
   const [isAssignmentOpen, setAssignmentOpen] = useState(false);
   const [assignmentSubmissions, setAssignmentSubmissions] = useState([]);
+  
+  // State cho video controls
+  const [videoRef, setVideoRef] = useState(null);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [showVideoSettings, setShowVideoSettings] = useState(false);
 
   const handleSubmitQuestion = () => {
     if (!questionText.trim()) return;
@@ -204,10 +207,6 @@ export default function CourseLearnDetail() {
 
     fetchCourse();
   }, [slug, user]);
-
-  // State cho video controls
-  const [videoRef, setVideoRef] = useState(null);
-  const [playbackSpeed, setPlaybackSpeed] = useState(1);
 
   // --- NEW: left assignment panel state (UI only, in-memory) ---
   const [showLeftAssignmentPanel, setShowLeftAssignmentPanel] = useState(false);
@@ -320,10 +319,12 @@ export default function CourseLearnDetail() {
         const first = section.items.find((item) => item.videoUrl ? item?.videoUrl : item?.content);
         if (first) {
           setCurrentPlayingVideo({
+            _id: first._id,
             title: first.title,
-            videoId: first.videoUrl.split("/")[first.videoUrl.split("/").length - 1],
+            videoId: first.videoUrl ? first.videoUrl.split("/")[first.videoUrl.split("/").length - 1] : null,
             content: first.content,
             updatedAt: first.updatedAt,
+            type: first.type || (first.videoUrl ? 'video' : 'article')
           });
           break;
         }
@@ -331,14 +332,16 @@ export default function CourseLearnDetail() {
     }
   }, [course]);
 
-  // Xử lý khi click vào một bài học
-  const handleLessonClick = (lesson) => {
-    if (lesson.videoUrl ? lesson.videoUrl : lesson.content) {
+  // Xử lý khi click vào một bài học hoặc article
+  const handleLessonClick = (item) => {
+    if (item.videoUrl || item.content) {
       setCurrentPlayingVideo({
-        title: lesson.title,
-        videoId: lesson.videoUrl.split("/")[lesson.videoUrl.split("/").length - 1],
-        content: lesson.content,
-        updatedAt: lesson.updatedAt,
+        _id: item._id,
+        title: item.title,
+        videoId: item.videoUrl ? item.videoUrl.split("/")[item.videoUrl.split("/").length - 1] : null,
+        content: item.content,
+        updatedAt: item.updatedAt,
+        type: item.type || (item.videoUrl ? 'video' : 'article')
       });
     }
   };
@@ -363,10 +366,17 @@ export default function CourseLearnDetail() {
     if (videoRef && videoRef.setPlaybackRate) {
       videoRef.setPlaybackRate(speed);
     }
+    setShowVideoSettings(false);
   };
 
   const handleVideoRef = (ref) => {
     setVideoRef(ref);
+  };
+
+  const handleVideoReady = () => {
+    if (videoRef && playbackSpeed !== 1) {
+      videoRef.setPlaybackRate(playbackSpeed);
+    }
   };
 
   // Keyboard shortcuts for video control
@@ -416,6 +426,20 @@ export default function CourseLearnDetail() {
       document.removeEventListener('keydown', handleKeyPress);
     };
   }, [videoRef]);
+
+  // Đóng video settings khi click bên ngoài
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showVideoSettings && !event.target.closest('.video-settings')) {
+        setShowVideoSettings(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showVideoSettings]);
 
   if (!course) {
     return (
@@ -635,35 +659,48 @@ export default function CourseLearnDetail() {
             </button>
           </div>
 
-          {/* Video Player - Sử dụng aspect-video để responsive */}
-          <div className="w-full bg-white">
-            <div className="aspect-video">
-              {videoEmbedUrl ? (
-                <VideoPlayer
-                  src={`${videoEmbedUrl}`}
-                  title={currentPlayingVideo?.title}
-                  className="w-full h-full"
-                />
-              ) : (
-                <>
-                  {finalContent ? (
-                    <div className="text-black bg-white p-[50px]">{parse(finalContent)}</div>
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-white text-3xl font-bold p-10">
-                      <div className="text-center">
-                        <h1 className="text-4xl font-bold mb-4">
-                          Không có video để phát
-                        </h1>
-                        <p className="text-lg">
-                          Hãy chọn một bài học từ danh sách bên phải.
-                        </p>
-                      </div>
+          {/* Video Player hoặc Article Content - Tăng kích thước */}
+          <div className="w-full bg-black">
+            <div className="aspect-[16/9] min-h-[600px] w-full">
+              {currentPlayingVideo?.type === 'article' || (!videoEmbedUrl && finalContent) ? (
+                <div className="w-full h-full bg-white overflow-y-auto">
+                  <div className="p-8 max-w-4xl mx-auto">
+                    <h1 className="text-3xl font-bold mb-6 text-gray-900">{currentPlayingVideo?.title}</h1>
+                    <div className="prose prose-lg max-w-none text-gray-800">
+                      {finalContent ? parse(finalContent) : 'Nội dung đang được tải...'}
                     </div>
-                  )}
-                </>
+                  </div>
+                </div>
+              ) : videoEmbedUrl ? (
+                <div className="relative w-full h-full">
+                  <VideoPlayer
+                    src={`${videoEmbedUrl}`}
+                    title={currentPlayingVideo?.title}
+                    className="w-full h-full min-h-[600px]"
+                    onReady={handleVideoReady}
+                    onRef={handleVideoRef}
+                    showCustomControls={true}
+                    speedControls={{
+                      speedOptions: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2],
+                      currentSpeed: playbackSpeed,
+                      onSpeedChange: handleSpeedChange
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-600 bg-gray-100">
+                  <div className="text-center">
+                    <h1 className="text-4xl font-bold mb-4">
+                      Không có nội dung để hiển thị
+                    </h1>
+                    <p className="text-lg">
+                      Hãy chọn một bài học từ danh sách bên phải.
+                    </p>
+                  </div>
+                </div>
               )}
             </div>
-          </div >
+          </div>
 
           {/* Lesson Details */}
           <div className="p-6 bg-white border-t border-gray-200 shadow-sm flex-1" >

@@ -73,8 +73,8 @@ const VideoPlayer = ({ src, poster, title, className = "", onRef, showCustomCont
   };
 
   const ytOptions = {
-    height: "100%",
-    width: "100%",
+    height: "600",
+    width: "100%", 
     playerVars: {
       autoplay: 0,
       controls: 0, // tắt UI gốc Youtube
