@@ -28,6 +28,14 @@ export const lessonKeys = {
   detail: (id) => [...lessonKeys.all, 'detail', id],
 };
 
+// Home page query keys for cross-component cache invalidation
+export const homeKeys = {
+  all: ['home'],
+  stats: () => [...homeKeys.all, 'stats'],
+  categories: () => [...homeKeys.all, 'categories'],
+  testimonials: () => [...homeKeys.all, 'testimonials'],
+};
+
 /**
  * Hook to fetch courses list with filters
  */
@@ -102,6 +110,9 @@ export const useCreateCourse = () => {
     onSuccess: () => {
       // Invalidate courses list to refetch
       queryClient.invalidateQueries({ queryKey: courseKeys.lists() });
+      // Invalidate home stats and categories as they might change
+      queryClient.invalidateQueries({ queryKey: homeKeys.stats() });
+      queryClient.invalidateQueries({ queryKey: homeKeys.categories() });
       toast.success('Tạo khóa học thành công!');
     },
     onError: (error) => {
