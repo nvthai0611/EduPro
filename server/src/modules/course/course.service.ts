@@ -9,17 +9,17 @@ class CourseService {
     ) {
       throw new Error("Missing required course fields");
     }
-    
+
     // Set default values if not provided
     if (!courseData.status) {
       courseData.status = "draft";
     }
-    
+
     // Use instructorId if provided, otherwise use manager_id
     if (!courseData.manager_id && courseData.instructorId) {
       courseData.manager_id = courseData.instructorId;
     }
-    
+
     const course = await CourseRepository.create(courseData);
     return course;
   }
@@ -58,6 +58,13 @@ class CourseService {
     return courses;
   }
 
+  async getGhiChu(courseId: string): Promise<any> {
+    const course = await CourseRepository.getCourseById(courseId);
+    if (!course) {
+      throw new Error("Course not found");
+    }
+    return course.ghiChu;
+  }
   async getAllCoursesPublic(filters: any = {}): Promise<any> {
     const query: any = { isDeleted: { $ne: true } };
 
@@ -116,7 +123,7 @@ class CourseService {
         createdAt: 1,
         updatedAt: 1,
         // Không trả về: sessionToken, approvalMessage, submittedBy, adminNote, etc.
-      }
+      },
     });
     return courses;
   }
@@ -168,7 +175,9 @@ class CourseService {
   }
 
   async getCoursesByInstructorService(instructorId: string): Promise<any> {
-    const courses = await CourseRepository.getCoursesByInstructorId(instructorId);
+    const courses = await CourseRepository.getCoursesByInstructorId(
+      instructorId
+    );
     return courses;
   }
 
@@ -178,13 +187,16 @@ class CourseService {
   }
 
   async updateCourseService(courseId: string, updateData: any): Promise<any> {
-    const updatedCourse = await CourseRepository.updateCourse(courseId, updateData);
+    const updatedCourse = await CourseRepository.updateCourse(
+      courseId,
+      updateData
+    );
     return updatedCourse;
   }
 
   async deleteCourseService(courseId: string): Promise<any> {
-    const deletedCourse = await CourseRepository.updateCourse(courseId, { 
-      isDeleted: true 
+    const deletedCourse = await CourseRepository.updateCourse(courseId, {
+      isDeleted: true,
     });
     return deletedCourse;
   }
@@ -199,12 +211,12 @@ class CourseService {
 
   // Submit course for approval
   async submitCourseForApproval(
-    courseId: string, 
-    userId: string, 
+    courseId: string,
+    userId: string,
     approvalMessage: string
   ): Promise<any> {
     const course = await CourseRepository.getCourseById(courseId);
-    
+
     if (!course) {
       throw new Error("Course not found");
     }
@@ -217,7 +229,9 @@ class CourseService {
 
     // Only draft courses can be submitted
     if (course.status !== "draft") {
-      throw new Error(`Cannot submit course with status: ${course.status}. Only draft courses can be submitted.`);
+      throw new Error(
+        `Cannot submit course with status: ${course.status}. Only draft courses can be submitted.`
+      );
     }
 
     // Update course with approval data
