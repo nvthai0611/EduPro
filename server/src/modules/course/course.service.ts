@@ -58,13 +58,6 @@ class CourseService {
     return courses;
   }
 
-  async getGhiChu(courseId: string): Promise<any> {
-    const course = await CourseRepository.getCourseById(courseId);
-    if (!course) {
-      throw new Error("Course not found");
-    }
-    return course.ghiChu;
-  }
   async getAllCoursesPublic(filters: any = {}): Promise<any> {
     const query: any = { isDeleted: { $ne: true } };
 

@@ -7,7 +7,7 @@ import mongoose from "mongoose";
 
 const BASE_URL =
   process.env.NODE_ENV === "development"
-    ? "https://muddiest-bob-veillike.ngrok-free.dev/"
+    ? "http://localhost:9999/"
     : "https://edupro-qnsy.onrender.com/";
 
 class OrderController {

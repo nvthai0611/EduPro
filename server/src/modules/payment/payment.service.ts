@@ -15,7 +15,7 @@ function extractOrderId(content: string) {
   return match ? match[0] : null;
 }
 
-const BASE_URL = process.env.NODE_ENV === 'development' ? "https://muddiest-bob-veillike.ngrok-free.dev/" : "https://edupro-qnsy.onrender.com/";
+const BASE_URL = process.env.NODE_ENV === 'development' ? "http://localhost:9999/" : "https://edupro-qnsy.onrender.com/";
 
 export class PaymentService {
   private io: Server;
