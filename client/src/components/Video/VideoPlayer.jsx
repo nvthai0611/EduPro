@@ -118,31 +118,6 @@ const VideoPlayer = ({ src, poster, title, className = "", onRef, showCustomCont
     if (event.data === 2) {
       setIsPlaying(false);
     }
-
-    // Video kết thúc (state = 0)
-    if (event.data === 0) {
-      setIsPlaying(false);
-      // Tự động ẩn tất cả overlay của YouTube sau khi video kết thúc
-      setTimeout(() => {
-        const overlaySelectors = [
-          '.ytp-endscreen-content',
-          '.ytp-ce-element', 
-          '.ytp-cards-teaser',
-          '.ytp-pause-overlay',
-          '.html5-endscreen',
-          '.videowall-endscreen'
-        ];
-        
-        overlaySelectors.forEach(selector => {
-          const elements = document.querySelectorAll(selector);
-          elements.forEach(el => {
-            el.style.display = 'none';
-            el.style.visibility = 'hidden';
-            el.style.opacity = '0';
-          });
-        });
-      }, 100);
-    }
   };
 
   /** Cập nhật currentTime mỗi 200ms */
@@ -220,39 +195,6 @@ const VideoPlayer = ({ src, poster, title, className = "", onRef, showCustomCont
       className={`relative bg-black rounded-lg overflow-hidden ${className}`}
       onMouseMove={handleMouseMove}
     >
-      {/* CSS để ẩn overlay của YouTube */}
-      <style jsx>{`
-        /* Ẩn video suggestions và annotations của YouTube */
-        .ytp-endscreen-content,
-        .ytp-ce-element,
-        .ytp-cards-teaser,
-        .ytp-pause-overlay,
-        .ytp-scroll-min,
-        .ytp-show-tiles,
-        .ytp-videowall-still,
-        .ytp-endscreen-paginate,
-        .html5-endscreen,
-        .videowall-endscreen,
-        .ytp-related-on-error-overlay {
-          display: none !important;
-          visibility: hidden !important;
-          opacity: 0 !important;
-        }
-        
-        /* Ẩn các nút YouTube không cần thiết */
-        .ytp-chrome-top,
-        .ytp-show-share-button,
-        .ytp-youtube-button,
-        .ytp-watermark {
-          display: none !important;
-        }
-
-        /* Đảm bảo video player full size */
-        iframe {
-          pointer-events: auto !important;
-        }
-      `}</style>
-
       {/* YouTube Player */}
       <div id="yt-player-frame" className="w-full h-full">
         {(() => {
@@ -268,16 +210,6 @@ const VideoPlayer = ({ src, poster, title, className = "", onRef, showCustomCont
           );
         })()}
       </div>
-
-      {/* Overlay để chặn YouTube suggestions khi video dừng hoặc kết thúc */}
-      {(!isPlaying || currentTime >= duration - 1) && duration > 0 && (
-        <div 
-          className="absolute top-0 right-0 w-full h-full bg-transparent pointer-events-none z-10"
-          style={{
-            background: 'linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.1) 100%)'
-          }}
-        />
-      )}
 
       {/* Title */} 
       {/* {title && (
@@ -336,7 +268,7 @@ const VideoPlayer = ({ src, poster, title, className = "", onRef, showCustomCont
                   />
                 </div>
 
-                <div className="text-sm w-[100px]">
+                <div className="text-sm w-[100%]">
                   {formatTime(currentTime)} / {formatTime(duration)}
                 </div>
               </div>
@@ -356,7 +288,7 @@ const VideoPlayer = ({ src, poster, title, className = "", onRef, showCustomCont
                     
                     {/* Settings Dropdown */}
                     {showSettingsDropdown && (
-                      <div className="settings-dropdown absolute bottom-full right-0 mb-2 bg-black/90 backdrop-blur-sm rounded-lg p-3 min-w-[160px] shadow-xl border border-white/10 z-50">
+                      <div className="absolute bottom-full right-0 mb-2 bg-black/90 backdrop-blur-sm rounded-lg p-3 min-w-[160px]">
                         <div className="text-white text-sm mb-2 font-medium">Tốc độ phát</div>
                         <div className="space-y-1">
                           {speedControls.speedOptions.map(speed => (
@@ -371,13 +303,13 @@ const VideoPlayer = ({ src, poster, title, className = "", onRef, showCustomCont
                               }}
                               className={`w-full text-left px-3 py-2 text-sm rounded hover:bg-white/20 transition ${
                                 speedControls.currentSpeed === speed
-                                  ? 'text-blue-400 font-medium bg-white/10'
+                                  ? 'text-blue-400 font-medium'
                                   : 'text-white'
                               }`}
                             >
                               {speed === 1 ? 'Bình thường' : `${speed}x`}
                               {speedControls.currentSpeed === speed && (
-                                <span className="ml-2 text-blue-400">✓</span>
+                                <span className="ml-2">✓</span>
                               )}
                             </button>
                           ))}
