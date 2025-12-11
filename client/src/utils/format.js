@@ -6,7 +6,12 @@ dayjs.extend(relativeTime);
 dayjs.extend(localizedFormat);
 dayjs.locale(vi); // dùng tiếng Việt
 export const formatPrice = (price) => {
-  return new Intl.NumberFormat("vi-VN").format(price) + " VND";
+  if (price === undefined || price === null) return "Miễn phí";
+  if (price === 0) return "Miễn phí";
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(price);
 };
 
 export const formatPriceChart = (price) => {
@@ -180,4 +185,40 @@ export const parsePrice = (formattedPrice) => {
   // Sử dụng regex để loại bỏ mọi thứ không phải chữ số
   const cleanedPrice = formattedPrice.replace(/[^0-9]/g, '');
   return parseFloat(cleanedPrice);
+};
+
+// Format duration from minutes to hours and minutes or H:MM:SS format
+export const formatDuration = (minutes, format = 'text') => {
+  if (minutes === undefined || minutes === null || minutes === 0) return format === 'text' ? "0 phút" : "0:00";
+  
+  if (format === 'time') {
+    // Format as H:MM:SS or MM:SS for video duration
+    // If input is already in seconds, use it directly
+    let totalSeconds;
+    if (minutes > 1000) {
+      // Likely already in seconds
+      totalSeconds = Math.floor(minutes);
+    } else {
+      // Convert minutes to seconds
+      totalSeconds = Math.floor(minutes * 60);
+    }
+    
+    const hours = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+    
+    if (hours > 0) {
+      return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    } else {
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+  }
+  
+  // Default text format (for course total duration)
+  const hours = Math.floor(minutes / 60);
+  const mins = Math.floor(minutes % 60);
+  if (hours > 0) {
+    return `${hours} giờ ${mins} phút`;
+  }
+  return `${mins} phút`;
 };

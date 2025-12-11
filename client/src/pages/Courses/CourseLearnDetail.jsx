@@ -7,6 +7,7 @@ import * as freeCourseService from "../../services/user/freeCourseService";
 import { useAuth } from "../../hooks/useAuth";
 import VideoPlayer from "../../components/Video/VideoPlayer";
 import AssignmentSubmission from "../../components/Assignment/AssignmentSubmission";
+import { formatDuration } from "../../utils/format";
 import { Loader2 } from "lucide-react";
 
 // Component cho từng bài học trong danh sách bên phải
@@ -21,7 +22,9 @@ const LessonItem = ({ item, isCurrent, onClick }) => (
         <i className={`mr-2 far fa-circle ${isCurrent ? "text-orange-500" : "text-gray-400"}`}></i>
         {item.title}
       </span>
-      <span className="text-xs text-gray-500">{item.videoDuration ? item.videoDuration / 60 + " ph" : ""}</span>
+      <span className="text-xs text-gray-500">
+        {item.videoDuration ? formatDuration(item.videoDuration, 'time') : ""}
+      </span>
     </div>
   </div>
 );
@@ -147,6 +150,10 @@ export default function CourseLearnDetail() {
   const [currentPlayingVideo, setCurrentPlayingVideo] = useState(null);
   const [isAssignmentOpen, setAssignmentOpen] = useState(false);
   const [assignmentSubmissions, setAssignmentSubmissions] = useState([]);
+  
+  // State cho video controls
+  const [videoRef, setVideoRef] = useState(null);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
 
   useEffect(() => {
     if (!course || !course.sections) return;
@@ -177,12 +184,12 @@ export default function CourseLearnDetail() {
     }
   };
 
-  const handleAssignmentSubmit = ({ note, attachment }) => {
-    if (!attachment) return;
+  const handleAssignmentSubmit = ({ link, note }) => {
+    if (!link) return;
 
     const newSubmission = {
       id: `${Date.now()}`,
-      fileName: attachment.name,
+      link,
       note,
       submittedAt: new Date().toISOString(),
       status: "pending",
@@ -190,6 +197,66 @@ export default function CourseLearnDetail() {
 
     setAssignmentSubmissions((prev) => [newSubmission, ...prev]);
   };
+
+  // Video control functions
+  const handleSpeedChange = (speed) => {
+    setPlaybackSpeed(speed);
+    if (videoRef && videoRef.setPlaybackRate) {
+      videoRef.setPlaybackRate(speed);
+    }
+  };
+
+  const handleVideoRef = (ref) => {
+    setVideoRef(ref);
+  };
+
+  // Keyboard shortcuts for video control
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      // Only work when video is focused or no input is focused
+      if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      switch (e.key) {
+        case 'ArrowLeft':
+          e.preventDefault();
+          // Skip backward 10 seconds
+          if (videoRef && videoRef.getCurrentTime && videoRef.seekTo) {
+            const currentTime = videoRef.getCurrentTime();
+            videoRef.seekTo(Math.max(0, currentTime - 10), true);
+          }
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          // Skip forward 10 seconds
+          if (videoRef && videoRef.getCurrentTime && videoRef.seekTo) {
+            const currentTime = videoRef.getCurrentTime();
+            const duration = videoRef.getDuration();
+            videoRef.seekTo(Math.min(duration, currentTime + 10), true);
+          }
+          break;
+        case ' ':
+          e.preventDefault();
+          if (videoRef && videoRef.getPlayerState) {
+            const state = videoRef.getPlayerState();
+            if (state === 1) { // playing
+              videoRef.pauseVideo();
+            } else if (state === 2) { // paused
+              videoRef.playVideo();
+            }
+          }
+          break;
+        default:
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyPress);
+    return () => {
+      document.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [videoRef]);
 
   if (!course) {
     return (
@@ -201,7 +268,7 @@ export default function CourseLearnDetail() {
 
   // Video Embed URL
   const videoEmbedUrl = currentPlayingVideo?.videoId
-    ? `https://www.youtu.be/${currentPlayingVideo?.videoId}`
+    ? `https://www.youtube.com/watch?v=${currentPlayingVideo?.videoId}`
     : "";
 
   return (
@@ -230,6 +297,13 @@ export default function CourseLearnDetail() {
                 src={`${videoEmbedUrl}`}
                 title={currentPlayingVideo?.title}
                 className="w-full h-full"
+                onRef={handleVideoRef}
+                showCustomControls={true}
+                speedControls={{
+                  speedOptions: [0.5, 0.75, 1, 1.25, 1.5, 2],
+                  currentSpeed: playbackSpeed,
+                  onSpeedChange: handleSpeedChange
+                }}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-white text-3xl font-bold p-10">
@@ -267,7 +341,7 @@ export default function CourseLearnDetail() {
                 className="flex items-center gap-1 bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition"
                 onClick={() => setAssignmentOpen(true)}
               >
-                <i className="fas fa-upload"></i> Nộp bài tập
+                <i className="fas fa-book"></i> Nộp bài tập
               </button>
             </div>
           </div>

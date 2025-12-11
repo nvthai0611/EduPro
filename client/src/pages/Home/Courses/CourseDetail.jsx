@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +26,7 @@ import * as orderService from "../../../services/user/orderService";
 import * as freeCourseService from "../../../services/user/freeCourseService";
 import { Link, useParams } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
+import { formatPrice, formatDuration } from "../../../utils/format";
 import "react-toastify/dist/ReactToastify.css";
 
 const CourseDetail = () => {
@@ -57,9 +58,10 @@ const CourseDetail = () => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
-  // Component Course Card
-  const CourseCard = ({ course }) => {
-    const gradientColors = [
+  // Optimized CourseCard component with memoization
+  const CourseCard = React.memo(({ course }) => {
+    // Memoize gradientColors to prevent recreation on every render
+    const gradientColors = useMemo(() => [
       "from-blue-400 to-blue-600",
       "from-purple-400 to-purple-600",
       "from-pink-400 to-pink-600",
@@ -77,7 +79,7 @@ const CourseDetail = () => {
       "from-emerald-400 to-emerald-600",
       "from-amber-400 to-amber-600",
       "from-lime-400 to-lime-600",
-    ];
+    ], []);
     const labelToUse = course.label || course.title;
     const labelLines = labelToUse
       .split("\n")
@@ -88,9 +90,10 @@ const CourseDetail = () => {
     const duration = course.duration || "N/A";
     const star = course?.averageRating;
 
-    const getRandomGradient = () => {
+    // Memoize getRandomGradient function
+    const getRandomGradient = useCallback(() => {
       return gradientColors[Math.floor(Math.random() * gradientColors.length)];
-    };
+    }, [gradientColors]);
 
     const color = useMemo(() => {
       return course.color || getRandomGradient();
@@ -181,7 +184,7 @@ const CourseDetail = () => {
         </div>
       </Link>
     );
-  };
+  });
 
   // Chuyển từ data fix cứng thành state
   const [reviews, setReview] = useState([
@@ -208,15 +211,21 @@ const CourseDetail = () => {
   const [comment, setComment] = useState("");
   const [rating, setRating] = useState(0);
 
-  // Submit function
-  const handleSubmit = () => {
+  // State cho video player
+  const [isVideoPlayerOpen, setIsVideoPlayerOpen] = useState(false);
+  const [currentVideoUrl, setCurrentVideoUrl] = useState("");
+  const [currentVideoTitle, setCurrentVideoTitle] = useState("");
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+
+  // Optimized submit function with useCallback
+  const handleSubmit = useCallback(() => {
     if (!userName || !comment || rating === 0) {
-      alert("Vui lòng nhập đầy đủ thông tin");
+      toast.error("Vui lòng nhập đầy đủ thông tin");
       return;
     }
 
     const newReview = {
-      id: reviews.length + 1,
+      id: Date.now(), // Use timestamp for unique ID
       userName,
       avatar: "https://i.pravatar.cc/150?img=" + Math.floor(Math.random() * 70),
       rating,
@@ -224,11 +233,42 @@ const CourseDetail = () => {
       date: new Date().toLocaleDateString("vi-VN"),
     };
 
-    setReview([...reviews, newReview]);
+    setReview(prev => [...prev, newReview]);
     setUserName("");
     setComment("");
     setRating(0);
-  };
+    toast.success("Đánh giá của bạn đã được gửi!");
+  }, [userName, comment, rating]);
+
+  // Video player functions with speed control
+  const handlePlayVideo = useCallback((videoUrl, title) => {
+    setCurrentVideoUrl(videoUrl);
+    setCurrentVideoTitle(title);
+    setIsVideoPlayerOpen(true);
+    setPlaybackSpeed(1); // Reset speed to normal
+  }, []);
+
+  const handleCloseVideoPlayer = useCallback(() => {
+    setIsVideoPlayerOpen(false);
+    setCurrentVideoUrl("");
+    setCurrentVideoTitle("");
+    setPlaybackSpeed(1);
+  }, []);
+
+  const handleSpeedChange = useCallback((speed) => {
+    setPlaybackSpeed(speed);
+    const video = document.querySelector('.video-player video');
+    if (video) {
+      video.playbackRate = speed;
+    }
+  }, []);
+
+  const handleSkip = useCallback((seconds) => {
+    const video = document.querySelector('.video-player video');
+    if (video) {
+      video.currentTime += seconds;
+    }
+  }, []);
 
   // Check if user has purchased this course
   useEffect(() => {
@@ -306,24 +346,7 @@ const CourseDetail = () => {
     }
   };
 
-  const formatPrice = (price) => {
-    if (price === undefined || price === null) return "Miễn phí";
-    if (price === 0) return "Miễn phí";
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(price);
-  };
-
-  const formatDuration = (minutes) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    if (hours > 0) {
-      return `${hours} giờ ${mins} phút`;
-    }
-    return `${mins} phút`;
-  };
-
+  // Utility functions moved to utils/format.js to avoid duplication
   const getTotalLessons = () => {
     return (
       course?.modules?.reduce(
@@ -365,6 +388,97 @@ const CourseDetail = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <ToastContainer position="top-right" autoClose={3000} />
+      
+      {/* Video Player Modal */}
+      {isVideoPlayerOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4"
+          onClick={handleCloseVideoPlayer}
+        >
+          <div 
+            className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-lg font-semibold">{currentVideoTitle}</h3>
+              <button
+                onClick={handleCloseVideoPlayer}
+                className="text-gray-500 hover:text-gray-700"
+                aria-label="Đóng video"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="p-4">
+              <div className="video-player relative bg-black rounded-lg overflow-hidden">
+                <video
+                  className="w-full h-auto max-h-96"
+                  controls
+                  autoPlay
+                  src={currentVideoUrl}
+                  onLoadedData={(e) => {
+                    e.target.playbackRate = playbackSpeed;
+                  }}
+                >
+                  <source src={currentVideoUrl} type="video/mp4" />
+                  Trình duyệt của bạn không hỗ trợ phát video.
+                </video>
+              </div>
+              
+              {/* Video Controls */}
+              <div className="mt-4 flex items-center justify-between">
+                {/* Speed Control */}
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600">Tốc độ:</span>
+                  <div className="flex space-x-1">
+                    {[0.5, 0.75, 1, 1.25, 1.5, 2].map(speed => (
+                      <button
+                        key={speed}
+                        onClick={() => handleSpeedChange(speed)}
+                        className={`px-2 py-1 text-xs rounded ${
+                          playbackSpeed === speed
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        {speed}x
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Skip Controls */}
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => handleSkip(-10)}
+                    className="flex items-center space-x-1 px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm"
+                    aria-label="Tua lùi 10 giây"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0019 16V8a1 1 0 00-1.6-.8l-5.334 4zM4.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0011 16V8a1 1 0 00-1.6-.8l-5.334 4z" />
+                    </svg>
+                    <span>-10s</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => handleSkip(10)}
+                    className="flex items-center space-x-1 px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm"
+                    aria-label="Tua tới 10 giây"
+                  >
+                    <span>+10s</span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.933 12.8a1 1 0 000-1.6L6.6 7.2A1 1 0 005 8v8a1 1 0 001.6.8l5.333-4zM19.933 12.8a1 1 0 000-1.6l-5.333-4A1 1 0 0013 8v8a1 1 0 001.6.8l5.333-4z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -417,6 +531,7 @@ const CourseDetail = () => {
                   className="bg-white text-blue-600 hover:bg-gray-100"
                   onClick={handleStartLearning}
                   disabled={isEnrolling}
+                  aria-label={freeCourseService.isFreeCourse(course) || isPurchased ? "Bắt đầu học khóa học" : "Mua khóa học"}
                 >
                   {isEnrolling ? (
                     <>
@@ -437,6 +552,7 @@ const CourseDetail = () => {
                   variant="outline"
                   size="lg"
                   className="bg-white text-blue-600 hover:bg-gray-100"
+                  aria-label="Thêm khóa học vào danh sách yêu thích"
                 >
                   <Heart className="w-5 h-5 mr-2" />
                   Yêu thích
@@ -446,6 +562,7 @@ const CourseDetail = () => {
                   variant="outline"
                   size="lg"
                   className="bg-white text-blue-600 hover:bg-gray-100"
+                  aria-label="Chia sẻ khóa học"
                 >
                   <Share2 className="w-5 h-5 mr-2" />
                   Chia sẻ
@@ -456,8 +573,9 @@ const CourseDetail = () => {
             <div className="relative">
               <img
                 src={course.thumbnail || "https://via.placeholder.com/600x400"}
-                alt={course.title}
+                alt={`${course.title} - Ảnh minh họa khóa học`}
                 className="w-full h-80 object-cover rounded-lg shadow-2xl"
+                loading="lazy"
               />
               <div className="absolute inset-0 bg-black/20 rounded-lg"></div>
             </div>
@@ -594,7 +712,16 @@ const CourseDetail = () => {
                           {module.lessons.map((lesson, lessonIndex) => (
                             <div
                               key={lesson._id}
-                              className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg"
+                              className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg cursor-pointer"
+                              onClick={() => {
+                                if (lesson.isFree || isPurchased) {
+                                  // Mock video URL - trong thực tế sẽ lấy từ lesson.videoUrl
+                                  const videoUrl = lesson.videoUrl || `https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4`;
+                                  handlePlayVideo(videoUrl, lesson.title);
+                                } else {
+                                  toast.info("Vui lòng mua khóa học để xem bài học này");
+                                }
+                              }}
                             >
                               <div className="flex items-center space-x-3">
                                 {lesson.isFree ? (
@@ -618,10 +745,7 @@ const CourseDetail = () => {
                               </div>
                               <div className="flex items-center space-x-2">
                                 <span className="text-sm text-gray-500">
-                                  {Math.floor(lesson.videoDuration / 60)}:
-                                  {(lesson.videoDuration % 60)
-                                    .toString()
-                                    .padStart(2, "0")}
+                                  {formatDuration(lesson.videoDuration || 0, 'time')}
                                 </span>
                                 {lesson.resources &&
                                   lesson.resources.length > 0 && (
@@ -660,52 +784,58 @@ const CourseDetail = () => {
 
                 {/* Hiển thị đánh giá của học viên - Data fix cứng, chỉ hiện thị ở UI, không lưu vào BackEnd */}
                 <CardContent>
-                  {/* Hiển thị đánh giá của học viên */}
+                  {/* Add loading state for reviews */}
                   <div className="space-y-6">
-                    {reviews.map((review) => {
-                      return (
-                        <div
-                          key={review.id}
-                          className="flex items-start space-x-4 border-b pb-4"
-                        >
-                          <img
-                            src={review.avatar}
-                            alt={review.userName}
-                            className="w-12 h-12 rounded-full object-cover"
-                          ></img>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                              <h4 className="font-semibold">
+                    {reviews.length === 0 ? (
+                      <div className="text-center py-8">
+                        <p className="text-gray-500">Chưa có đánh giá nào</p>
+                      </div>
+                    ) : (
+                      reviews.map((review) => {
+                        return (
+                          <div
+                            key={review.id}
+                            className="flex items-start space-x-4 border-b pb-4"
+                          >
+                            <img
+                              src={review.avatar}
+                              alt={review.userName}
+                              className="w-12 h-12 rounded-full object-cover"
+                            ></img>
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between">
+                                <h4 className="font-semibold">
+                                  {" "}
+                                  {review.userName}
+                                </h4>
+                                <span className="text-sm text-gray-500">
+                                  {" "}
+                                  {review.date}
+                                </span>
+                              </div>
+                              <div className="flex items-center mt-1">
+                                {[...Array(5)].map((_, index) => {
+                                  return (
+                                    <Star
+                                      key={index}
+                                      className={
+                                        index < review.rating
+                                          ? "w-4 h-4 fill-yellow-400 text-yellow-400"
+                                          : "w-4 h-4 text-gray-300"
+                                      }
+                                    ></Star>
+                                  );
+                                })}
+                              </div>
+                              <p className="text-gray-700 mt-2">
                                 {" "}
-                                {review.userName}
-                              </h4>
-                              <span className="text-sm text-gray-500">
-                                {" "}
-                                {review.date}
-                              </span>
+                                {review.comment}
+                              </p>
                             </div>
-                            <div className="flex items-center mt-1">
-                              {[...Array(5)].map((_, index) => {
-                                return (
-                                  <Star
-                                    key={index}
-                                    className={
-                                      index < review.rating
-                                        ? "w-4 h-4 fill-yellow-400 text-yellow-400"
-                                        : "w-4 h-4 text-gray-300"
-                                    }
-                                  ></Star>
-                                );
-                              })}
-                            </div>
-                            <p className="text-gray-700 mt-2">
-                              {" "}
-                              {review.comment}
-                            </p>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                    )}
                   </div>
                 </CardContent>
 
@@ -875,8 +1005,9 @@ const CourseDetail = () => {
                 <div className="text-center">
                   <img
                     src={course.instructorId?.image || 'https://i.pravatar.cc'}
-                    alt="Hoàng An IT"
+                    alt={`${course.instructorId?.fullName || 'Giảng viên'} - Ảnh đại diện`}
                     className="w-20 h-20 rounded-full mx-auto mb-4"
+                    loading="lazy"
                   />
                   <h4 className="font-semibold text-lg">{course.instructorId?.fullName}</h4>
                   <p className="text-gray-600 text-sm mb-4">
