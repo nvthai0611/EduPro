@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { courseService } from '../services/admin/courseService';
 import sectionService from '../services/admin/sectionService';
 import lessonService from '../services/admin/lessonService';
+import { articleService } from '../services/articleService';
 import { toast } from 'react-toastify';
 
 // Query keys
@@ -26,6 +27,13 @@ export const lessonKeys = {
   byCourse: (courseId) => [...lessonKeys.all, 'course', courseId],
   bySection: (sectionId) => [...lessonKeys.all, 'section', sectionId],
   detail: (id) => [...lessonKeys.all, 'detail', id],
+};
+
+export const articleKeys = {
+  all: ['articles'],
+  byCourse: (courseId) => [...articleKeys.all, 'course', courseId],
+  bySection: (sectionId) => [...articleKeys.all, 'section', sectionId],
+  detail: (id) => [...articleKeys.all, 'detail', id],
 };
 
 // Home page query keys for cross-component cache invalidation
@@ -526,6 +534,138 @@ export const useDeleteLesson = () => {
     onError: (error) => {
       console.error('Error deleting lesson:', error);
       toast.error(error?.message || 'Không thể xóa bài học!');
+    },
+  });
+};
+
+// ==================== ARTICLE HOOKS ====================
+
+/**
+ * Hook to fetch articles by section ID
+ */
+export const useArticlesBySection = (sectionId, options = {}) => {
+  return useQuery({
+    queryKey: articleKeys.bySection(sectionId),
+    queryFn: async () => {
+      const response = await articleService.getArticlesBySection(sectionId);
+      return response?.data || response;
+    },
+    enabled: !!sectionId,
+    ...options,
+  });
+};
+
+/**
+ * Hook to fetch single article by ID
+ */
+export const useArticle = (articleId, options = {}) => {
+  return useQuery({
+    queryKey: articleKeys.detail(articleId),
+    queryFn: async () => {
+      const response = await articleService.getArticleById(articleId);
+      return response?.data || response;
+    },
+    enabled: !!articleId,
+    ...options,
+  });
+};
+
+/**
+ * Hook to create new article
+ */
+export const useCreateArticle = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (articleData) => {
+      const response = await articleService.createArticle(articleData);
+      return response?.data || response;
+    },
+    onSuccess: (data, variables) => {
+      const { courseId, sectionId } = variables;
+      
+      // Invalidate relevant queries
+      if (courseId) {
+        queryClient.invalidateQueries({ queryKey: articleKeys.byCourse(courseId) });
+        queryClient.invalidateQueries({ queryKey: sectionKeys.withLessons(courseId) });
+      }
+      if (sectionId) {
+        queryClient.invalidateQueries({ queryKey: articleKeys.bySection(sectionId) });
+        queryClient.invalidateQueries({ queryKey: sectionKeys.detail(sectionId) });
+      }
+      
+      toast.success('Thêm bài viết mới thành công!');
+    },
+    onError: (error) => {
+      console.error('Error creating article:', error);
+      toast.error(error?.message || 'Không thể thêm bài viết!');
+    },
+  });
+};
+
+/**
+ * Hook to update article
+ */
+export const useUpdateArticle = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, data }) => {
+      const response = await articleService.updateArticle(id, data);
+      return response?.data || response;
+    },
+    onSuccess: (data, variables) => {
+      const courseId = data?.courseId;
+      const sectionId = data?.sectionId;
+      
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: articleKeys.detail(variables.id) });
+      if (courseId) {
+        queryClient.invalidateQueries({ queryKey: articleKeys.byCourse(courseId) });
+        queryClient.invalidateQueries({ queryKey: sectionKeys.withLessons(courseId) });
+      }
+      if (sectionId) {
+        queryClient.invalidateQueries({ queryKey: articleKeys.bySection(sectionId) });
+      }
+      
+      toast.success('Cập nhật bài viết thành công!');
+    },
+    onError: (error) => {
+      console.error('Error updating article:', error);
+      toast.error(error?.message || 'Không thể cập nhật bài viết!');
+    },
+  });
+};
+
+/**
+ * Hook to delete article
+ */
+export const useDeleteArticle = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, courseId, sectionId }) => {
+      const response = await articleService.deleteArticle(id);
+      return { ...response, courseId, sectionId };
+    },
+    onSuccess: (data) => {
+      const { courseId, sectionId } = data;
+      
+      // Invalidate relevant queries
+      if (courseId) {
+        queryClient.invalidateQueries({ queryKey: articleKeys.byCourse(courseId) });
+        queryClient.invalidateQueries({ queryKey: sectionKeys.withLessons(courseId) });
+      }
+      if (sectionId) {
+        queryClient.invalidateQueries({ queryKey: articleKeys.bySection(sectionId) });
+        queryClient.invalidateQueries({ queryKey: sectionKeys.detail(sectionId) });
+      }
+      
+      toast.success('Xóa bài viết thành công!');
+    },
+    onError: (error) => {
+      console.error('Error deleting article:', error);
+      toast.error(error?.message || 'Không thể xóa bài viết!');
     },
   });
 };
