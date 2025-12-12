@@ -74,7 +74,7 @@ const VideoPlayer = ({ src, poster, title, className = "", onRef, showCustomCont
 
   const ytOptions = {
     height: "100%",
-    width: "100%",
+    width: "100%", 
     playerVars: {
       autoplay: 0,
       controls: 0, // tắt UI gốc Youtube
@@ -268,7 +268,7 @@ const VideoPlayer = ({ src, poster, title, className = "", onRef, showCustomCont
                   />
                 </div>
 
-                <div className="text-sm w-[100px]">
+                <div className="text-sm w-[100%]">
                   {formatTime(currentTime)} / {formatTime(duration)}
                 </div>
               </div>

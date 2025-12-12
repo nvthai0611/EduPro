@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { courseService } from "../../services/courseService";
-import { lessonService } from "../../services/lessonService";
+import { useCourseBySlug, useSectionsWithLessons } from "../../hooks/useCourseQueries";
 import * as orderService from "../../services/user/orderService";
 import * as freeCourseService from "../../services/user/freeCourseService";
 import { useAuth } from "../../hooks/useAuth";
@@ -39,7 +38,7 @@ const LessonItem = ({ item, isCurrent, onClick }) => (
 
 // Component cho từng Section (Chương)
 const CourseSection = ({ section, currentPlayingVideo, onLessonClick }) => {
-  const sectionItems = section.items || [];
+  const sectionItems = section.lessons || []; // Sử dụng lessons thay vì items
 
   // Tính toán số bài đã hoàn thành và tổng số bài trong section
   const totalItems = sectionItems.length;
@@ -66,12 +65,10 @@ const CourseSection = ({ section, currentPlayingVideo, onLessonClick }) => {
       {isOpen && sectionItems.length > 0 && (
         <div>
           {sectionItems.map((item, index) => (
-            console.log(item),
-
             <LessonItem
               key={item._id || index}
               item={item}
-              isCurrent={item.title === currentPlayingVideo?.title}
+              isCurrent={item._id === currentPlayingVideo?._id}
               onClick={onLessonClick}
             />
           ))}
@@ -93,8 +90,20 @@ const formatDate = (isoDate) => {
 export default function CourseLearnDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const [course, setCourse] = useState(null);
   const { user } = useAuth();
+
+  // TanStack Query hooks - giống CourseBuilder
+  const { data: course, isLoading: courseLoading, error: courseError } = useCourseBySlug(slug, {
+    onError: (error) => {
+      console.error('Error fetching course:', error);
+    }
+  });
+
+  const courseId = course?._id;
+  const { data: sections = [], isLoading: sectionsLoading, error: sectionsError } = useSectionsWithLessons(courseId);
+
+  // Local states
+  const [accessChecked, setAccessChecked] = useState(false);
 
   // Tạo pop up hỏi đáp
   const [showQABox, setShowQABox] = useState(false);
@@ -109,6 +118,11 @@ export default function CourseLearnDetail() {
   const [currentPlayingVideo, setCurrentPlayingVideo] = useState(null);
   const [isAssignmentOpen, setAssignmentOpen] = useState(false);
   const [assignmentSubmissions, setAssignmentSubmissions] = useState([]);
+  
+  // State cho video controls
+  const [videoRef, setVideoRef] = useState(null);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [showVideoSettings, setShowVideoSettings] = useState(false);
 
   const handleSubmitQuestion = () => {
     if (!questionText.trim()) return;
@@ -148,66 +162,34 @@ export default function CourseLearnDetail() {
     setShowNoteBox(false);
   };
 
+  // Access checking logic using TanStack Query data
   useEffect(() => {
-    // Fetch course data from API
-    const fetchCourse = async () => {
+    const checkCourseAccess = async () => {
+      if (!course || !user || accessChecked) return;
+
       try {
-        const responeCourse = await courseService.getCourseBySlug(slug);
-        const responeLessons = await lessonService.getLessonsByCourse(
-          responeCourse.data._id
+        // Check if user has purchased this course
+        const hasPurchased = await orderService.checkPurchase(
+          user?.userId,
+          course._id
         );
 
-        // Check if user has purchased this course
-        if (user) {
-          const hasPurchased = await orderService.checkPurchase(
-            user?.userId,
-            responeCourse.data._id
-          );
+        // Check if course is free
+        const isFree = freeCourseService.isFreeCourse(course);
 
-          // Check if course is free
-          const isFree = freeCourseService.isFreeCourse(responeCourse.data);
-
-          if (!hasPurchased.purchased && !isFree) {
-            window.location.href = `/courses/${slug}`;
-            return;
-          } else {
-            const sectionsMap = {};
-
-            for (const lesson of responeLessons) {
-              const sec = lesson.sectionId; // thông tin section trong từng lession
-
-              // nhóm lesson theo id của section
-              if (!sectionsMap[sec._id]) {
-                sectionsMap[sec._id] = {
-                  _id: sec._id,
-                  title: sec.title,
-                  description: sec.description,
-                  items: [],
-                };
-              }
-
-              sectionsMap[sec._id].items.push(lesson);
-            }
-
-            const dataFinal = {
-              ...responeCourse.data,
-              sections: Object.values(sectionsMap),
-            };
-
-            setCourse(dataFinal);
-          }
+        if (!hasPurchased.purchased && !isFree) {
+          window.location.href = `/courses/${slug}`;
+          return;
         }
+
+        setAccessChecked(true);
       } catch (error) {
-        console.error("Error fetching course data:", error);
+        console.error("Error checking course access:", error);
       }
     };
 
-    fetchCourse();
-  }, [slug, user]);
-
-  // State cho video controls
-  const [videoRef, setVideoRef] = useState(null);
-  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+    checkCourseAccess();
+  }, [course, user, slug, accessChecked]);
 
   // --- NEW: left assignment panel state (UI only, in-memory) ---
   const [showLeftAssignmentPanel, setShowLeftAssignmentPanel] = useState(false);
@@ -313,32 +295,36 @@ export default function CourseLearnDetail() {
   // --- END NEW ---
 
   useEffect(() => {
-    if (!course || !course.sections) return;
+    if (!sections || sections.length === 0) return;
 
-    for (const section of course.sections) {
-      if (section.items?.length) {
-        const first = section.items.find((item) => item.videoUrl ? item?.videoUrl : item?.content);
+    for (const section of sections) {
+      if (section.lessons?.length) {
+        const first = section.lessons.find((item) => item.videoUrl ? item?.videoUrl : item?.content);
         if (first) {
           setCurrentPlayingVideo({
+            _id: first._id,
             title: first.title,
-            videoId: first.videoUrl.split("/")[first.videoUrl.split("/").length - 1],
+            videoId: first.videoUrl ? first.videoUrl.split("/")[first.videoUrl.split("/").length - 1] : null,
             content: first.content,
             updatedAt: first.updatedAt,
+            type: first.type || (first.videoUrl ? 'video' : 'article')
           });
           break;
         }
       }
     }
-  }, [course]);
+  }, [sections]);
 
-  // Xử lý khi click vào một bài học
-  const handleLessonClick = (lesson) => {
-    if (lesson.videoUrl ? lesson.videoUrl : lesson.content) {
+  // Xử lý khi click vào một bài học hoặc article
+  const handleLessonClick = (item) => {
+    if (item.videoUrl || item.content) {
       setCurrentPlayingVideo({
-        title: lesson.title,
-        videoId: lesson.videoUrl.split("/")[lesson.videoUrl.split("/").length - 1],
-        content: lesson.content,
-        updatedAt: lesson.updatedAt,
+        _id: item._id,
+        title: item.title,
+        videoId: item.videoUrl ? item.videoUrl.split("/")[item.videoUrl.split("/").length - 1] : null,
+        content: item.content,
+        updatedAt: item.updatedAt,
+        type: item.type || (item.videoUrl ? 'video' : 'article')
       });
     }
   };
@@ -363,10 +349,17 @@ export default function CourseLearnDetail() {
     if (videoRef && videoRef.setPlaybackRate) {
       videoRef.setPlaybackRate(speed);
     }
+    setShowVideoSettings(false);
   };
 
   const handleVideoRef = (ref) => {
     setVideoRef(ref);
+  };
+
+  const handleVideoReady = () => {
+    if (videoRef && playbackSpeed !== 1) {
+      videoRef.setPlaybackRate(playbackSpeed);
+    }
   };
 
   // Keyboard shortcuts for video control
@@ -416,6 +409,49 @@ export default function CourseLearnDetail() {
       document.removeEventListener('keydown', handleKeyPress);
     };
   }, [videoRef]);
+
+  // Đóng video settings khi click bên ngoài
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showVideoSettings && !event.target.closest('.video-settings')) {
+        setShowVideoSettings(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showVideoSettings]);
+
+  // Loading và error handling
+  if (courseLoading || sectionsLoading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
+        <span className="ml-2 text-gray-600">Đang tải khóa học...</span>
+      </div>
+    );
+  }
+
+  if (courseError || sectionsError) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-2">Có lỗi xảy ra</h2>
+          <p className="text-gray-600 mb-4">
+            {courseError?.message || sectionsError?.message || "Không thể tải dữ liệu khóa học"}
+          </p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Thử lại
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!course) {
     return (
@@ -635,35 +671,48 @@ export default function CourseLearnDetail() {
             </button>
           </div>
 
-          {/* Video Player - Sử dụng aspect-video để responsive */}
-          <div className="w-full bg-white">
-            <div className="aspect-video">
-              {videoEmbedUrl ? (
-                <VideoPlayer
-                  src={`${videoEmbedUrl}`}
-                  title={currentPlayingVideo?.title}
-                  className="w-full h-full"
-                />
-              ) : (
-                <>
-                  {finalContent ? (
-                    <div className="text-black bg-white p-[50px]">{parse(finalContent)}</div>
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-white text-3xl font-bold p-10">
-                      <div className="text-center">
-                        <h1 className="text-4xl font-bold mb-4">
-                          Không có video để phát
-                        </h1>
-                        <p className="text-lg">
-                          Hãy chọn một bài học từ danh sách bên phải.
-                        </p>
-                      </div>
+          {/* Video Player hoặc Article Content - Tăng kích thước */}
+          <div className="w-full bg-black">
+            <div className="aspect-[16/9] min-h-[600px] w-full">
+              {currentPlayingVideo?.type === 'article' || (!videoEmbedUrl && finalContent) ? (
+                <div className="w-full h-full bg-white overflow-y-auto">
+                  <div className="p-8 max-w-4xl mx-auto">
+                    <h1 className="text-3xl font-bold mb-6 text-gray-900">{currentPlayingVideo?.title}</h1>
+                    <div className="prose prose-lg max-w-none text-gray-800">
+                      {finalContent ? parse(finalContent) : 'Nội dung đang được tải...'}
                     </div>
-                  )}
-                </>
+                  </div>
+                </div>
+              ) : videoEmbedUrl ? (
+                <div className="relative w-full h-full">
+                  <VideoPlayer
+                    src={`${videoEmbedUrl}`}
+                    title={currentPlayingVideo?.title}
+                    className="w-full h-full min-h-[600px]"
+                    onReady={handleVideoReady}
+                    onRef={handleVideoRef}
+                    showCustomControls={true}
+                    speedControls={{
+                      speedOptions: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2],
+                      currentSpeed: playbackSpeed,
+                      onSpeedChange: handleSpeedChange
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-600 bg-gray-100">
+                  <div className="text-center">
+                    <h1 className="text-4xl font-bold mb-4">
+                      Không có nội dung để hiển thị
+                    </h1>
+                    <p className="text-lg">
+                      Hãy chọn một bài học từ danh sách bên phải.
+                    </p>
+                  </div>
+                </div>
               )}
             </div>
-          </div >
+          </div>
 
           {/* Lesson Details */}
           <div className="p-6 bg-white border-t border-gray-200 shadow-sm flex-1" >
@@ -852,8 +901,8 @@ export default function CourseLearnDetail() {
 
           {/* List Sections */}
           {
-            course.sections &&
-            course.sections.map((section) => (
+            sections &&
+            sections.map((section) => (
               <CourseSection
                 key={section._id}
                 section={section}
