@@ -64,7 +64,7 @@ const MyCourses = () => {
 
   const handleContinueLearning = (course) => {
     // Redirect to learning page
-    window.location.href = `/courses/learn/${course.slug}`;
+    window.location.href = `/learn/${course.slug}`;
   };
 
   const handleViewCourse = (course) => {

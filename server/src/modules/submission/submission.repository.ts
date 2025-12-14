@@ -15,7 +15,7 @@ export default {
   // Find all comments for a lesson
   async findByLesson(lessonId: string): Promise<ILessonCommentDocument[]> {
     return await LessonComment.find({ lessonId })
-      .populate('studentId', 'fullName avatar')
+      .populate('studentId', 'fullName avatar role') // Include role field
       .populate('teacherReplies.teacherId', 'fullName avatar')
       .sort({ createdAt: -1 });
   },
@@ -24,7 +24,7 @@ export default {
   async updateComment(lessonId: string, studentId: string, content: string): Promise<ILessonCommentDocument | null> {
     return await LessonComment.findOneAndUpdate(
       { lessonId, studentId },
-      { content },
+      { content, isEdited: true }, // Set isEdited to true
       { new: true }
     ).populate('studentId', 'fullName avatar');
   },

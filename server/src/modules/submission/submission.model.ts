@@ -13,6 +13,7 @@ export interface ILessonComment {
   teacherReplies?: ITeacherReply[];
   createdAt?: Date;
   updatedAt?: Date;
+  isEdited?: boolean; // New field to track if the comment is edited
 }
 
 export interface ILessonCommentDocument extends ILessonComment, Document {}
@@ -32,6 +33,7 @@ const lessonCommentSchema = new mongoose.Schema<ILessonCommentDocument>(
     studentId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     content: { type: String, required: true },
     teacherReplies: { type: [teacherReplySchema], default: [] },
+    isEdited: { type: Boolean, default: false }, // New field to track if the comment is edited
   },
   { collection: "LessonComment", timestamps: true }
 );

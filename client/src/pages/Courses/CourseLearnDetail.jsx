@@ -8,7 +8,7 @@ import { useAuth } from "../../hooks/useAuth";
 import VideoPlayer from "../../components/Video/VideoPlayer";
 import AssignmentSubmission from "../../components/Assignment/AssignmentSubmission";
 import LessonCommentDialog from "../../components/LessonComment/LessonCommentDialog";
-import { useMyLessonComment, useCreateLessonComment, useUpdateLessonComment, useCommentsForLesson } from "../../hooks/useLessonCommentQueries";
+import { useMyLessonComment, useCreateLessonComment, useUpdateLessonComment, useCommentsForLesson, useTeacherReply } from "../../hooks/useLessonCommentQueries";
 import { Loader2 } from "lucide-react";
 import parse from 'html-react-parser';
 
@@ -127,6 +127,7 @@ export default function CourseLearnDetail() {
   const allCommentsQuery = useCommentsForLesson(currentLessonId, { enabled: !!currentLessonId });
   const createCommentMutation = useCreateLessonComment();
   const updateCommentMutation = useUpdateLessonComment();
+  const teacherReplyMutation = useTeacherReply();
   
   // State cho video controls
   const [videoRef, setVideoRef] = useState(null);
@@ -179,12 +180,23 @@ export default function CourseLearnDetail() {
     return updateCommentMutation.mutateAsync({ lessonId, payload });
   };
 
+  const handleTeacherReply = async ({ commentId, payload }) => {
+    return teacherReplyMutation.mutateAsync({ commentId, payload });
+  };
+
   // Access checking logic using TanStack Query data
   useEffect(() => {
     const checkCourseAccess = async () => {
       if (!course || !user || accessChecked) return;
 
       try {
+        // Admin/Instructor/Manager can access all courses (they created/manage them)
+        const isStaff = user?.role && ['admin', 'manager', 'instructor'].includes(user.role);
+        if (isStaff) {
+          setAccessChecked(true);
+          return;
+        }
+
         // Check if user has purchased this course
         const hasPurchased = await orderService.checkPurchase(
           user?.userId,
@@ -718,6 +730,7 @@ export default function CourseLearnDetail() {
         onOpenChange={setCommentDialogOpen}
         lessonId={currentLessonId}
         lessonTitle={currentPlayingVideo?.title}
+        onTeacherReply={handleTeacherReply}
         myComment={myCommentQuery.data}
         allComments={allCommentsQuery.data || []}
         onCreateComment={handleCreateComment}
