@@ -70,3 +70,22 @@ export const useCommentsForLesson = (lessonId, options = {}) => {
     ...options,
   });
 };
+
+export const useTeacherReply = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ commentId, payload }) => {
+      const res = await lessonCommentService.teacherReply(commentId, payload);
+      return res;
+    },
+    onSuccess: (data, vars) => {
+      // Invalidate all lesson comments queries to refresh the list
+      qc.invalidateQueries({ queryKey: ['lessonComments'] });
+      toast.success('Phản hồi thành công');
+    },
+    onError: (err) => {
+      console.error('Error replying to comment', err);
+      toast.error(err?.response?.data?.message || err?.message || 'Không thể phản hồi');
+    }
+  });
+};
