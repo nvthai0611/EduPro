@@ -16,6 +16,7 @@ import { lessonRoutes } from "./v1/admin/lesson.routes";
 import { articleRoutes } from "./v1/article.routes";
 import { articleAdminRoutes } from "./v1/admin/article.routes";
 import { orderAdminRoutes } from "./v1/admin/order.route";
+import { submissionRoutes } from "./v1/submission.routes";
 import { limitRequestsMiddleware } from "../middlewares/auth/limitRequest.middleware";
 import blockDirectAccess from "../middlewares/auth/blockDirectAccess";
 
@@ -65,6 +66,10 @@ export const apiRouter = (io?: Server) => {
 
   // Article content routes for learners
   router.use("/articles", articleRoutes);
+  
+  // Lesson comments (student comments + teacher replies)
+  router.use("/lessons", submissionRoutes);
+  
   // Course routes
   router.use("/admin/order", orderAdminRoutes);
 

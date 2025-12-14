@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { createPortal } from "react-dom";
+// import { createPortal } from "react-dom";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useCourseBySlug, useSectionsWithLessons } from "../../hooks/useCourseQueries";
 import * as orderService from "../../services/user/orderService";
@@ -7,7 +7,8 @@ import * as freeCourseService from "../../services/user/freeCourseService";
 import { useAuth } from "../../hooks/useAuth";
 import VideoPlayer from "../../components/Video/VideoPlayer";
 import AssignmentSubmission from "../../components/Assignment/AssignmentSubmission";
-import { formatDuration } from "../../utils/format";
+import LessonCommentDialog from "../../components/LessonComment/LessonCommentDialog";
+import { useMyLessonComment, useCreateLessonComment, useUpdateLessonComment, useCommentsForLesson } from "../../hooks/useLessonCommentQueries";
 import { Loader2 } from "lucide-react";
 import parse from 'html-react-parser';
 
@@ -119,6 +120,14 @@ export default function CourseLearnDetail() {
   const [isAssignmentOpen, setAssignmentOpen] = useState(false);
   const [assignmentSubmissions, setAssignmentSubmissions] = useState([]);
   
+  // Lesson comment state
+  const [isCommentDialogOpen, setCommentDialogOpen] = useState(false);
+  const currentLessonId = currentPlayingVideo?._id;
+  const myCommentQuery = useMyLessonComment(currentLessonId, { enabled: !!currentLessonId });
+  const allCommentsQuery = useCommentsForLesson(currentLessonId, { enabled: !!currentLessonId });
+  const createCommentMutation = useCreateLessonComment();
+  const updateCommentMutation = useUpdateLessonComment();
+  
   // State cho video controls
   const [videoRef, setVideoRef] = useState(null);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
@@ -162,6 +171,14 @@ export default function CourseLearnDetail() {
     setShowNoteBox(false);
   };
 
+  const handleCreateComment = async ({ lessonId, payload }) => {
+    return createCommentMutation.mutateAsync({ lessonId, payload });
+  };
+
+  const handleUpdateComment = async ({ lessonId, payload }) => {
+    return updateCommentMutation.mutateAsync({ lessonId, payload });
+  };
+
   // Access checking logic using TanStack Query data
   useEffect(() => {
     const checkCourseAccess = async () => {
@@ -191,51 +208,16 @@ export default function CourseLearnDetail() {
     checkCourseAccess();
   }, [course, user, slug, accessChecked]);
 
-  // --- NEW: left assignment panel state (UI only, in-memory) ---
-  const [showLeftAssignmentPanel, setShowLeftAssignmentPanel] = useState(false);
 
-  // selected assignment for current video
-  const [selectedAssignmentId, setSelectedAssignmentId] = useState(null);
 
-  // helper: sample assignments per video (UI-only). Thay bằng dữ liệu thật nếu cần.
-  const getAssignmentsForVideo = (videoId) => {
-    if (!videoId) return [];
-    // ví dụ mặc định 3 bài tập; có thể thay đổi nội dung/prompt tùy video
-    return [
-      {
-        id: "a1",
-        title: "Bài tập 1",
-        prompt:
-          "Viết 1 đoạn tóm tắt 200-300 chữ về nội dung video. Nếu nộp file, chấp nhận .pdf hoặc .docx",
-      },
-      {
-        id: "a2",
-        title: "Bài tập 2",
-        prompt:
-          "Trả lời 3 câu hỏi ngắn liên quan đến lý thuyết trong video (mỗi câu 1-2 câu).",
-      },
-      {
-        id: "a3",
-        title: "Bài tập 3",
-        prompt:
-          "Chuẩn bị 1 file báo cáo ngắn (.pdf hoặc .docx) nêu ứng dụng thực tế của kiến thức trong video.",
-      },
-    ];
-  };
-
-  // store in-memory answers keyed by `${videoId}:${assignmentId}`
-  const [leftPanelAnswers, setLeftPanelAnswers] = useState({
-    // example:
-    // "video123:a1": { textAnswers: [...], fileAnswers: [...] }
-  });
 
   const fileInputRef = useRef(null);
 
   // when current video changes, select first assignment by default
   useEffect(() => {
     const vid = currentPlayingVideo?.videoId;
-    const assigns = getAssignmentsForVideo(vid);
-    setSelectedAssignmentId(assigns[0]?.id || null);
+    // const assigns = getAssignmentsForVideo(vid);
+    // setSelectedAssignmentId(assigns[0]?.id || null);
   }, [currentPlayingVideo]);
 
   const handleLeftTextSubmit = () => {
@@ -470,189 +452,7 @@ export default function CourseLearnDetail() {
 
   return (
     <>
-      {/* --- NEW: Left fixed toggle button and panel --- */}
-      {createPortal(
-        <button
-          onClick={() => setShowLeftAssignmentPanel((s) => !s)}
-          className="fixed left-3 top-3 z-[9999] bg-orange-500 text-white px-3 py-2 rounded-r-lg shadow-lg hover:bg-orange-600 transition"
-          title="Bài tập cho video"
-          style={{ position: "fixed" }}
-        >
-          Bài tập
-        </button>,
-        document.body
-      )}
-
-      <div>
-        {/* Panel cố định; bên trong có list nhiều bài tập cho 1 video */}
-        <div
-          className={`fixed left-0 top-16 z-40 bg-white w-[910px] shadow-xl rounded-r transition-transform ${showLeftAssignmentPanel ? "translate-x-0" : "-translate-x-full"
-            }`}
-          style={{ maxHeight: "calc(100vh - 4rem)", overflow: "auto" }}
-        >
-          <div className="p-4 border-b flex items-start justify-between">
-            <div>
-              <h3 className="text-lg font-semibold">Bài tập</h3>
-              <p className="text-sm text-gray-500">
-                {currentPlayingVideo?.title || "Chưa chọn video"}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowLeftAssignmentPanel(false)}
-                className="text-gray-500 hover:text-gray-800"
-                title="Đóng"
-              >
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-          </div>
-
-          {/* List bài tập */}
-          <div className="p-3 border-b bg-gray-50">
-            <div className="flex flex-col gap-2">
-              {getAssignmentsForVideo(currentPlayingVideo?.videoId).map(
-                (a) => (
-                  <button
-                    key={a.id}
-                    onClick={() => setSelectedAssignmentId(a.id)}
-                    className={`text-left px-3 py-2 rounded ${selectedAssignmentId === a.id
-                      ? "bg-orange-100 text-orange-700 font-semibold"
-                      : "hover:bg-gray-100 text-gray-700"
-                      }`}
-                  >
-                    {a.title}
-                  </button>
-                )
-              )}
-
-              {getAssignmentsForVideo(currentPlayingVideo?.videoId).length ===
-                0 && (
-                  <div className="text-sm text-gray-500 px-3 py-2">
-                    Chưa có bài tập cho video này.
-                  </div>
-                )}
-            </div>
-          </div>
-
-          {/* Nội dung bài tập được chọn */}
-          <div className="p-4">
-            {selectedAssignmentId ? (
-              (() => {
-                const assigns = getAssignmentsForVideo(
-                  currentPlayingVideo?.videoId
-                );
-                const currentAssign = assigns.find(
-                  (x) => x.id === selectedAssignmentId
-                );
-                const key = `${currentPlayingVideo?.videoId}:${selectedAssignmentId}`;
-                const textAnswers = leftPanelAnswers[key]?.textAnswers || [];
-                const fileAnswers = leftPanelAnswers[key]?.fileAnswers || [];
-
-                return (
-                  <>
-                    <div className="mb-4">
-                      <h4 className="font-semibold mb-2">
-                        {currentAssign?.title}
-                      </h4>
-                      <div className="p-3 border rounded bg-gray-50 text-sm text-gray-800">
-                        {currentAssign?.prompt}
-                      </div>
-                    </div>
-
-                    <div className="mb-4">
-                      <h4 className="font-semibold mb-2">
-                        Trả lời bằng văn bản
-                      </h4>
-                      <textarea
-                        id="left-assignment-textarea"
-                        className="w-full p-3 border rounded focus:ring-2 focus:ring-orange-300"
-                        rows="5"
-                        placeholder="Viết câu trả lời trực tiếp ở đây..."
-                      ></textarea>
-                      <div className="flex justify-end mt-2">
-                        <button
-                          onClick={handleLeftTextSubmit}
-                          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-                        >
-                          Gửi trả lời
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="mb-6">
-                      <h4 className="font-semibold mb-2">Hoặc tải file</h4>
-                      <form onSubmit={handleLeftFileSubmit}>
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          className="w-full"
-                          accept=".pdf,.doc,.docx,.txt"
-                        />
-                        <div className="flex justify-end mt-2">
-                          <button
-                            type="submit"
-                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                          >
-                            Tải lên
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-
-                    <div>
-                      <h4 className="font-semibold mb-2">Các nộp tạm của bạn</h4>
-
-                      {textAnswers.length + fileAnswers.length === 0 && (
-                        <p className="text-sm text-gray-500">
-                          Bạn chưa nộp gì cho bài tập này.
-                        </p>
-                      )}
-
-                      <div className="space-y-3">
-                        {textAnswers.map((t) => (
-                          <div
-                            key={t.id}
-                            className="p-3 border rounded bg-gray-50 text-sm"
-                          >
-                            <div className="text-xs text-gray-400 mb-1">
-                              {formatDate(t.createdAt)}
-                            </div>
-                            <div>{t.text}</div>
-                          </div>
-                        ))}
-
-                        {fileAnswers.map((f) => (
-                          <div
-                            key={f.id}
-                            className="p-3 border rounded bg-gray-50 text-sm flex items-center justify-between"
-                          >
-                            <div>
-                              <div className="font-medium">{f.fileName}</div>
-                              <div className="text-xs text-gray-400">
-                                {formatDate(f.createdAt)}
-                              </div>
-                            </div>
-                            <div>
-                              <button className="text-blue-600 text-sm" disabled>
-                                Tải xuống
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                );
-              })()
-            ) : (
-              <div className="text-sm text-gray-500">
-                Vui lòng chọn 1 bài tập.
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+     
       {/* --- END NEW --- */}
 
       <div className="flex flex-col lg:flex-row w-full min-h-screen bg-gray-100">
@@ -741,9 +541,9 @@ export default function CourseLearnDetail() {
                 </button>
                 <button
                   className="flex items-center gap-1 bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition"
-                  onClick={() => setAssignmentOpen(true)}
+                  onClick={() => setCommentDialogOpen(true)}
                 >
-                  <i className="fas fa-upload"></i> Nộp bài tập
+                  <i className="fas fa-comment-dots"></i> Nhận xét bài học
                 </button>
               </div>
             </div>
@@ -913,12 +713,15 @@ export default function CourseLearnDetail() {
           }
         </div >
       </div >
-      <AssignmentSubmission
-        open={isAssignmentOpen}
-        onOpenChange={setAssignmentOpen}
-        onSubmit={handleAssignmentSubmit}
-        submissions={assignmentSubmissions}
+      <LessonCommentDialog
+        open={isCommentDialogOpen}
+        onOpenChange={setCommentDialogOpen}
+        lessonId={currentLessonId}
         lessonTitle={currentPlayingVideo?.title}
+        myComment={myCommentQuery.data}
+        allComments={allCommentsQuery.data || []}
+        onCreateComment={handleCreateComment}
+        onUpdateComment={handleUpdateComment}
       />
     </>
   );
