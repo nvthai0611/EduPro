@@ -1,10 +1,12 @@
+import { encryptData } from "../../utils/encryption";
 import LessonService from "./lesson.service";
 
 export const getLessonsByCourseId = async (req: any, res: any) => {
   try {
     const courseId = req.params.courseId;
     const lessons = await LessonService.getLessonsByCourseId(courseId);
-    res.status(200).json({ success: true, data: lessons });
+    res.setHeader("x-encrypted", "true");
+    res.status(200).json({ success: true, encryptedData: encryptData(lessons) });
   } catch (error: any) {
     res.status(400).json({ success: false, message: error.message });
   }

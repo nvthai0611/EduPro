@@ -5,7 +5,8 @@ export const lessonService = {
   getLessonsByCourse: async (courseId) => {
     try {
       const response = await apiClient.get(`/courses/${courseId}/lessons`);
-      return response.data;
+
+      return response;
     } catch (error) {
       console.error('Error fetching lessons:', error);
       throw error;

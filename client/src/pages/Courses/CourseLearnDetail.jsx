@@ -66,8 +66,6 @@ const CourseSection = ({ section, currentPlayingVideo, onLessonClick }) => {
       {isOpen && sectionItems.length > 0 && (
         <div>
           {sectionItems.map((item, index) => (
-            console.log(item),
-
             <LessonItem
               key={item._id || index}
               item={item}
@@ -153,19 +151,18 @@ export default function CourseLearnDetail() {
     const fetchCourse = async () => {
       try {
         const responeCourse = await courseService.getCourseBySlug(slug);
-        const responeLessons = await lessonService.getLessonsByCourse(
-          responeCourse.data._id
-        );
+
+        const responeLessons = await lessonService.getLessonsByCourse(responeCourse._id);
 
         // Check if user has purchased this course
         if (user) {
           const hasPurchased = await orderService.checkPurchase(
             user?.userId,
-            responeCourse.data._id
+            responeCourse._id
           );
 
           // Check if course is free
-          const isFree = freeCourseService.isFreeCourse(responeCourse.data);
+          const isFree = freeCourseService.isFreeCourse(responeCourse);
 
           if (!hasPurchased.purchased && !isFree) {
             window.location.href = `/courses/${slug}`;
@@ -190,7 +187,7 @@ export default function CourseLearnDetail() {
             }
 
             const dataFinal = {
-              ...responeCourse.data,
+              ...responeCourse,
               sections: Object.values(sectionsMap),
             };
 
@@ -647,7 +644,7 @@ export default function CourseLearnDetail() {
               ) : (
                 <>
                   {finalContent ? (
-                    <div className="text-black bg-white p-[50px]">{parse(finalContent)}</div>
+                    <div className="text-black bg-white p-[50px] h-[500px] overflow-y-auto">{parse(finalContent)}</div>
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-white text-3xl font-bold p-10">
                       <div className="text-center">
@@ -837,7 +834,7 @@ export default function CourseLearnDetail() {
               </Link>
               <span className="mx-2">/</span>
               <span className="text-gray-700 font-semibold line-clamp-1">
-                {course.title}
+                {course?.title}
               </span>
             </div>
           </div>
@@ -851,17 +848,19 @@ export default function CourseLearnDetail() {
           </button>
 
           {/* List Sections */}
-          {
-            course.sections &&
-            course.sections.map((section) => (
-              <CourseSection
-                key={section._id}
-                section={section}
-                currentPlayingVideo={currentPlayingVideo}
-                onLessonClick={handleLessonClick}
-              />
-            ))
-          }
+          <div className="h-[800px] overflow-y-auto">
+            {
+              course.sections &&
+              course.sections.map((section) => (
+                <CourseSection
+                  key={section._id}
+                  section={section}
+                  currentPlayingVideo={currentPlayingVideo}
+                  onLessonClick={handleLessonClick}
+                />
+              ))
+            }
+          </div>
         </div >
       </div >
       <AssignmentSubmission

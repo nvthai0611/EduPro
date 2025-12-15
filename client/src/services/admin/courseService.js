@@ -49,7 +49,7 @@ export const courseService = {
   getCourseBySlug: async (slug) => {
     try {
       const response = await apiClient.get(`/courses/slug/${slug}`);
-      return response.data;
+      return response;
     } catch (error) {
       // console.error('Error fetching course by slug:', error);
       throw error;
