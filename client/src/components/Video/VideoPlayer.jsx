@@ -229,6 +229,8 @@ const VideoPlayer = ({ src, poster, title, className = "", onRef, showCustomCont
           className={`absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-transparent to-transparent
         transition-opacity duration-300
         ${isHovering || showSettingsDropdown ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+        
+        onClick={togglePlay}
         >
           {/* Center Play */}
           <div className="absolute inset-0 flex items-center justify-center">

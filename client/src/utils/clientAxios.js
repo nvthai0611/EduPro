@@ -20,7 +20,7 @@ const setCookie = (name, value, days = 7, options = {}) => {
   expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
 
   const isProduction = import.meta.env.VITE_PROD === "production" || window.location.hostname !== "localhost";
-  
+
   const defaultOptions = {
     expires: expires.toUTCString(),
     path: "/",
@@ -60,11 +60,11 @@ const removeCookie = (name, path = "/") => {
   } else {
     // Production: xóa với secure và sameSite=none
     document.cookie = `${name}=; Path=${path}; Expires=${expires}; Max-Age=0; SameSite=None; Secure;`;
-    
+
     // Xóa cookie với domain có dấu chấm (.edu-pro-delta.vercel.app) để đảm bảo
     const baseDomain = window.location.hostname.replace(/^www\./, "");
     document.cookie = `${name}=; Path=${path}; Domain=.${baseDomain}; Expires=${expires}; Max-Age=0; SameSite=None; Secure;`;
-    
+
     // Xóa cookie với domain không có dấu chấm (backup)
     document.cookie = `${name}=; Path=${path}; Domain=${baseDomain}; Expires=${expires}; Max-Age=0; SameSite=None; Secure;`;
   }
@@ -104,7 +104,7 @@ export const getTokenFromCookie = () => {
   return getCookie(TOKEN_KEY);
 };
 
-export const initSession = () => {  
+export const initSession = () => {
   const token = getToken();
   if (token) {
     logger.log("Session initialized with token");

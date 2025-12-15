@@ -119,7 +119,7 @@ export default function CourseLearnDetail() {
   const [currentPlayingVideo, setCurrentPlayingVideo] = useState(null);
   const [isAssignmentOpen, setAssignmentOpen] = useState(false);
   const [assignmentSubmissions, setAssignmentSubmissions] = useState([]);
-  
+
   // Lesson comment state
   const [isCommentDialogOpen, setCommentDialogOpen] = useState(false);
   const currentLessonId = currentPlayingVideo?._id;
@@ -128,7 +128,7 @@ export default function CourseLearnDetail() {
   const createCommentMutation = useCreateLessonComment();
   const updateCommentMutation = useUpdateLessonComment();
   const teacherReplyMutation = useTeacherReply();
-  
+
   // State cho video controls
   const [videoRef, setVideoRef] = useState(null);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
@@ -443,7 +443,7 @@ export default function CourseLearnDetail() {
           <p className="text-gray-600 mb-4">
             {courseError?.message || sectionsError?.message || "Không thể tải dữ liệu khóa học"}
           </p>
-          <button 
+          <button
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
@@ -471,7 +471,7 @@ export default function CourseLearnDetail() {
 
   return (
     <>
-     
+
       {/* --- END NEW --- */}
 
       <div className="flex flex-col lg:flex-row w-full min-h-screen bg-gray-100">
@@ -719,17 +719,19 @@ export default function CourseLearnDetail() {
           </button>
 
           {/* List Sections */}
-          {
-            sections &&
-            sections.map((section) => (
-              <CourseSection
-                key={section._id}
-                section={section}
-                currentPlayingVideo={currentPlayingVideo}
-                onLessonClick={handleLessonClick}
-              />
-            ))
-          }
+          <div className="h-[1100px] overflow-y-auto">
+            {
+              sections &&
+              sections.map((section) => (
+                <CourseSection
+                  key={section._id}
+                  section={section}
+                  currentPlayingVideo={currentPlayingVideo}
+                  onLessonClick={handleLessonClick}
+                />
+              ))
+            }
+          </div>
         </div >
       </div >
       <LessonCommentDialog
