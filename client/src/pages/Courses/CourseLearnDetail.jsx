@@ -340,10 +340,13 @@ export default function CourseLearnDetail() {
   // Video control functions
   const handleSpeedChange = (speed) => {
     setPlaybackSpeed(speed);
-    if (videoRef && videoRef.setPlaybackRate) {
-      videoRef.setPlaybackRate(speed);
+    try {
+      if (videoRef && typeof videoRef.setPlaybackRate === 'function') {
+        videoRef.setPlaybackRate(speed);
+      }
+    } catch (error) {
+      console.error('Error setting playback rate:', error);
     }
-    setShowVideoSettings(false);
   };
 
   const handleVideoRef = (ref) => {
@@ -351,8 +354,12 @@ export default function CourseLearnDetail() {
   };
 
   const handleVideoReady = () => {
-    if (videoRef && playbackSpeed !== 1) {
-      videoRef.setPlaybackRate(playbackSpeed);
+    try {
+      if (videoRef && typeof videoRef.setPlaybackRate === 'function' && playbackSpeed !== 1) {
+        videoRef.setPlaybackRate(playbackSpeed);
+      }
+    } catch (error) {
+      console.error('Error setting initial playback rate:', error);
     }
   };
 

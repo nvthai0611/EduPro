@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { courseService } from '../services/admin/courseService';
-import sectionService from '../services/admin/sectionService';
+import adminSectionService from '../services/admin/sectionService';
+import userSectionService from '../services/user/sectionService';
 import lessonService from '../services/admin/lessonService';
 import { articleService } from '../services/articleService';
 import { toast } from 'react-toastify';
@@ -234,13 +235,13 @@ export const useReviewCourse = () => {
 // ==================== SECTION HOOKS ====================
 
 /**
- * Hook to fetch sections with lessons by course ID
+ * Hook to fetch sections with lessons by course ID (for user learning page)
  */
 export const useSectionsWithLessons = (courseId, options = {}) => {
   return useQuery({
     queryKey: sectionKeys.withLessons(courseId),
     queryFn: async () => {
-      const response = await sectionService.getSectionsWithLessons(courseId);
+      const response = await userSectionService.getSectionsWithLessons(courseId);
       return response?.data || response;
     },
     enabled: !!courseId,
@@ -253,13 +254,32 @@ export const useSectionsWithLessons = (courseId, options = {}) => {
 };
 
 /**
- * Hook to fetch sections by course ID
+ * Hook to fetch sections with lessons by course ID (for admin course builder)
+ */
+export const useAdminSectionsWithLessons = (courseId, options = {}) => {
+  return useQuery({
+    queryKey: [...sectionKeys.withLessons(courseId), 'admin'],
+    queryFn: async () => {
+      const response = await adminSectionService.getSectionsWithLessons(courseId);
+      return response?.data || response;
+    },
+    enabled: !!courseId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes cache
+    refetchOnWindowFocus: false,
+    select: (data) => Array.isArray(data) ? data : [], // Transform data in query
+    ...options,
+  });
+};
+
+/**
+ * Hook to fetch sections by course ID (for admin)
  */
 export const useSections = (courseId, options = {}) => {
   return useQuery({
     queryKey: sectionKeys.byCourse(courseId),
     queryFn: async () => {
-      const response = await sectionService.getSectionsByCourseId(courseId);
+      const response = await adminSectionService.getSectionsByCourseId(courseId);
       return response?.data || response;
     },
     enabled: !!courseId,
