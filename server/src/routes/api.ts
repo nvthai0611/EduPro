@@ -11,10 +11,12 @@ import { paymentRoutes } from "./v1/payment.routes";
 import { courseAdminRoutes } from "./v1/admin/course.routes";
 import { userRoutes } from "./v1/users.routes";
 import { sectionRoutes } from "./v1/admin/section.routes";
+import { publicSectionRoutes } from "./v1/section.routes";
 import { lessonRoutes } from "./v1/admin/lesson.routes";
 import { articleRoutes } from "./v1/article.routes";
 import { articleAdminRoutes } from "./v1/admin/article.routes";
 import { orderAdminRoutes } from "./v1/admin/order.route";
+import { submissionRoutes } from "./v1/submission.routes";
 import { limitRequestsMiddleware } from "../middlewares/auth/limitRequest.middleware";
 import blockDirectAccess from "../middlewares/auth/blockDirectAccess";
 
@@ -33,6 +35,9 @@ export const apiRouter = (io?: Server) => {
 
   // Course routes (public with optional auth + rate limiting)
   router.use("/courses", courseRoutes);
+  
+  // Public sections routes (for learners)
+  router.use("/sections", publicSectionRoutes);
 
   // Order routes
   router.use("/orders", orderRoutes);
@@ -61,6 +66,10 @@ export const apiRouter = (io?: Server) => {
 
   // Article content routes for learners
   router.use("/articles", articleRoutes);
+  
+  // Lesson comments (student comments + teacher replies)
+  router.use("/lessons", submissionRoutes);
+  
   // Course routes
   router.use("/admin/order", orderAdminRoutes);
 

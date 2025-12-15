@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ReactQuill from 'react-quill';
@@ -31,7 +31,6 @@ import {
   BookOpen,
   HelpCircle,
   Video,
-  Type,
   Loader2
 } from 'lucide-react';
 import {
@@ -43,7 +42,10 @@ import {
   useCreateLesson,
   useUpdateLesson,
   useDeleteLesson,
-  useAddLessonToSection
+  useAddLessonToSection,
+  useCreateArticle,
+  useUpdateArticle,
+  useDeleteArticle
 } from '../../../hooks/useCourseQueries';
 
 const CourseBuilder = () => {
@@ -52,7 +54,7 @@ const CourseBuilder = () => {
 
   // TanStack Query hooks
   const { data: course, isLoading: courseLoading, error: courseError } = useCourseBySlug(slug, {
-    onError: (error) => {
+    onError: () => {
       // console.error('Error fetching course:', error);
       toast.error('Không thể tải dữ liệu khóa học');
       navigate('/admin/manager-courses');
@@ -90,6 +92,9 @@ const CourseBuilder = () => {
   const updateLessonMutation = useUpdateLesson();
   const deleteLessonMutation = useDeleteLesson();
   const addLessonToSectionMutation = useAddLessonToSection();
+  const createArticleMutation = useCreateArticle();
+  const updateArticleMutation = useUpdateArticle();
+  const deleteArticleMutation = useDeleteArticle();
 
   // State management
   const [expandedSections, setExpandedSections] = useState({});
@@ -175,15 +180,62 @@ const CourseBuilder = () => {
       return;
     }
 
-    // Create lesson first
-    createLessonMutation.mutate(
-      {
-        ...lessonForm,
+    if (lessonForm.type === 'article') {
+      // Validate article content
+      if (!lessonForm.content || lessonForm.content.trim().length < 20) {
+        toast.error('Nội dung bài viết phải có ít nhất 20 ký tự');
+        return;
+      }
+
+      // Prepare article data - only send fields expected by article validator
+      const articleData = {
         courseId: courseId,
         sectionId: selectedSection._id,
-        order: (selectedSection.lessons?.length || 0) + 1
-      },
-      {
+        title: lessonForm.title,
+        description: lessonForm.description || '',
+        content: lessonForm.content,
+        readingTime: lessonForm.readingTime || 5,
+        order: (selectedSection.lessons?.length || 0) + 1,
+        isFree: lessonForm.isFree || false,
+        isPublished: false,
+        isPreviewed: false
+      };
+
+      // Save article to Article collection
+      createArticleMutation.mutate(articleData, {
+        onSuccess: (newArticle) => {
+          setShowAddLessonDialog(false);
+          setLessonForm({
+            title: '',
+            description: '',
+            type: 'video',
+            videoUrl: '',
+            videoDuration: 0,
+            content: '',
+            readingTime: 0,
+            isFree: false,
+            order: 1
+          });
+          toast.success('Thêm bài viết thành công!');
+        }
+      });
+    } else {
+      // Prepare lesson data - only send fields expected by lesson validator
+      const lessonData = {
+        courseId: courseId,
+        sectionId: selectedSection._id,
+        title: lessonForm.title,
+        description: lessonForm.description || '',
+        type: lessonForm.type,
+        videoUrl: lessonForm.videoUrl || '',
+        videoDuration: lessonForm.videoDuration || 0,
+        order: (selectedSection.lessons?.length || 0) + 1,
+        isFree: lessonForm.isFree || false,
+        isPublished: false
+      };
+
+      // Save video/quiz to Lesson collection
+      createLessonMutation.mutate(lessonData, {
         onSuccess: (newLesson) => {
           // Then add lesson to section
           addLessonToSectionMutation.mutate(
@@ -206,27 +258,86 @@ const CourseBuilder = () => {
                   isFree: false,
                   order: 1
                 });
+                toast.success('Thêm bài học thành công!');
               }
             }
           );
         }
-      }
-    );
+      });
+    }
   };
 
   const handleUpdateLesson = async () => {
-    updateLessonMutation.mutate(
-      {
-        id: selectedLesson._id,
-        data: lessonForm
-      },
-      {
-        onSuccess: () => {
-          setShowEditLessonDialog(false);
-          setSelectedLesson(null);
-        }
+    if (selectedLesson.type === 'article' || lessonForm.type === 'article') {
+      // Validate article content
+      if (lessonForm.content && lessonForm.content.trim().length < 20) {
+        toast.error('Nội dung bài viết phải có ít nhất 20 ký tự');
+        return;
       }
-    );
+
+      // Prepare article update data - only send fields expected by article validator
+      const articleData = {
+        title: lessonForm.title,
+        description: lessonForm.description || '',
+        content: lessonForm.content,
+        readingTime: lessonForm.readingTime || 5,
+        isFree: lessonForm.isFree || false
+      };
+
+      // Remove undefined/empty fields
+      Object.keys(articleData).forEach(key => {
+        if (articleData[key] === undefined || articleData[key] === '') {
+          delete articleData[key];
+        }
+      });
+
+      // Update article in Article collection
+      updateArticleMutation.mutate(
+        {
+          id: selectedLesson._id,
+          data: articleData
+        },
+        {
+          onSuccess: () => {
+            setShowEditLessonDialog(false);
+            setSelectedLesson(null);
+            toast.success('Cập nhật bài viết thành công!');
+          }
+        }
+      );
+    } else {
+      // Prepare lesson update data - only send fields expected by lesson validator
+      const lessonData = {
+        title: lessonForm.title,
+        description: lessonForm.description || '',
+        type: lessonForm.type,
+        videoUrl: lessonForm.videoUrl || '',
+        videoDuration: lessonForm.videoDuration || 0,
+        isFree: lessonForm.isFree || false
+      };
+
+      // Remove undefined/empty fields
+      Object.keys(lessonData).forEach(key => {
+        if (lessonData[key] === undefined || lessonData[key] === '') {
+          delete lessonData[key];
+        }
+      });
+
+      // Update lesson in Lesson collection
+      updateLessonMutation.mutate(
+        {
+          id: selectedLesson._id,
+          data: lessonData
+        },
+        {
+          onSuccess: () => {
+            setShowEditLessonDialog(false);
+            setSelectedLesson(null);
+            toast.success('Cập nhật bài học thành công!');
+          }
+        }
+      );
+    }
   };
 
   const handleDelete = React.useCallback(() => {
@@ -244,16 +355,34 @@ const CourseBuilder = () => {
         { onSuccess: resetDeleteState }
       );
     } else if (deleteTarget.type === 'lesson') {
-      deleteLessonMutation.mutate(
-        {
-          id: deleteTarget.id,
-          courseId: courseId,
-          sectionId: selectedSection?._id
-        },
-        { onSuccess: resetDeleteState }
-      );
+      // Find the lesson to check its type
+      const lesson = sections
+        .flatMap(section => section.lessons || [])
+        .find(l => l._id === deleteTarget.id);
+        
+      if (lesson?.type === 'article') {
+        // Delete from Article collection
+        deleteArticleMutation.mutate(
+          {
+            id: deleteTarget.id,
+            courseId: courseId,
+            sectionId: selectedSection?._id
+          },
+          { onSuccess: resetDeleteState }
+        );
+      } else {
+        // Delete from Lesson collection
+        deleteLessonMutation.mutate(
+          {
+            id: deleteTarget.id,
+            courseId: courseId,
+            sectionId: selectedSection?._id
+          },
+          { onSuccess: resetDeleteState }
+        );
+      }
     }
-  }, [deleteTarget, courseId, selectedSection, deleteSectionMutation, deleteLessonMutation]);
+  }, [deleteTarget, courseId, selectedSection, sections, deleteSectionMutation, deleteLessonMutation, deleteArticleMutation]);
 
   // Toggle section expand/collapse
   const toggleSection = (sectionId) => {
@@ -324,7 +453,10 @@ const CourseBuilder = () => {
     createLessonMutation.isPending ||
     updateLessonMutation.isPending ||
     deleteLessonMutation.isPending ||
-    addLessonToSectionMutation.isPending;
+    addLessonToSectionMutation.isPending ||
+    createArticleMutation.isPending ||
+    updateArticleMutation.isPending ||
+    deleteArticleMutation.isPending;
 
   if (isLoading) {
     return (
@@ -961,9 +1093,9 @@ const CourseBuilder = () => {
             </Button>
             <Button
               onClick={handleAddLesson}
-              disabled={!lessonForm.title || lessonForm.type === 'quiz' || createLessonMutation.isPending || addLessonToSectionMutation.isPending}
+              disabled={!lessonForm.title || lessonForm.type === 'quiz' || createLessonMutation.isPending || addLessonToSectionMutation.isPending || createArticleMutation.isPending}
             >
-              {(createLessonMutation.isPending || addLessonToSectionMutation.isPending) ? (
+              {(createLessonMutation.isPending || addLessonToSectionMutation.isPending || createArticleMutation.isPending) ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Đang thêm...
@@ -1224,9 +1356,9 @@ const CourseBuilder = () => {
             </Button>
             <Button
               onClick={handleUpdateLesson}
-              disabled={!lessonForm.title || lessonForm.type === 'quiz' || updateLessonMutation.isPending}
+              disabled={!lessonForm.title || lessonForm.type === 'quiz' || updateLessonMutation.isPending || updateArticleMutation.isPending}
             >
-              {updateLessonMutation.isPending ? (
+              {(updateLessonMutation.isPending || updateArticleMutation.isPending) ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Đang lưu...
@@ -1261,9 +1393,9 @@ const CourseBuilder = () => {
             <Button
               variant="destructive"
               onClick={handleDelete}
-              disabled={deleteSectionMutation.isPending || deleteLessonMutation.isPending}
+              disabled={deleteSectionMutation.isPending || deleteLessonMutation.isPending || deleteArticleMutation.isPending}
             >
-              {(deleteSectionMutation.isPending || deleteLessonMutation.isPending) ? (
+              {(deleteSectionMutation.isPending || deleteLessonMutation.isPending || deleteArticleMutation.isPending) ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Đang xóa...

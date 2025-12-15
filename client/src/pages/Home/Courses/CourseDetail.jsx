@@ -101,7 +101,7 @@ const CourseDetail = () => {
 
     return (
       <Link
-        to={`/courses/${course.slug}`}
+        to={`/learn/${course.slug}`}
         onClick={handleClick}
         className="group rounded-2xl shadow-lg overflow-hidden bg-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer border border-gray-100"
       >
@@ -323,7 +323,7 @@ const CourseDetail = () => {
         
         // Redirect to learning page after 1.5 seconds
         setTimeout(() => {
-          window.location.href = `/courses/learn/${course.slug}`;
+          window.location.href = `/learn/${course.slug}`;
         }, 1500);
       } else {
         toast.error(response.message || "Đăng ký khóa học thất bại");
@@ -340,7 +340,7 @@ const CourseDetail = () => {
 
   const handleStartLearning = () => {
     if (isPurchased) {
-      window.location.href = `/courses/learn/${course.slug}`;
+      window.location.href = `/learn/${course.slug}`;
     } else {
       handlePurchase();
     }

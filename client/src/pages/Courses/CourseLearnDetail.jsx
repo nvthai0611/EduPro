@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef } from "react";
-import { createPortal } from "react-dom";
+// import { createPortal } from "react-dom";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { courseService } from "../../services/courseService";
-import { lessonService } from "../../services/lessonService";
+import { useCourseBySlug, useSectionsWithLessons } from "../../hooks/useCourseQueries";
 import * as orderService from "../../services/user/orderService";
 import * as freeCourseService from "../../services/user/freeCourseService";
 import { useAuth } from "../../hooks/useAuth";
 import VideoPlayer from "../../components/Video/VideoPlayer";
 import AssignmentSubmission from "../../components/Assignment/AssignmentSubmission";
-import { formatDuration } from "../../utils/format";
+import LessonCommentDialog from "../../components/LessonComment/LessonCommentDialog";
+import { useMyLessonComment, useCreateLessonComment, useUpdateLessonComment, useCommentsForLesson, useTeacherReply } from "../../hooks/useLessonCommentQueries";
 import { Loader2 } from "lucide-react";
 import parse from 'html-react-parser';
 
@@ -39,7 +39,7 @@ const LessonItem = ({ item, isCurrent, onClick }) => (
 
 // Component cho từng Section (Chương)
 const CourseSection = ({ section, currentPlayingVideo, onLessonClick }) => {
-  const sectionItems = section.items || [];
+  const sectionItems = section.lessons || []; // Sử dụng lessons thay vì items
 
   // Tính toán số bài đã hoàn thành và tổng số bài trong section
   const totalItems = sectionItems.length;
@@ -69,7 +69,7 @@ const CourseSection = ({ section, currentPlayingVideo, onLessonClick }) => {
             <LessonItem
               key={item._id || index}
               item={item}
-              isCurrent={item.title === currentPlayingVideo?.title}
+              isCurrent={item._id === currentPlayingVideo?._id}
               onClick={onLessonClick}
             />
           ))}
@@ -91,8 +91,20 @@ const formatDate = (isoDate) => {
 export default function CourseLearnDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const [course, setCourse] = useState(null);
   const { user } = useAuth();
+
+  // TanStack Query hooks - giống CourseBuilder
+  const { data: course, isLoading: courseLoading, error: courseError } = useCourseBySlug(slug, {
+    onError: (error) => {
+      console.error('Error fetching course:', error);
+    }
+  });
+
+  const courseId = course?._id;
+  const { data: sections = [], isLoading: sectionsLoading, error: sectionsError } = useSectionsWithLessons(courseId);
+
+  // Local states
+  const [accessChecked, setAccessChecked] = useState(false);
 
   // Tạo pop up hỏi đáp
   const [showQABox, setShowQABox] = useState(false);
@@ -107,6 +119,20 @@ export default function CourseLearnDetail() {
   const [currentPlayingVideo, setCurrentPlayingVideo] = useState(null);
   const [isAssignmentOpen, setAssignmentOpen] = useState(false);
   const [assignmentSubmissions, setAssignmentSubmissions] = useState([]);
+
+  // Lesson comment state
+  const [isCommentDialogOpen, setCommentDialogOpen] = useState(false);
+  const currentLessonId = currentPlayingVideo?._id;
+  const myCommentQuery = useMyLessonComment(currentLessonId, { enabled: !!currentLessonId });
+  const allCommentsQuery = useCommentsForLesson(currentLessonId, { enabled: !!currentLessonId });
+  const createCommentMutation = useCreateLessonComment();
+  const updateCommentMutation = useUpdateLessonComment();
+  const teacherReplyMutation = useTeacherReply();
+
+  // State cho video controls
+  const [videoRef, setVideoRef] = useState(null);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [showVideoSettings, setShowVideoSettings] = useState(false);
 
   const handleSubmitQuestion = () => {
     if (!questionText.trim()) return;
@@ -146,111 +172,64 @@ export default function CourseLearnDetail() {
     setShowNoteBox(false);
   };
 
-  useEffect(() => {
-    // Fetch course data from API
-    const fetchCourse = async () => {
-      try {
-        const responeCourse = await courseService.getCourseBySlug(slug);
+  const handleCreateComment = async ({ lessonId, payload }) => {
+    return createCommentMutation.mutateAsync({ lessonId, payload });
+  };
 
-        const responeLessons = await lessonService.getLessonsByCourse(responeCourse._id);
+  const handleUpdateComment = async ({ lessonId, payload }) => {
+    return updateCommentMutation.mutateAsync({ lessonId, payload });
+  };
+
+  const handleTeacherReply = async ({ commentId, payload }) => {
+    return teacherReplyMutation.mutateAsync({ commentId, payload });
+  };
+
+  // Access checking logic using TanStack Query data
+  useEffect(() => {
+    const checkCourseAccess = async () => {
+      if (!course || !user || accessChecked) return;
+
+      try {
+        // Admin/Instructor/Manager can access all courses (they created/manage them)
+        const isStaff = user?.role && ['admin', 'manager', 'instructor'].includes(user.role);
+        if (isStaff) {
+          setAccessChecked(true);
+          return;
+        }
 
         // Check if user has purchased this course
-        if (user) {
-          const hasPurchased = await orderService.checkPurchase(
-            user?.userId,
-            responeCourse._id
-          );
+        const hasPurchased = await orderService.checkPurchase(
+          user?.userId,
+          course._id
+        );
 
-          // Check if course is free
-          const isFree = freeCourseService.isFreeCourse(responeCourse);
+        // Check if course is free
+        const isFree = freeCourseService.isFreeCourse(course);
 
-          if (!hasPurchased.purchased && !isFree) {
-            window.location.href = `/courses/${slug}`;
-            return;
-          } else {
-            const sectionsMap = {};
-
-            for (const lesson of responeLessons) {
-              const sec = lesson.sectionId; // thông tin section trong từng lession
-
-              // nhóm lesson theo id của section
-              if (!sectionsMap[sec._id]) {
-                sectionsMap[sec._id] = {
-                  _id: sec._id,
-                  title: sec.title,
-                  description: sec.description,
-                  items: [],
-                };
-              }
-
-              sectionsMap[sec._id].items.push(lesson);
-            }
-
-            const dataFinal = {
-              ...responeCourse,
-              sections: Object.values(sectionsMap),
-            };
-
-            setCourse(dataFinal);
-          }
+        if (!hasPurchased.purchased && !isFree) {
+          window.location.href = `/courses/${slug}`;
+          return;
         }
+
+        setAccessChecked(true);
       } catch (error) {
-        console.error("Error fetching course data:", error);
+        console.error("Error checking course access:", error);
       }
     };
 
-    fetchCourse();
-  }, [slug, user]);
+    checkCourseAccess();
+  }, [course, user, slug, accessChecked]);
 
-  // State cho video controls
-  const [videoRef, setVideoRef] = useState(null);
-  const [playbackSpeed, setPlaybackSpeed] = useState(1);
 
-  // --- NEW: left assignment panel state (UI only, in-memory) ---
-  const [showLeftAssignmentPanel, setShowLeftAssignmentPanel] = useState(false);
 
-  // selected assignment for current video
-  const [selectedAssignmentId, setSelectedAssignmentId] = useState(null);
-
-  // helper: sample assignments per video (UI-only). Thay bằng dữ liệu thật nếu cần.
-  const getAssignmentsForVideo = (videoId) => {
-    if (!videoId) return [];
-    // ví dụ mặc định 3 bài tập; có thể thay đổi nội dung/prompt tùy video
-    return [
-      {
-        id: "a1",
-        title: "Bài tập 1",
-        prompt:
-          "Viết 1 đoạn tóm tắt 200-300 chữ về nội dung video. Nếu nộp file, chấp nhận .pdf hoặc .docx",
-      },
-      {
-        id: "a2",
-        title: "Bài tập 2",
-        prompt:
-          "Trả lời 3 câu hỏi ngắn liên quan đến lý thuyết trong video (mỗi câu 1-2 câu).",
-      },
-      {
-        id: "a3",
-        title: "Bài tập 3",
-        prompt:
-          "Chuẩn bị 1 file báo cáo ngắn (.pdf hoặc .docx) nêu ứng dụng thực tế của kiến thức trong video.",
-      },
-    ];
-  };
-
-  // store in-memory answers keyed by `${videoId}:${assignmentId}`
-  const [leftPanelAnswers, setLeftPanelAnswers] = useState({
-    // example:
-    // "video123:a1": { textAnswers: [...], fileAnswers: [...] }
-  });
 
   const fileInputRef = useRef(null);
 
   // when current video changes, select first assignment by default
   useEffect(() => {
     const vid = currentPlayingVideo?.videoId;
-    const assigns = getAssignmentsForVideo(vid);
-    setSelectedAssignmentId(assigns[0]?.id || null);
+    // const assigns = getAssignmentsForVideo(vid);
+    // setSelectedAssignmentId(assigns[0]?.id || null);
   }, [currentPlayingVideo]);
 
   const handleLeftTextSubmit = () => {
@@ -310,32 +289,36 @@ export default function CourseLearnDetail() {
   // --- END NEW ---
 
   useEffect(() => {
-    if (!course || !course.sections) return;
+    if (!sections || sections.length === 0) return;
 
-    for (const section of course.sections) {
-      if (section.items?.length) {
-        const first = section.items.find((item) => item.videoUrl ? item?.videoUrl : item?.content);
+    for (const section of sections) {
+      if (section.lessons?.length) {
+        const first = section.lessons.find((item) => item.videoUrl ? item?.videoUrl : item?.content);
         if (first) {
           setCurrentPlayingVideo({
+            _id: first._id,
             title: first.title,
-            videoId: first.videoUrl.split("/")[first.videoUrl.split("/").length - 1],
+            videoId: first.videoUrl ? first.videoUrl.split("/")[first.videoUrl.split("/").length - 1] : null,
             content: first.content,
             updatedAt: first.updatedAt,
+            type: first.type || (first.videoUrl ? 'video' : 'article')
           });
           break;
         }
       }
     }
-  }, [course]);
+  }, [sections]);
 
-  // Xử lý khi click vào một bài học
-  const handleLessonClick = (lesson) => {
-    if (lesson.videoUrl ? lesson.videoUrl : lesson.content) {
+  // Xử lý khi click vào một bài học hoặc article
+  const handleLessonClick = (item) => {
+    if (item.videoUrl || item.content) {
       setCurrentPlayingVideo({
-        title: lesson.title,
-        videoId: lesson.videoUrl.split("/")[lesson.videoUrl.split("/").length - 1],
-        content: lesson.content,
-        updatedAt: lesson.updatedAt,
+        _id: item._id,
+        title: item.title,
+        videoId: item.videoUrl ? item.videoUrl.split("/")[item.videoUrl.split("/").length - 1] : null,
+        content: item.content,
+        updatedAt: item.updatedAt,
+        type: item.type || (item.videoUrl ? 'video' : 'article')
       });
     }
   };
@@ -360,10 +343,17 @@ export default function CourseLearnDetail() {
     if (videoRef && videoRef.setPlaybackRate) {
       videoRef.setPlaybackRate(speed);
     }
+    setShowVideoSettings(false);
   };
 
   const handleVideoRef = (ref) => {
     setVideoRef(ref);
+  };
+
+  const handleVideoReady = () => {
+    if (videoRef && playbackSpeed !== 1) {
+      videoRef.setPlaybackRate(playbackSpeed);
+    }
   };
 
   // Keyboard shortcuts for video control
@@ -414,6 +404,49 @@ export default function CourseLearnDetail() {
     };
   }, [videoRef]);
 
+  // Đóng video settings khi click bên ngoài
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showVideoSettings && !event.target.closest('.video-settings')) {
+        setShowVideoSettings(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showVideoSettings]);
+
+  // Loading và error handling
+  if (courseLoading || sectionsLoading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
+        <span className="ml-2 text-gray-600">Đang tải khóa học...</span>
+      </div>
+    );
+  }
+
+  if (courseError || sectionsError) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-2">Có lỗi xảy ra</h2>
+          <p className="text-gray-600 mb-4">
+            {courseError?.message || sectionsError?.message || "Không thể tải dữ liệu khóa học"}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Thử lại
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!course) {
     return (
       <div className="flex justify-center items-center py-20">
@@ -431,189 +464,7 @@ export default function CourseLearnDetail() {
 
   return (
     <>
-      {/* --- NEW: Left fixed toggle button and panel --- */}
-      {createPortal(
-        <button
-          onClick={() => setShowLeftAssignmentPanel((s) => !s)}
-          className="fixed left-3 top-3 z-[9999] bg-orange-500 text-white px-3 py-2 rounded-r-lg shadow-lg hover:bg-orange-600 transition"
-          title="Bài tập cho video"
-          style={{ position: "fixed" }}
-        >
-          Bài tập
-        </button>,
-        document.body
-      )}
 
-      <div>
-        {/* Panel cố định; bên trong có list nhiều bài tập cho 1 video */}
-        <div
-          className={`fixed left-0 top-16 z-40 bg-white w-[910px] shadow-xl rounded-r transition-transform ${showLeftAssignmentPanel ? "translate-x-0" : "-translate-x-full"
-            }`}
-          style={{ maxHeight: "calc(100vh - 4rem)", overflow: "auto" }}
-        >
-          <div className="p-4 border-b flex items-start justify-between">
-            <div>
-              <h3 className="text-lg font-semibold">Bài tập</h3>
-              <p className="text-sm text-gray-500">
-                {currentPlayingVideo?.title || "Chưa chọn video"}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowLeftAssignmentPanel(false)}
-                className="text-gray-500 hover:text-gray-800"
-                title="Đóng"
-              >
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-          </div>
-
-          {/* List bài tập */}
-          <div className="p-3 border-b bg-gray-50">
-            <div className="flex flex-col gap-2">
-              {getAssignmentsForVideo(currentPlayingVideo?.videoId).map(
-                (a) => (
-                  <button
-                    key={a.id}
-                    onClick={() => setSelectedAssignmentId(a.id)}
-                    className={`text-left px-3 py-2 rounded ${selectedAssignmentId === a.id
-                      ? "bg-orange-100 text-orange-700 font-semibold"
-                      : "hover:bg-gray-100 text-gray-700"
-                      }`}
-                  >
-                    {a.title}
-                  </button>
-                )
-              )}
-
-              {getAssignmentsForVideo(currentPlayingVideo?.videoId).length ===
-                0 && (
-                  <div className="text-sm text-gray-500 px-3 py-2">
-                    Chưa có bài tập cho video này.
-                  </div>
-                )}
-            </div>
-          </div>
-
-          {/* Nội dung bài tập được chọn */}
-          <div className="p-4">
-            {selectedAssignmentId ? (
-              (() => {
-                const assigns = getAssignmentsForVideo(
-                  currentPlayingVideo?.videoId
-                );
-                const currentAssign = assigns.find(
-                  (x) => x.id === selectedAssignmentId
-                );
-                const key = `${currentPlayingVideo?.videoId}:${selectedAssignmentId}`;
-                const textAnswers = leftPanelAnswers[key]?.textAnswers || [];
-                const fileAnswers = leftPanelAnswers[key]?.fileAnswers || [];
-
-                return (
-                  <>
-                    <div className="mb-4">
-                      <h4 className="font-semibold mb-2">
-                        {currentAssign?.title}
-                      </h4>
-                      <div className="p-3 border rounded bg-gray-50 text-sm text-gray-800">
-                        {currentAssign?.prompt}
-                      </div>
-                    </div>
-
-                    <div className="mb-4">
-                      <h4 className="font-semibold mb-2">
-                        Trả lời bằng văn bản
-                      </h4>
-                      <textarea
-                        id="left-assignment-textarea"
-                        className="w-full p-3 border rounded focus:ring-2 focus:ring-orange-300"
-                        rows="5"
-                        placeholder="Viết câu trả lời trực tiếp ở đây..."
-                      ></textarea>
-                      <div className="flex justify-end mt-2">
-                        <button
-                          onClick={handleLeftTextSubmit}
-                          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-                        >
-                          Gửi trả lời
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="mb-6">
-                      <h4 className="font-semibold mb-2">Hoặc tải file</h4>
-                      <form onSubmit={handleLeftFileSubmit}>
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          className="w-full"
-                          accept=".pdf,.doc,.docx,.txt"
-                        />
-                        <div className="flex justify-end mt-2">
-                          <button
-                            type="submit"
-                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                          >
-                            Tải lên
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-
-                    <div>
-                      <h4 className="font-semibold mb-2">Các nộp tạm của bạn</h4>
-
-                      {textAnswers.length + fileAnswers.length === 0 && (
-                        <p className="text-sm text-gray-500">
-                          Bạn chưa nộp gì cho bài tập này.
-                        </p>
-                      )}
-
-                      <div className="space-y-3">
-                        {textAnswers.map((t) => (
-                          <div
-                            key={t.id}
-                            className="p-3 border rounded bg-gray-50 text-sm"
-                          >
-                            <div className="text-xs text-gray-400 mb-1">
-                              {formatDate(t.createdAt)}
-                            </div>
-                            <div>{t.text}</div>
-                          </div>
-                        ))}
-
-                        {fileAnswers.map((f) => (
-                          <div
-                            key={f.id}
-                            className="p-3 border rounded bg-gray-50 text-sm flex items-center justify-between"
-                          >
-                            <div>
-                              <div className="font-medium">{f.fileName}</div>
-                              <div className="text-xs text-gray-400">
-                                {formatDate(f.createdAt)}
-                              </div>
-                            </div>
-                            <div>
-                              <button className="text-blue-600 text-sm" disabled>
-                                Tải xuống
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                );
-              })()
-            ) : (
-              <div className="text-sm text-gray-500">
-                Vui lòng chọn 1 bài tập.
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
       {/* --- END NEW --- */}
 
       <div className="flex flex-col lg:flex-row w-full min-h-screen bg-gray-100">
@@ -632,35 +483,48 @@ export default function CourseLearnDetail() {
             </button>
           </div>
 
-          {/* Video Player - Sử dụng aspect-video để responsive */}
-          <div className="w-full bg-white">
-            <div className="aspect-video">
-              {videoEmbedUrl ? (
-                <VideoPlayer
-                  src={`${videoEmbedUrl}`}
-                  title={currentPlayingVideo?.title}
-                  className="w-full h-full"
-                />
-              ) : (
-                <>
-                  {finalContent ? (
-                    <div className="text-black bg-white p-[50px] h-[500px] overflow-y-auto">{parse(finalContent)}</div>
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-white text-3xl font-bold p-10">
-                      <div className="text-center">
-                        <h1 className="text-4xl font-bold mb-4">
-                          Không có video để phát
-                        </h1>
-                        <p className="text-lg">
-                          Hãy chọn một bài học từ danh sách bên phải.
-                        </p>
-                      </div>
+          {/* Video Player hoặc Article Content - Tăng kích thước */}
+          <div className="w-full bg-black">
+            <div className="aspect-[16/9] min-h-[600px] w-full">
+              {currentPlayingVideo?.type === 'article' || (!videoEmbedUrl && finalContent) ? (
+                <div className="w-full h-full bg-white overflow-y-auto">
+                  <div className="p-8 max-w-4xl mx-auto">
+                    <h1 className="text-3xl font-bold mb-6 text-gray-900">{currentPlayingVideo?.title}</h1>
+                    <div className="prose prose-lg max-w-none text-gray-800">
+                      {finalContent ? parse(finalContent) : 'Nội dung đang được tải...'}
                     </div>
-                  )}
-                </>
+                  </div>
+                </div>
+              ) : videoEmbedUrl ? (
+                <div className="relative w-full h-full">
+                  <VideoPlayer
+                    src={`${videoEmbedUrl}`}
+                    title={currentPlayingVideo?.title}
+                    className="w-full h-full min-h-[600px]"
+                    onReady={handleVideoReady}
+                    onRef={handleVideoRef}
+                    showCustomControls={true}
+                    speedControls={{
+                      speedOptions: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2],
+                      currentSpeed: playbackSpeed,
+                      onSpeedChange: handleSpeedChange
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-600 bg-gray-100">
+                  <div className="text-center">
+                    <h1 className="text-4xl font-bold mb-4">
+                      Không có nội dung để hiển thị
+                    </h1>
+                    <p className="text-lg">
+                      Hãy chọn một bài học từ danh sách bên phải.
+                    </p>
+                  </div>
+                </div>
               )}
             </div>
-          </div >
+          </div>
 
           {/* Lesson Details */}
           <div className="p-6 bg-white border-t border-gray-200 shadow-sm flex-1" >
@@ -689,9 +553,9 @@ export default function CourseLearnDetail() {
                 </button>
                 <button
                   className="flex items-center gap-1 bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition"
-                  onClick={() => setAssignmentOpen(true)}
+                  onClick={() => setCommentDialogOpen(true)}
                 >
-                  <i className="fas fa-upload"></i> Nộp bài tập
+                  <i className="fas fa-comment-dots"></i> Nhận xét bài học
                 </button>
               </div>
             </div>
@@ -834,7 +698,7 @@ export default function CourseLearnDetail() {
               </Link>
               <span className="mx-2">/</span>
               <span className="text-gray-700 font-semibold line-clamp-1">
-                {course?.title}
+                {course.title}
               </span>
             </div>
           </div>
@@ -848,10 +712,10 @@ export default function CourseLearnDetail() {
           </button>
 
           {/* List Sections */}
-          <div className="h-[800px] overflow-y-auto">
+          <div className="h-[1100px] overflow-y-auto">
             {
-              course.sections &&
-              course.sections.map((section) => (
+              sections &&
+              sections.map((section) => (
                 <CourseSection
                   key={section._id}
                   section={section}
@@ -863,12 +727,16 @@ export default function CourseLearnDetail() {
           </div>
         </div >
       </div >
-      <AssignmentSubmission
-        open={isAssignmentOpen}
-        onOpenChange={setAssignmentOpen}
-        onSubmit={handleAssignmentSubmit}
-        submissions={assignmentSubmissions}
+      <LessonCommentDialog
+        open={isCommentDialogOpen}
+        onOpenChange={setCommentDialogOpen}
+        lessonId={currentLessonId}
         lessonTitle={currentPlayingVideo?.title}
+        onTeacherReply={handleTeacherReply}
+        myComment={myCommentQuery.data}
+        allComments={allCommentsQuery.data || []}
+        onCreateComment={handleCreateComment}
+        onUpdateComment={handleUpdateComment}
       />
     </>
   );

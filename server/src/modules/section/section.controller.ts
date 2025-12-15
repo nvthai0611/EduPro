@@ -1,3 +1,4 @@
+import { encryptData } from "../../utils/encryption";
 import SectionService from "./section.service";
 
 export const createSection = async (req: any, res: any) => {
@@ -114,6 +115,18 @@ export const reorderSections = async (req: any, res: any) => {
 
 // Get sections with populated lessons
 export const getSectionsWithLessons = async (req: any, res: any) => {
+  try {
+    const courseId = req.params.courseId;
+    const sections = await SectionService.getSectionsWithLessons(courseId);
+    res.setHeader("x-encrypted", "true");
+    res.status(200).json({ success: true, encryptedData: encryptData(sections) });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+// Public endpoint - Get sections with content for learners (no auth required)
+export const getSectionsWithContentForLearners = async (req: any, res: any) => {
   try {
     const courseId = req.params.courseId;
     const sections = await SectionService.getSectionsWithLessons(courseId);
