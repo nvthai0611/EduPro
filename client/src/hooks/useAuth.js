@@ -22,7 +22,6 @@ export function useAuth() {
       }
       setAuthState({ ...state, isLoading: false });
     };
-    console.log(authState);
     
     initAuth();
   }, []);

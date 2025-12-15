@@ -1,3 +1,4 @@
+import { encryptData } from "../../utils/encryption";
 import courseService from "./course.service";
 
 // POST /courses
@@ -89,7 +90,8 @@ export const getCourseBySlug = async (req: any, res: any) => {
     if (!course) {
       return res.status(404).json({ success: false, message: "Course not found" });
     }
-    res.status(200).json({ success: true, data: course });
+    res.setHeader("x-encrypted", "true");
+    res.status(200).json({ success: true, encryptedData: encryptData(course)});
   } catch (error: any) {
     res.status(400).json({ success: false, message: error.message });
   }

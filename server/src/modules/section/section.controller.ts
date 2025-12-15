@@ -1,3 +1,4 @@
+import { encryptData } from "../../utils/encryption";
 import SectionService from "./section.service";
 
 export const createSection = async (req: any, res: any) => {
@@ -117,7 +118,8 @@ export const getSectionsWithLessons = async (req: any, res: any) => {
   try {
     const courseId = req.params.courseId;
     const sections = await SectionService.getSectionsWithLessons(courseId);
-    res.status(200).json({ success: true, data: sections });
+    res.setHeader("x-encrypted", "true");
+    res.status(200).json({ success: true, encryptedData: encryptData(sections) });
   } catch (error: any) {
     res.status(400).json({ success: false, message: error.message });
   }
