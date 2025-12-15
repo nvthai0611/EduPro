@@ -35,7 +35,7 @@ import {
 } from 'lucide-react';
 import {
   useCourseBySlug,
-  useSectionsWithLessons,
+  useAdminSectionsWithLessons,
   useCreateSection,
   useUpdateSection,
   useDeleteSection,
@@ -82,7 +82,7 @@ const CourseBuilder = () => {
   ];
 
   const courseId = course?._id;
-  const { data: sections = [], isLoading: sectionsLoading } = useSectionsWithLessons(courseId);
+  const { data: sections = [], isLoading: sectionsLoading } = useAdminSectionsWithLessons(courseId);
 
   // Mutations
   const createSectionMutation = useCreateSection();

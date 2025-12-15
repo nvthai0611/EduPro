@@ -26,6 +26,9 @@ const VideoPlayer = ({ src, poster, title, className = "", onRef, showCustomCont
     // reset timer
     if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
 
+    // Don't hide controls if dropdown is open
+    if (showSettingsDropdown) return;
+
     hideTimerRef.current = setTimeout(() => {
       setIsHovering(false);
     }, 2000); // 2 giây
@@ -225,7 +228,7 @@ const VideoPlayer = ({ src, poster, title, className = "", onRef, showCustomCont
         <div
           className={`absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-transparent to-transparent
         transition-opacity duration-300
-        ${isHovering ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+        ${isHovering || showSettingsDropdown ? "opacity-100" : "opacity-0 pointer-events-none"}`}
         >
           {/* Center Play */}
           <div className="absolute inset-0 flex items-center justify-center">
@@ -273,14 +276,17 @@ const VideoPlayer = ({ src, poster, title, className = "", onRef, showCustomCont
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 relative">
+              <div className="flex items-center gap-2 relative pointer-events-auto">
                 {/* Settings Button */}
                 {showCustomControls && speedControls && (
-                  <div className="relative">
+                  <div className="settings-dropdown relative pointer-events-auto">
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      onClick={() => setShowSettingsDropdown(!showSettingsDropdown)}
+                      onClick={(e) => {
+                        e.stopPropagation(); // Stop propagation
+                        setShowSettingsDropdown(!showSettingsDropdown);
+                      }}
                       className="text-white hover:bg-white/20"
                     >
                       <Settings className="w-4 h-4" />
@@ -288,15 +294,26 @@ const VideoPlayer = ({ src, poster, title, className = "", onRef, showCustomCont
                     
                     {/* Settings Dropdown */}
                     {showSettingsDropdown && (
-                      <div className="absolute bottom-full right-0 mb-2 bg-black/90 backdrop-blur-sm rounded-lg p-3 min-w-[160px]">
+                      <div 
+                        className="settings-dropdown absolute bottom-full right-0 mb-2 bg-black/90 backdrop-blur-sm rounded-lg p-3 min-w-[160px] pointer-events-auto z-50"
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                      >
                         <div className="text-white text-sm mb-2 font-medium">Tốc độ phát</div>
                         <div className="space-y-1">
                           {speedControls.speedOptions.map(speed => (
                             <button
                               key={speed}
-                              onClick={() => {
-                                if (playerRef.current) {
-                                  playerRef.current.setPlaybackRate(speed);
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                try {
+                                  if (playerRef.current && typeof playerRef.current.setPlaybackRate === 'function') {
+                                    playerRef.current.setPlaybackRate(speed);
+                                  }
+                                } catch (error) {
+                                  console.error('Error setting playback rate:', error);
                                 }
                                 speedControls.onSpeedChange?.(speed);
                                 setShowSettingsDropdown(false);
@@ -329,8 +346,6 @@ const VideoPlayer = ({ src, poster, title, className = "", onRef, showCustomCont
       )}
     </div>
   );
-
-
 };
 
 export default VideoPlayer;
