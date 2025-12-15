@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ReactQuill from 'react-quill';
@@ -31,7 +31,6 @@ import {
   BookOpen,
   HelpCircle,
   Video,
-  Type,
   Loader2
 } from 'lucide-react';
 import {
@@ -55,7 +54,7 @@ const CourseBuilder = () => {
 
   // TanStack Query hooks
   const { data: course, isLoading: courseLoading, error: courseError } = useCourseBySlug(slug, {
-    onError: (error) => {
+    onError: () => {
       // console.error('Error fetching course:', error);
       toast.error('Không thể tải dữ liệu khóa học');
       navigate('/admin/manager-courses');

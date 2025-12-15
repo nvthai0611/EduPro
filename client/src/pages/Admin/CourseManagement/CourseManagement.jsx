@@ -445,7 +445,8 @@ const CourseManagement = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => window.open(`/courses/${course?.slug}`, '_blank')}
+                            title="Xem khóa học như học viên"
+                            onClick={() => window.open(`/learn/${course?.slug}`, '_blank')}
                           >
                             <Eye className="w-4 h-4" />
                           </Button>

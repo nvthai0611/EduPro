@@ -41,7 +41,17 @@ export const privateRoutes = (
       <Route path="/learn/:courseId/:lessonId" element={<LearningPage />} />
       <Route path="/tai-khoan" element={<Profile />} />
       <Route path="/checkout" element={<PaymentPage />} />
-      <Route path="/courses/learn/:slug" element={<CourseLearnDetail />} />
+    </Route>
+
+    {/* Learning Page - accessible by all authenticated users including staff */}
+    <Route
+      element={
+        <AuthMiddleware allowedRoles={[TYPE_AUTH.CUSTOMER, TYPE_AUTH.USER, TYPE_AUTH.ADMIN, TYPE_AUTH.MANAGER, TYPE_AUTH.STAFF]}>
+          <DefaultLayout />
+        </AuthMiddleware>
+      }
+    >
+      <Route path="/learn/:slug" element={<CourseLearnDetail />} />
     </Route>
 
     {/* Admin */}
