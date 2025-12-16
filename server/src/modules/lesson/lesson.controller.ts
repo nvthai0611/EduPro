@@ -6,9 +6,11 @@ export const getLessonsByCourseId = async (req: any, res: any) => {
     const courseId = req.params.courseId;
     const lessons = await LessonService.getLessonsByCourseId(courseId);
     res.setHeader("x-encrypted", "true");
-    res.status(200).json({ success: true, encryptedData: encryptData(lessons) });
+    return res
+      .status(200)
+      .json({ success: true, encryptedData: encryptData(lessons) });
   } catch (error: any) {
-    res.status(400).json({ success: false, message: error.message });
+    return res.status(400).json({ success: false, message: error.message });
   }
 };
 
@@ -65,7 +67,9 @@ export const deleteLesson = async (req: any, res: any) => {
     const lessonId = req.params.lessonId;
     const deletedLesson = await LessonService.deleteLesson(lessonId);
     if (!deletedLesson) {
-      return res.status(404).json({ success: false, message: "Lesson not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Lesson not found" });
     }
     res.status(200).json({ success: true, data: deletedLesson });
   } catch (error: any) {
@@ -78,19 +82,22 @@ export const reorderLessons = async (req: any, res: any) => {
   try {
     const sectionId = req.params.sectionId;
     const { lessonIds } = req.body; // Array of lesson IDs in new order
-    
+
     if (!Array.isArray(lessonIds) || lessonIds.length === 0) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "lessonIds must be a non-empty array" 
+      return res.status(400).json({
+        success: false,
+        message: "lessonIds must be a non-empty array",
       });
     }
 
-    const updatedLessons = await LessonService.reorderLessons(sectionId, lessonIds);
-    res.status(200).json({ 
-      success: true, 
+    const updatedLessons = await LessonService.reorderLessons(
+      sectionId,
+      lessonIds
+    );
+    res.status(200).json({
+      success: true,
       data: updatedLessons,
-      message: "Lessons reordered successfully"
+      message: "Lessons reordered successfully",
     });
   } catch (error: any) {
     res.status(400).json({ success: false, message: error.message });
@@ -102,19 +109,19 @@ export const reorderLessons = async (req: any, res: any) => {
 //   try {
 //     // Multer middleware will handle file upload
 //     const file = req.file;
-//     
+//
 //     if (!file) {
-//       return res.status(400).json({ 
-//         success: false, 
-//         message: "No video file provided" 
+//       return res.status(400).json({
+//         success: false,
+//         message: "No video file provided"
 //       });
 //     }
 //
 //     // Upload to cloud storage (Cloudinary/AWS S3)
 //     const videoData = await LessonService.uploadVideo(file);
-//     
-//     res.status(200).json({ 
-//       success: true, 
+//
+//     res.status(200).json({
+//       success: true,
 //       data: videoData,
 //       message: "Video uploaded successfully"
 //     });
@@ -122,4 +129,3 @@ export const reorderLessons = async (req: any, res: any) => {
 //     res.status(400).json({ success: false, message: error.message });
 //   }
 // };
-
