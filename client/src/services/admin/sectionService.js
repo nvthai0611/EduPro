@@ -26,7 +26,7 @@ export const sectionService = {
   getSectionsWithLessons: async (courseId) => {
     try {
       const response = await apiClient.get(`/admin/sections/course/${courseId}/with-lessons`);
-      return response.data;
+      return response;
     } catch (error) {
     //   console.error('Error fetching sections with lessons:', error);
       throw error;
