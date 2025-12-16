@@ -5,7 +5,7 @@ export const sectionService = {
   getSectionsWithLessons: async (courseId) => {
     try {
       const response = await apiClient.get(`/sections/course/${courseId}/with-lessons`);
-      return response.data;
+      return response;
     } catch (error) {
       throw error;
     }
