@@ -115,7 +115,7 @@ const LessonCommentDialog = ({
 
   return (
     <Sheet open={open} onOpenChange={handleDialogChange}>
-      <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto">
+      <SheetContent side="left" className="w-full sm:max-w-xl overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Nhận xét bài học</SheetTitle>
           <SheetDescription>

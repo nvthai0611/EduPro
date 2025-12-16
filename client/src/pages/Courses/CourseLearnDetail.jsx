@@ -9,7 +9,7 @@ import VideoPlayer from "../../components/Video/VideoPlayer";
 import AssignmentSubmission from "../../components/Assignment/AssignmentSubmission";
 import LessonCommentDialog from "../../components/LessonComment/LessonCommentDialog";
 import { useMyLessonComment, useCreateLessonComment, useUpdateLessonComment, useCommentsForLesson, useTeacherReply } from "../../hooks/useLessonCommentQueries";
-import { Loader2 } from "lucide-react";
+import { Loader2, CircleHelp } from "lucide-react";
 import parse from 'html-react-parser';
 
 // Component cho từng bài học trong danh sách bên phải
@@ -472,7 +472,6 @@ export default function CourseLearnDetail() {
   return (
     <>
 
-      {/* --- END NEW --- */}
 
       <div className="flex flex-col lg:flex-row w-full min-h-screen bg-gray-100">
         {/* Left - Video Player & Lesson Info */}
@@ -545,12 +544,6 @@ export default function CourseLearnDetail() {
             </p>
 
             <div className="mt-4 flex items-center justify-between">
-              <button
-                className="flex items-center gap-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-100 transition"
-                onClick={() => setShowNoteBox(true)}
-              >
-                <i className="fas fa-plus text-xs"></i> Thêm ghi chú
-              </button>
               <div className="flex items-center gap-2">
                 <button
                   className="flex items-center gap-1 bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600 transition"
@@ -558,13 +551,13 @@ export default function CourseLearnDetail() {
                 >
                   <i className="fas fa-comments"></i> Hỏi đáp
                 </button>
-                <button
-                  className="flex items-center gap-1 bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition"
-                  onClick={() => setCommentDialogOpen(true)}
-                >
-                  <i className="fas fa-comment-dots"></i> Nhận xét bài học
-                </button>
               </div>
+              <button
+                className="flex items-center gap-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-100 transition"
+                onClick={() => setShowNoteBox(true)}
+              >
+                <i className="fas fa-plus text-xs"></i> Thêm ghi chú
+              </button>
             </div>
           </div>
 
@@ -690,7 +683,7 @@ export default function CourseLearnDetail() {
         </div >
 
         {/* Right - Course Content List */}
-        < div className="w-full lg:w-[500px] flex-shrink-0 bg-white border-l overflow-y-auto p-4 shadow-inner" >
+        < div className="w-full lg:w-[500px] flex-shrink-0 bg-white border-r overflow-y-auto p-4 shadow-inner" >
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-bold text-gray-800">
               Nội dung khóa học
@@ -734,6 +727,19 @@ export default function CourseLearnDetail() {
           </div>
         </div >
       </div >
+
+      {/* Floating Comment Island Button */}
+      <button
+        onClick={() => setCommentDialogOpen(true)}
+        className="fixed bottom-6 left-6 z-50 flex items-center justify-center gap-3 bg-gradient-to-r from-orange-500 to-amber-600 text-white px-6 py-4 rounded-full shadow-2xl hover:shadow-orange-500/50 hover:scale-110 transition-all duration-300 group"
+        title="Nhận xét bài học"
+      >
+        <CircleHelp size={24} className="text-white" strokeWidth={2.5} />
+        {/* <span className="font-semibold text-base">Nhận xét</span> */}
+        <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-ping"></div>
+        <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full"></div>
+      </button>
+
       <LessonCommentDialog
         open={isCommentDialogOpen}
         onOpenChange={setCommentDialogOpen}
