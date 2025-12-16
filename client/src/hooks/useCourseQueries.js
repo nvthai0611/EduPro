@@ -295,7 +295,7 @@ export const useSection = (sectionId, options = {}) => {
   return useQuery({
     queryKey: sectionKeys.detail(sectionId),
     queryFn: async () => {
-      const response = await sectionService.getSectionById(sectionId);
+      const response = await adminSectionService.getSectionById(sectionId);
       return response?.data || response;
     },
     enabled: !!sectionId,
@@ -311,7 +311,7 @@ export const useCreateSection = () => {
 
   return useMutation({
     mutationFn: async (sectionData) => {
-      const response = await sectionService.createSection(sectionData);
+      const response = await adminSectionService.createSection(sectionData);
       return response?.data || response;
     },
     onSuccess: (data, variables) => {
@@ -335,7 +335,7 @@ export const useUpdateSection = () => {
 
   return useMutation({
     mutationFn: async ({ id, data }) => {
-      const response = await sectionService.updateSection(id, data);
+      const response = await adminSectionService.updateSection(id, data);
       return response?.data || response;
     },
     onSuccess: (data, variables) => {
@@ -366,7 +366,7 @@ export const useDeleteSection = () => {
 
   return useMutation({
     mutationFn: async ({ id, courseId }) => {
-      const response = await sectionService.deleteSection(id);
+      const response = await adminSectionService.deleteSection(id);
       return { ...response, courseId };
     },
     onSuccess: (data) => {
@@ -386,6 +386,33 @@ export const useDeleteSection = () => {
 };
 
 /**
+ * Hook to reorder sections
+ */
+export const useReorderSections = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ courseId, sectionIds }) => {
+      const response = await adminSectionService.reorderSections(courseId, sectionIds);
+      return { ...response, courseId };
+    },
+    onSuccess: (data) => {
+      const { courseId } = data;
+      
+      if (courseId) {
+        queryClient.invalidateQueries({ queryKey: sectionKeys.byCourse(courseId) });
+        queryClient.invalidateQueries({ queryKey: sectionKeys.withLessons(courseId) });
+      }
+      toast.success('Sắp xếp chương thành công!');
+    },
+    onError: (error) => {
+      console.error('Error reordering sections:', error);
+      toast.error(error?.message || 'Không thể sắp xếp chương!');
+    },
+  });
+};
+
+/**
  * Hook to add lesson to section
  */
 export const useAddLessonToSection = () => {
@@ -393,7 +420,7 @@ export const useAddLessonToSection = () => {
 
   return useMutation({
     mutationFn: async ({ sectionId, lessonId, courseId }) => {
-      const response = await sectionService.addLessonToSection(sectionId, lessonId);
+      const response = await adminSectionService.addLessonToSection(sectionId, lessonId);
       return { ...response, sectionId, courseId };
     },
     onSuccess: (data) => {
@@ -554,6 +581,36 @@ export const useDeleteLesson = () => {
     onError: (error) => {
       console.error('Error deleting lesson:', error);
       toast.error(error?.message || 'Không thể xóa bài học!');
+    },
+  });
+};
+
+/**
+ * Hook to reorder lessons within a section
+ */
+export const useReorderLessons = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ sectionId, lessonIds, courseId }) => {
+      const response = await lessonService.reorderLessons(sectionId, lessonIds);
+      return { ...response, sectionId, courseId };
+    },
+    onSuccess: (data) => {
+      const { sectionId, courseId } = data;
+      
+      if (sectionId) {
+        queryClient.invalidateQueries({ queryKey: lessonKeys.bySection(sectionId) });
+        queryClient.invalidateQueries({ queryKey: sectionKeys.detail(sectionId) });
+      }
+      if (courseId) {
+        queryClient.invalidateQueries({ queryKey: sectionKeys.withLessons(courseId) });
+      }
+      toast.success('Sắp xếp bài học thành công!');
+    },
+    onError: (error) => {
+      console.error('Error reordering lessons:', error);
+      toast.error(error?.message || 'Không thể sắp xếp bài học!');
     },
   });
 };
