@@ -17,6 +17,7 @@ import {
   Plus,
   ChevronDown,
   ChevronRight,
+  ChevronUp,
   Edit,
   Trash2,
   GripVertical,
@@ -31,7 +32,9 @@ import {
   BookOpen,
   HelpCircle,
   Video,
-  Loader2
+  Loader2,
+  MoveUp,
+  MoveDown
 } from 'lucide-react';
 import {
   useCourseBySlug,
@@ -39,9 +42,11 @@ import {
   useCreateSection,
   useUpdateSection,
   useDeleteSection,
+  useReorderSections,
   useCreateLesson,
   useUpdateLesson,
   useDeleteLesson,
+  useReorderLessons,
   useAddLessonToSection,
   useCreateArticle,
   useUpdateArticle,
@@ -88,9 +93,11 @@ const CourseBuilder = () => {
   const createSectionMutation = useCreateSection();
   const updateSectionMutation = useUpdateSection();
   const deleteSectionMutation = useDeleteSection();
+  const reorderSectionsMutation = useReorderSections();
   const createLessonMutation = useCreateLesson();
   const updateLessonMutation = useUpdateLesson();
   const deleteLessonMutation = useDeleteLesson();
+  const reorderLessonsMutation = useReorderLessons();
   const addLessonToSectionMutation = useAddLessonToSection();
   const createArticleMutation = useCreateArticle();
   const updateArticleMutation = useUpdateArticle();
@@ -355,10 +362,17 @@ const CourseBuilder = () => {
         { onSuccess: resetDeleteState }
       );
     } else if (deleteTarget.type === 'lesson') {
-      // Find the lesson to check its type
+      // Find the lesson and its parent section to check type
+      let foundSection = null;
       const lesson = sections
-        .flatMap(section => section.lessons || [])
-        .find(l => l._id === deleteTarget.id);
+        .find(section => {
+          const found = (section.lessons || []).find(l => l._id === deleteTarget.id);
+          if (found) {
+            foundSection = section;
+            return true;
+          }
+          return false;
+        })?.lessons.find(l => l._id === deleteTarget.id);
         
       if (lesson?.type === 'article') {
         // Delete from Article collection
@@ -366,7 +380,7 @@ const CourseBuilder = () => {
           {
             id: deleteTarget.id,
             courseId: courseId,
-            sectionId: selectedSection?._id
+            sectionId: foundSection?._id
           },
           { onSuccess: resetDeleteState }
         );
@@ -376,13 +390,13 @@ const CourseBuilder = () => {
           {
             id: deleteTarget.id,
             courseId: courseId,
-            sectionId: selectedSection?._id
+            sectionId: foundSection?._id
           },
           { onSuccess: resetDeleteState }
         );
       }
     }
-  }, [deleteTarget, courseId, selectedSection, sections, deleteSectionMutation, deleteLessonMutation, deleteArticleMutation]);
+  }, [deleteTarget, courseId, sections, deleteSectionMutation, deleteLessonMutation, deleteArticleMutation]);
 
   // Toggle section expand/collapse
   const toggleSection = (sectionId) => {
@@ -430,6 +444,55 @@ const CourseBuilder = () => {
     setShowDeleteDialog(true);
   };
 
+  // Reorder handlers
+  const handleMoveSection = (sectionId, direction) => {
+    const currentIndex = sections.findIndex(s => s._id === sectionId);
+    if (currentIndex === -1) return;
+
+    if (direction === 'up' && currentIndex === 0) return;
+    if (direction === 'down' && currentIndex === sections.length - 1) return;
+
+    const newSections = [...sections];
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    
+    // Swap sections
+    [newSections[currentIndex], newSections[targetIndex]] = [newSections[targetIndex], newSections[currentIndex]];
+    
+    // Extract section IDs in new order
+    const sectionIds = newSections.map(s => s._id);
+    
+    reorderSectionsMutation.mutate({
+      courseId: courseId,
+      sectionIds: sectionIds
+    });
+  };
+
+  const handleMoveLesson = (sectionId, lessonId, direction) => {
+    const section = sections.find(s => s._id === sectionId);
+    if (!section || !section.lessons) return;
+
+    const currentIndex = section.lessons.findIndex(l => l._id === lessonId);
+    if (currentIndex === -1) return;
+
+    if (direction === 'up' && currentIndex === 0) return;
+    if (direction === 'down' && currentIndex === section.lessons.length - 1) return;
+
+    const newLessons = [...section.lessons];
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    
+    // Swap lessons
+    [newLessons[currentIndex], newLessons[targetIndex]] = [newLessons[targetIndex], newLessons[currentIndex]];
+    
+    // Extract lesson IDs in new order
+    const lessonIds = newLessons.map(l => l._id);
+    
+    reorderLessonsMutation.mutate({
+      sectionId: sectionId,
+      lessonIds: lessonIds,
+      courseId: courseId
+    });
+  };
+
   // Calculate statistics
   const totalSections = sections.length;
   const totalLessons = sections.reduce((acc, section) => acc + (section.lessons?.length || 0), 0);
@@ -450,9 +513,11 @@ const CourseBuilder = () => {
   const isMutating = createSectionMutation.isPending ||
     updateSectionMutation.isPending ||
     deleteSectionMutation.isPending ||
+    reorderSectionsMutation.isPending ||
     createLessonMutation.isPending ||
     updateLessonMutation.isPending ||
     deleteLessonMutation.isPending ||
+    reorderLessonsMutation.isPending ||
     addLessonToSectionMutation.isPending ||
     createArticleMutation.isPending ||
     updateArticleMutation.isPending ||
@@ -607,6 +672,24 @@ const CourseBuilder = () => {
                             <Button
                               variant="ghost"
                               size="sm"
+                              onClick={() => handleMoveSection(section._id, 'up')}
+                              disabled={sectionIndex === 0 || reorderSectionsMutation.isPending}
+                              title="Di chuyển lên"
+                            >
+                              <ChevronUp className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleMoveSection(section._id, 'down')}
+                              disabled={sectionIndex === sections.length - 1 || reorderSectionsMutation.isPending}
+                              title="Di chuyển xuống"
+                            >
+                              <ChevronDown className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               onClick={() => openEditSection(section)}
                             >
                               <Edit className="w-4 h-4" />
@@ -664,6 +747,24 @@ const CourseBuilder = () => {
                                     </div>
 
                                     <div className="flex items-center gap-1">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleMoveLesson(section._id, lesson._id, 'up')}
+                                        disabled={lessonIndex === 0 || reorderLessonsMutation.isPending}
+                                        title="Di chuyển lên"
+                                      >
+                                        <ChevronUp className="w-4 h-4" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleMoveLesson(section._id, lesson._id, 'down')}
+                                        disabled={lessonIndex === section.lessons.length - 1 || reorderLessonsMutation.isPending}
+                                        title="Di chuyển xuống"
+                                      >
+                                        <ChevronDown className="w-4 h-4" />
+                                      </Button>
                                       <Button
                                         variant="ghost"
                                         size="sm"
