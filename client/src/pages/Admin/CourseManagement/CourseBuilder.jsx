@@ -33,8 +33,6 @@ import {
   HelpCircle,
   Video,
   Loader2,
-  MoveUp,
-  MoveDown
 } from 'lucide-react';
 import {
   useCourseBySlug,
@@ -210,7 +208,7 @@ const CourseBuilder = () => {
 
       // Save article to Article collection
       createArticleMutation.mutate(articleData, {
-        onSuccess: (newArticle) => {
+        onSuccess: () => {
           setShowAddLessonDialog(false);
           setLessonForm({
             title: '',
@@ -510,18 +508,18 @@ const CourseBuilder = () => {
 
   // Loading states
   const isLoading = courseLoading || sectionsLoading;
-  const isMutating = createSectionMutation.isPending ||
-    updateSectionMutation.isPending ||
-    deleteSectionMutation.isPending ||
-    reorderSectionsMutation.isPending ||
-    createLessonMutation.isPending ||
-    updateLessonMutation.isPending ||
-    deleteLessonMutation.isPending ||
-    reorderLessonsMutation.isPending ||
-    addLessonToSectionMutation.isPending ||
-    createArticleMutation.isPending ||
-    updateArticleMutation.isPending ||
-    deleteArticleMutation.isPending;
+  // const isMutating = createSectionMutation.isPending ||
+  //   updateSectionMutation.isPending ||
+  //   deleteSectionMutation.isPending ||
+  //   reorderSectionsMutation.isPending ||
+  //   createLessonMutation.isPending ||
+  //   updateLessonMutation.isPending ||
+  //   deleteLessonMutation.isPending ||
+  //   reorderLessonsMutation.isPending ||
+  //   addLessonToSectionMutation.isPending ||
+  //   createArticleMutation.isPending ||
+  //   updateArticleMutation.isPending ||
+  //   deleteArticleMutation.isPending;
 
   if (isLoading) {
     return (
@@ -1479,7 +1477,7 @@ const CourseBuilder = () => {
             <DialogTitle>Xác nhận xóa</DialogTitle>
             <DialogDescription>
               Bạn có chắc chắn muốn xóa {deleteTarget.type === 'section' ? 'chương' : 'bài học'}{' '}
-              <span className="font-semibold">"{deleteTarget.name}"</span>?
+              <span className="font-semibold">{deleteTarget.name}</span>?
               {deleteTarget.type === 'section' && (
                 <span className="block mt-2 text-red-600">
                   Lưu ý: Tất cả bài học trong chương này cũng sẽ bị xóa.
