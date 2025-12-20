@@ -7,13 +7,24 @@ interface CreateAttendanceDTO {
 
 export class AttendanceService {
   static async createAttendance(data: CreateAttendanceDTO) {
-    const existed =
-      await AttendanceRepository.findByCourseAndDate(
-        data.courseId,
-      );
+    const now = new Date();
+
+    const startOfDay = new Date(now);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(now);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const existed = await AttendanceRepository.findOne({
+      courseId: data.courseId,
+      createdAt: {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      },
+    });
 
     if (existed) {
-      throw new Error("Buổi điểm danh này đã tồn tại");
+      throw new Error("Buổi điểm danh hôm nay đã tồn tại");
     }
 
     return AttendanceRepository.create(data);
