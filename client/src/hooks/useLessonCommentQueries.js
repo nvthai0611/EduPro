@@ -78,7 +78,7 @@ export const useTeacherReply = () => {
       const res = await lessonCommentService.teacherReply(commentId, payload);
       return res;
     },
-    onSuccess: (data, vars) => {
+    onSuccess: () => {
       // Invalidate all lesson comments queries to refresh the list
       qc.invalidateQueries({ queryKey: ['lessonComments'] });
       toast.success('Phản hồi thành công');

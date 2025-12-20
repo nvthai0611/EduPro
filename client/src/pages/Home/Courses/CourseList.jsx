@@ -24,10 +24,8 @@ const formatPrice = (price) => {
   }).format(price);
 };
 
-// AUTO TĂNG HỌC VIÊN 25% - Logic chính
 const calculateStudentsDisplay = (realStudents) => {
   if (!realStudents || realStudents === 0) return 0;
-  // Tăng 25% và làm tròn
   return Math.round(realStudents * 1.25);
 };
 
@@ -99,9 +97,9 @@ const GRADIENT_COLORS = [
 const CourseCard = ({ course }) => {
 
   const labelToUse = course.label || course.title;
-  const labelLines = labelToUse
-    .split("\n")
-    .map((line, index) => <span key={index}>{line}</span>);
+  // const labelLines = labelToUse
+  //   .split("\n")
+  //   .map((line, index) => (<span key={`${course.id || course.slug || 'label'}-${index}`}>{line}</span>));
   const realStudents = course.totalStudents || course.students || 0;
   const displayStudents = calculateStudentsDisplay(realStudents);
 
@@ -139,7 +137,7 @@ const CourseCard = ({ course }) => {
 
         <div className="relative z-10">
           <h3 className="text-2xl font-bold mb-2 whitespace-pre-line leading-tight drop-shadow-sm">
-            {labelLines}
+            {labelToUse}
           </h3>
         </div>
       </div>
@@ -279,7 +277,7 @@ export default function CourseList() {
           <h2 className="text-3xl font-bold mb-6 text-gray-800">Danh sách khóa học</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredCourses.map((course) => (
-              <CourseCard key={course._id} course={course} />
+              <CourseCard key={course.id  ?? course.slug} course={course} />
             ))}
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   Home,
   BookOpen,
@@ -8,16 +8,16 @@ import {
 } from 'lucide-react';
 
 const SideBar = () => {
-  const location = useLocation();
+  // const location = useLocation();
 
   const isActive = (path) => location.pathname === path;
 
   const menuItems = [
     { path: '/', icon: Home, label: 'Home' },
     { path: '/courses', icon: BookOpen, label: 'Courses' },
-    { path: '', icon: Users, label: 'Users' },
-    { path: '', icon: Settings, label: 'Settings' },
-    { path: '', icon: HelpCircle, label: 'Help' }
+    { path: '/users', icon: Users, label: 'Users' },
+    { path: '/settings', icon: Settings, label: 'Settings' },
+    { path: '/help', icon: HelpCircle, label: 'Help' }
   ];
 
   return (
