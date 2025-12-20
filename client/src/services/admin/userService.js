@@ -4,7 +4,7 @@ const addUser = async (userData) => {
   return await apiClient.post('/admin/user/addUser', userData)
 }
 
-const getAllUsers = async (params) => {
+const getAllUsers = async () => {
   return await apiClient.get('/admin/user')
 }
 

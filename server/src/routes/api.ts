@@ -19,6 +19,7 @@ import { orderAdminRoutes } from "./v1/admin/order.route";
 import { submissionRoutes } from "./v1/submission.routes";
 import { limitRequestsMiddleware } from "../middlewares/auth/limitRequest.middleware";
 import blockDirectAccess from "../middlewares/auth/blockDirectAccess";
+import { attendanceRoutes } from "./v1/admin/attendance.route";
 
 export const apiRouter = (io?: Server) => {
   // Block direct browser access to API
@@ -72,6 +73,9 @@ export const apiRouter = (io?: Server) => {
   
   // Course routes
   router.use("/admin/order", orderAdminRoutes);
+
+  // Course routes
+  router.use("/admin/attendance", attendanceRoutes);
 
   return router;
 };

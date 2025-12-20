@@ -8,8 +8,7 @@ export const courseService = {
       const response = await apiClient.post('/courses', courseData);
       return response.data;
     } catch (error) {
-      // console.error('Error creating course:', error);
-      throw error;
+      console.error('Error creating course:', error);
     }
   },
   // Cập nhật khóa học
@@ -18,8 +17,7 @@ export const courseService = {
       const response = await apiClient.patch(`/courses/${id}`, courseData);
       return response.data;
     } catch (error) {
-      // console.error('Error updating course:', error);
-      throw error;
+      console.error('Error updating course:', error);
     }
   },
 
@@ -29,8 +27,7 @@ export const courseService = {
       const response = await apiClient.get('/courses', { params });
       return response.data;
     } catch (error) {
-      // console.error('Error fetching courses:', error);
-      throw error;
+      console.error('Error fetching courses:', error);
     }
   },
 
@@ -40,8 +37,7 @@ export const courseService = {
       const response = await apiClient.get(`/admin/course/${id}`);
       return response.data;
     } catch (error) {
-      // console.error('Error fetching course:', error);
-      throw error;
+      console.error('Error fetching course:', error);
     }
   },
 
@@ -51,8 +47,7 @@ export const courseService = {
       const response = await apiClient.get(`/courses/slug/${slug}`);
       return response;
     } catch (error) {
-      // console.error('Error fetching course by slug:', error);
-      throw error;
+      console.error('Error fetching course by slug:', error);
     }
   },
 
@@ -62,8 +57,7 @@ export const courseService = {
       const response = await apiClient.get('/admin/course/popular');
       return response.data;
     } catch (error) {
-      // console.error('Error fetching popular courses:', error);
-      throw error;
+      console.error('Error fetching popular courses:', error);
     }
   },
 
@@ -73,8 +67,7 @@ export const courseService = {
       const response = await apiClient.get('/admin/course/free');
       return response.data;
     } catch (error) {
-      // console.error('Error fetching free courses:', error);
-      throw error;
+      console.error('Error fetching free courses:', error);
     }
   },
 
@@ -84,8 +77,7 @@ export const courseService = {
       const response = await apiClient.get(`/admin/course/category/${categoryId}`);
       return response.data;
     } catch (error) {
-      // console.error('Error fetching courses by category:', error);
-      throw error;
+      console.error('Error fetching courses by category:', error);
     }
   },
 
@@ -97,8 +89,7 @@ export const courseService = {
       });
       return response.data;
     } catch (error) {
-      // console.error('Error searching courses:', error);
-      throw error;
+      console.error('Error searching courses:', error);
     }
   },
 
@@ -108,8 +99,7 @@ export const courseService = {
       const response = await apiClient.post(`/courses/${id}/submit`, { approvalMessage });
       return response.data;
     } catch (error) {
-      // console.error('Error submitting course for approval:', error);
-      throw error;
+      console.error('Error submitting course for approval:', error);
     }
   },
 
@@ -119,8 +109,7 @@ export const courseService = {
       const response = await apiClient.delete(`/courses/${id}`);
       return response.data;
     } catch (error) {
-      // console.error('Error deleting course:', error);
-      throw error;
+      console.error('Error deleting course:', error);
     }
   },
 
@@ -133,8 +122,7 @@ export const courseService = {
       });
       return response.data;
     } catch (error) {
-      // console.error('Error reviewing course:', error);
-      throw error;
+      console.error('Error reviewing course:', error);
     }
   },
 
@@ -144,7 +132,6 @@ export const courseService = {
       return response.data;
     } catch (error) {
       console.error('Error creating course:', error);
-      throw error;
     }
   },
 };
