@@ -19,7 +19,7 @@ export const useOptimizedAuth = () => {
       document.cookie = `render_id=${encodedAuth}; ${cookieOptions}`;
       
       // Log thành công
-      console.log("🍪 Cookie saved successfully");
+      // console.log("🍪 Cookie saved successfully");
       
       // Navigate ngay lập tức mà không delay
       navigate("/", { replace: true });

@@ -7,6 +7,9 @@ import {
   getMyComment,
   getComments,
   teacherReply,
+  deleteComment,
+  updateReply,
+  deleteReply,
 } from "../../modules/submission/submission.controller";
 
 const router: Router = Router();
@@ -28,5 +31,14 @@ router.get("/:lessonId/comments", getComments);
 
 // Teacher reply to a specific comment
 router.post("/:commentId/reply", authorizeRoles(["admin", "manager", "instructor"]), teacherReply);
+
+// Delete student comment
+router.delete("/:lessonId/comment", deleteComment);
+
+// Update teacher reply by index
+router.put("/:commentId/reply/:replyIndex", authorizeRoles(["admin", "manager", "instructor"]), updateReply);
+
+// Delete teacher reply by index
+router.delete("/:commentId/reply/:replyIndex", authorizeRoles(["admin", "manager", "instructor"]), deleteReply);
 
 export const submissionRoutes: Router = router;

@@ -75,3 +75,52 @@ export const teacherReply = async (req: any, res: any) => {
     res.status(400).json({ success: false, message: error.message });
   }
 };
+
+export const deleteComment = async (req: any, res: any) => {
+  try {
+    const lessonId = req.params.lessonId;
+    const studentId = req.user?.id;
+
+    const deleted = await SubmissionService.deleteStudentComment({ lessonId, studentId });
+    res.status(200).json({ success: true, data: deleted });
+  } catch (error: any) {
+    const status = error?.status || 400;
+    res.status(status).json({ success: false, message: error.message });
+  }
+};
+
+export const updateReply = async (req: any, res: any) => {
+  try {
+    const { commentId, replyIndex } = req.params;
+    const { content } = req.body;
+
+    if (!content?.trim()) {
+      return res.status(400).json({ success: false, message: "Nội dung reply không được để trống" });
+    }
+
+    const updated = await SubmissionService.updateTeacherReply({ 
+      commentId, 
+      replyIndex: parseInt(replyIndex), 
+      content 
+    });
+    res.status(200).json({ success: true, data: updated });
+  } catch (error: any) {
+    const status = error?.status || 400;
+    res.status(status).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteReply = async (req: any, res: any) => {
+  try {
+    const { commentId, replyIndex } = req.params;
+
+    const updated = await SubmissionService.deleteTeacherReply({ 
+      commentId, 
+      replyIndex: parseInt(replyIndex) 
+    });
+    res.status(200).json({ success: true, data: updated });
+  } catch (error: any) {
+    const status = error?.status || 400;
+    res.status(status).json({ success: false, message: error.message });
+  }
+};
