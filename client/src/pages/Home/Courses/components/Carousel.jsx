@@ -77,7 +77,7 @@ const Carousel = () => {
         <div className="overflow-hidden rounded-3xl" ref={emblaRef}>
           <div className="flex">
             {banners.map((banner) => {
-              const Icon = banner.icon;
+              // const Icon = banner.icon;
               return (
                 <div key={banner.id} className="flex-[0_0_100%] min-w-0 px-2">
                   <div className={`relative h-80 bg-gradient-to-r ${banner.gradient} rounded-3xl overflow-hidden shadow-2xl`}>
@@ -94,15 +94,15 @@ const Carousel = () => {
                         </div>
                         <h5 className=" font-bold mb-4">{banner.subtitle}</h5>
                         <p className="text-white/90">{banner.description}</p>
-                        <button className="mt-8 bg-clip-content text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transition-all hover:scale-105 shadow-lg">
+                        <button className="mt-8 bg-clip-content text-white px-8 py-4 rounded-full font-bold text-lg  transition-all hover:scale-105 shadow-lg">
                           Tìm hiểu ngay
                         </button>
                       </div>
                       
                       {/* Icon decoration */}
-                      <div className="hidden lg:block">
+                      {/* <div className="hidden lg:block">
                         <Icon className="w-64 h-64 text-white/20" />
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 </div>

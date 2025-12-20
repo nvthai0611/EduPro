@@ -266,7 +266,7 @@ export default function CourseList() {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar Container */}
-      <div className="w-24 flex-shrink-0 p-4">
+      <div className="w-28 flex-shrink-0 p-4">
         <SideBar />
       </div>
 
