@@ -20,6 +20,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useCourses } from "../../../hooks/useCourseQueries";
 import { orderService } from "../../../services/admin/orderService"
 import { changeAttendance, createAttendance, getAttendanceByCourse } from "../../../services/admin/attendanceService";
+import { toast, ToastContainer } from "react-toastify";
 
 export default function AttendanceManage() {
   const [step, setStep] = useState("courses");
@@ -30,6 +31,7 @@ export default function AttendanceManage() {
   const [selectedSession, setSelectedSession] = useState("");
   const [absentStudents, setAbsentStudents] = useState([]);
   const [missingHomeworkStudents, setMissingHomeworkStudents] = useState([]);
+  const [reload, setReload] = useState(false);
 
   const { data: courses = [] } = useCourses();
 
@@ -59,7 +61,7 @@ export default function AttendanceManage() {
       }));
 
     setStudents(mappedStudents);
-  }, [selectedCourse, orders]);
+  }, [selectedCourse, orders, reload]);
 
   useEffect(() => {
     setAbsentStudents(studentAttendance.filter(s => s.attendance === false));
@@ -109,29 +111,36 @@ export default function AttendanceManage() {
   };
 
   const handleSubmit = async () => {
-    if (step === "check") {
-      const dataFinal = {
-        courseId: selectedCourse?._id,
-        records: students
+    try {
+      if (step === "check") {
+        const dataFinal = {
+          courseId: selectedCourse?._id,
+          records: students
+        }
+
+        await createAttendance(dataFinal);
+        setReload(!reload);
       }
 
-      await createAttendance(dataFinal);
-    }
+      if (step === "change") {
+        const dataFinal = {
+          records: studentAttendance
+        }
 
-    if (step === "change") {
-      const dataFinal = {
-        records: studentAttendance
+        await changeAttendance(selectedSession?._id, dataFinal);
       }
 
-      await changeAttendance(selectedSession?._id, dataFinal);
+      await refetch();
+      setStep("sessions");
+    } catch (error) {
+      toast.error(error.message);
     }
-
-    await refetch();
-    setStep("sessions");
   }
 
   return (
     <div className="p-6 space-y-6">
+      <ToastContainer />
+
       {step === "courses" && (
         <>
           <div>
@@ -273,7 +282,7 @@ export default function AttendanceManage() {
         <Card>
           <CardHeader>
             <CardTitle>
-              Điểm danh ngày {format(date, "dd/MM/yyyy")}
+              Điểm danh ngày {format(new Date(), "dd/MM/yyyy")}
             </CardTitle>
           </CardHeader>
 
