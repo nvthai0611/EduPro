@@ -5,8 +5,7 @@ export class AttendanceController {
   // POST /attendance
   static async create(req: Request, res: Response) {
     try {
-      console.log(req.body);
-      
+
       const { courseId, records } = req.body;
 
       if (!courseId || !records) {

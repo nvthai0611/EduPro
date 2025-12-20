@@ -22,10 +22,8 @@ export class AttendanceRepository {
       .populate("courseId", "title");
   }
 
-  static findByCourseAndDate(courseId: string) {
-    return Attendance.findOne({
-      courseId: new Types.ObjectId(courseId),
-    });
+  static findOne(filter: any) {
+    return Attendance.findOne(filter);
   }
 
   static findById(id: string) {
