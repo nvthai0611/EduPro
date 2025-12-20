@@ -17,7 +17,7 @@ export class AttendanceRepository {
     return Attendance.find({
       courseId: new Types.ObjectId(courseId),
     })
-      .sort({ createdAt: -1 })
+      .sort({ date: -1 })
       .populate("records.studentId", "fullName email")
       .populate("courseId", "title");
   }
