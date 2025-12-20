@@ -7,8 +7,9 @@ export const metadata = {
 
 export default function PageUserManagement() {
     return (
-        <div className="w-full">
-            <h1 className="text-3xl font-bold mb-6">Quản lý người dùng</h1>
+        <div className="w-full p-6">
+            <h1 className="text-3xl font-bold text-gray-900">Quản lý người dùng</h1>
+            <p className="text-gray-600 mt-2">Quản lý các tài khoản của học viên</p>
             <UserManagement />
         </div>
     )

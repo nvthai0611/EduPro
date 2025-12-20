@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  BarChart3,
   Users,
   Settings,
   MessageSquare,
@@ -13,9 +12,8 @@ import {
   Ticket,
   Package,
   Warehouse,
-  ShoppingBasket,
   Percent,
-  Gem,
+  UserCheck,
   ClipboardCheck,
   Unlock,
   HelpCircleIcon,
@@ -134,6 +132,19 @@ export default function DashboardSidebar() {
                   <Link to={"/admin/assign-course"}>
                     <Unlock />
                     <span>Cấp Khóa Học</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  tooltip="Attendance"
+                  isActive={activeMenu == "attendance"}
+                  onClick={() => setActiveMenu("attendance")}
+                >
+                  <Link to={"/admin/attendance"}>
+                    <UserCheck />
+                    <span>Điểm danh</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

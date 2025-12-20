@@ -200,6 +200,10 @@ courseSchema.virtual("effectivePrice").get(function (this: ICourseDocument) {
   return this.salePrice || this.discountPrice || this.price;
 });
 
+courseSchema.set("toJSON", {
+  virtuals: false,
+});
+
 // Instance Methods
 courseSchema.methods.incrementStudentCount = async function (this: ICourseDocument) {
   this.totalStudents += 1;
