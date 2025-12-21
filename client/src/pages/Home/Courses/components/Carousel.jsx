@@ -143,7 +143,7 @@ const Carousel = () => {
               onClick={() => scrollTo(index)}
               className={`rounded-full transition-all ${
                 index === selectedIndex
-                  ? "bg-blue-600 w-10 h-3"
+                  ? "bg-black w-4 h-3"
                   : "bg-gray-300 w-3 h-3"
               }`}
             />

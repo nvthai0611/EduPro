@@ -1,6 +1,6 @@
 
 import { useEffect, useMemo } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -14,14 +14,14 @@ import {
   Globe,
   Smartphone,
   Zap,
-  Loader2,
+  // Loader2,
   AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { Link } from 'react-router-dom';
 import SkillsSection from './SkillsSection';
 import LearningRoadmap from './LearningRoadmap';
-import { toast } from 'react-toastify';
+// import { toast } from 'react-toastify';
 import { useHomeData } from '../../hooks/useHomeQueries';
 import { useOptimizedAuth } from '../../hooks/useOptimizedAuth';
 import { HomePageSkeleton, StatsSkeletonLoader, CategoriesSkeletonLoader, TestimonialsSkeletonLoader } from '../../components/LoadingSpinner/HomeSkeletonLoader';
@@ -30,7 +30,7 @@ import { usePerformanceMonitor } from '../../hooks/usePerformanceMonitor';
 function Home() {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const { handleOAuthSuccess, handleOAuthError } = useOptimizedAuth();
   
   // Performance monitoring
@@ -239,7 +239,7 @@ function Home() {
                     ))}
                   </div>
                   <p className="text-blue-100 italic leading-relaxed">
-                    "{testimonial.content}"
+                    {/* "{testimonial.content}" */}
                   </p>
                 </CardContent>
               </Card>

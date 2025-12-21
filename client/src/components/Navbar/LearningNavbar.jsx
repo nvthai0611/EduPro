@@ -1,33 +1,42 @@
-import  { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { BookOpen, User, Menu, X, ChevronDown, LogOut } from 'lucide-react';
-import LearningPlatformLogo from '../Logo/LearningPlatformLogo';
-import { useAuth } from '../../hooks/useAuth';
-import { Button } from '@/components/ui/button';
+import { useState, useRef, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  BookOpen,
+  User,
+  Menu,
+  X,
+  ChevronDown,
+  LogOut,
+  Search,
+} from "lucide-react";
+import LearningPlatformLogo from "../Logo/LearningPlatformLogo";
+import { useAuth } from "../../hooks/useAuth";
+import { Button } from "@/components/ui/button";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const userMenuRef = useRef(null);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const navigationItems = [
-    { path: '/courses', label: 'Trang chủ' },
-    { path: '/courses', label: 'Khóa học' },
-    { path: '/about', label: 'Giới thiệu' },
-    { path: '/advisory', label: 'Lộ trình' },
-  ];
+  // const navigationItems = [
+  //   { path: '/courses', label: 'Trang chủ' },
+  //   { path: '/courses', label: 'Khóa học' },
+  //   { path: '/about', label: 'Giới thiệu' },
+  //   { path: '/advisory', label: 'Lộ trình' },
+  // ];
 
   const userMenuItems = [
     {
-      label: 'Khóa học của tôi',
-      path: '/my-learning',
+      label: "Khóa học của tôi",
+      path: "/my-learning",
       icon: BookOpen,
     },
     {
-      label: 'Thông tin tài khoản',
-      path: '/tai-khoan',
+      label: "Thông tin tài khoản",
+      path: "/tai-khoan",
       icon: User,
     },
   ];
@@ -35,10 +44,10 @@ const Navbar = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/');
+      navigate("/courses");
       setIsUserMenuOpen(false);
     } catch (error) {
-      console.error('Logout error:', error);
+      // console.error('Logout error:', error);
     }
   };
 
@@ -50,23 +59,37 @@ const Navbar = () => {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
   return (
-    <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+    <nav className=" fixed top-0 left-0 right-0 bg-white shadow-sm border-b border-gray-200 top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-16 gap-4">
           {/* Logo */}
-          <Link to="/" className="flex-shrink-0">
+          <Link to="/courses" className="flex-shrink-0">
             <LearningPlatformLogo size="md" />
           </Link>
 
+          {/* Search Bar - Desktop */}
+          <div className="hidden md:flex flex-1 max-w-2xl">
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Tìm kiếm khóa học..."
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
+          {/* <div className="hidden md:flex items-center space-x-8">
             {navigationItems.map((item) => (
               <Link
                 key={item.path}
@@ -76,7 +99,7 @@ const Navbar = () => {
                 {item.label}
               </Link>
             ))}
-          </div>
+          </div> */}
 
           {/* Desktop User Menu */}
           <div className="hidden md:flex items-center space-x-4">
@@ -87,7 +110,7 @@ const Navbar = () => {
                   className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
                 >
                   <img
-                    src={user.image || 'https://via.placeholder.com/32x32'}
+                    src={user.image || "https://via.placeholder.com/32x32"}
                     alt={user.fullName}
                     className="w-8 h-8 rounded-full object-cover"
                   />
@@ -125,21 +148,42 @@ const Navbar = () => {
                   variant="outline"
                   className="w-full bg-transparent"
                   onClick={() =>
-                  (window.location.href =
-                    import.meta.env.VITE_SERVER_API_V1 + "/auth/google")
+                    (window.location.href =
+                      import.meta.env.VITE_SERVER_API_V1 + "/auth/google")
                   }
                 >
                   <svg
+                    viewBox="-3 0 262 262"
                     xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    className="mr-2 h-4 w-4"
+                    preserveAspectRatio="xMidYMid"
+                    fill="#000000"
                   >
-                    <path
-                      d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"
-                      fill="currentColor"
-                    />
+                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                    <g
+                      id="SVGRepo_tracerCarrier"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    ></g>
+                    <g id="SVGRepo_iconCarrier">
+                      <path
+                        d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622 38.755 30.023 2.685.268c24.659-22.774 38.875-56.282 38.875-96.027"
+                        fill="#4285F4"
+                      ></path>
+                      <path
+                        d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055-34.523 0-63.824-22.773-74.269-54.25l-1.531.13-40.298 31.187-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1"
+                        fill="#34A853"
+                      ></path>
+                      <path
+                        d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82 0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602l42.356-32.782"
+                        fill="#FBBC05"
+                      ></path>
+                      <path
+                        d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0 79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251"
+                        fill="#EB4335"
+                      ></path>
+                    </g>
                   </svg>
-                  Đăng nhập với Google
+                  Đăng nhập
                 </Button>
               </div>
             )}
@@ -151,7 +195,11 @@ const Navbar = () => {
               onClick={() => setIsOpen(!isOpen)}
               className="text-gray-700 hover:text-blue-600 p-2 rounded-md transition-colors"
             >
-              {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {isOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
             </button>
           </div>
         </div>
@@ -159,17 +207,18 @@ const Navbar = () => {
         {/* Mobile Navigation */}
         {isOpen && (
           <div className="md:hidden border-t border-gray-200 bg-white">
-            <div className="px-2 pt-2 pb-3 space-y-1">
-              {navigationItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  {item.label}
-                </Link>
-              ))}
+            {/* Search Bar - Mobile */}
+            <div className="px-4 py-3">
+              <div className="relative w-full">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Tìm kiếm khóa học..."
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
             </div>
 
             {/* Mobile User Menu */}
@@ -178,7 +227,7 @@ const Navbar = () => {
                 <div className="space-y-1">
                   <div className="flex items-center px-3 py-2">
                     <img
-                      src={user.image || 'https://via.placeholder.com/40x40'}
+                      src={user.image || "https://via.placeholder.com/40x40"}
                       alt={user.fullName}
                       className="w-10 h-10 rounded-full object-cover mr-3"
                     />
@@ -186,9 +235,7 @@ const Navbar = () => {
                       <div className="text-base font-medium text-gray-800">
                         {user.fullName}
                       </div>
-                      <div className="text-sm text-gray-500">
-                        {user.email}
-                      </div>
+                      <div className="text-sm text-gray-500">{user.email}</div>
                     </div>
                   </div>
                   {userMenuItems.map((item) => (

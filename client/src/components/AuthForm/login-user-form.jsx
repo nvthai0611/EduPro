@@ -57,7 +57,7 @@ export default function LoginUserForm() {
       setIsLoading(false);
       if (res.success) {
         toast.success("Đăng nhập thành công");
-        window.location.href = "/";
+        window.location.href = "/courses";
         return;
       }
       toast.error(res.message.email || res.message.password || res.message || "Đăng nhập thất bại");
