@@ -91,7 +91,7 @@ class CourseService {
     // Chỉ select các fields cần thiết cho public
     const courses = await CourseRepository.findAll(query, {
       select: {
-        _id: 0,
+        _id: 1,
         title: 1,
         slug: 1,
         // thumbnail: 1,
