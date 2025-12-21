@@ -42,8 +42,12 @@ export default function AttendanceManage() {
 
   const { data: attendanceSessions = [], refetch } = useQuery({
     queryKey: ["attendance", selectedCourse?._id],
-    queryFn: () => getAttendanceByCourse(selectedCourse._id),
+    queryFn: () =>
+      selectedCourse && selectedCourse._id
+        ? getAttendanceByCourse(selectedCourse._id)
+        : Promise.resolve({ data: [] }),
     select: (res) => res.data,
+    enabled: !!selectedCourse?._id,
   });
 
   useEffect(() => {
@@ -52,7 +56,7 @@ export default function AttendanceManage() {
     const mappedStudents = orders
       .filter(o => o?.courseId?._id === selectedCourse._id)
       .map(o => ({
-        studentId: o.userId._id,
+        studentId: { _id: o.userId._id, fullName: o.userId.fullName, email: o.userId.email },
         name: o.userId.fullName,
         email: o.userId.email,
         attendance: false,
@@ -72,7 +76,7 @@ export default function AttendanceManage() {
     if (step === "check") {
       setStudents(prev =>
         prev.map(s =>
-          s.studentId === studentId
+          s.studentId._id === studentId
             ? { ...s, attendance: value }
             : s
         )
@@ -93,7 +97,7 @@ export default function AttendanceManage() {
     if (step === "check") {
       setStudents(prev =>
         prev.map(s =>
-          s.studentId === studentId
+          s.studentId._id === studentId
             ? { ...s, homework: value }
             : s
         )
@@ -113,12 +117,17 @@ export default function AttendanceManage() {
   const handleSubmit = async () => {
     try {
       if (step === "check") {
+        if (!students || students.length === 0) {
+          toast.error("Không có học viên để lưu");
+          return;
+        }
         const dataFinal = {
           courseId: selectedCourse?._id,
           records: students
         }
 
         await createAttendance(dataFinal);
+        toast.success("Lưu điểm danh thành công");
         setReload(!reload);
       }
 
@@ -128,12 +137,15 @@ export default function AttendanceManage() {
         }
 
         await changeAttendance(selectedSession?._id, dataFinal);
+        toast.success("Cập nhật điểm danh thành công");
       }
 
       await refetch();
       setStep("sessions");
     } catch (error) {
-      toast.error(error.message);
+      const msg = error?.response?.data?.message || error?.message || "Có lỗi xảy ra";
+      console.error(error);
+      toast.error(msg);
     }
   }
 
@@ -199,10 +211,14 @@ export default function AttendanceManage() {
 
               <CardContent>
                 <Select
-                  onValueChange={(v) => {
-                    setStudentAttendance(v.records);
-                    setSelectedSession(v);
-                    setDate(new Date(v.createdAt));
+                  value={selectedSession?._id || ""}
+                  onValueChange={(id) => {
+                    const session = attendanceSessions.find(x => x._id === id);
+                    if (session) {
+                      setStudentAttendance(session.records || []);
+                      setSelectedSession(session);
+                      setDate(new Date(session.createdAt));
+                    }
                   }}
                 >
                   <SelectTrigger>
@@ -210,7 +226,7 @@ export default function AttendanceManage() {
                   </SelectTrigger>
                   <SelectContent>
                     {attendanceSessions.map((s) => (
-                      <SelectItem key={s?._id} value={s}>
+                      <SelectItem key={s?._id} value={s?._id}>
                         {format(new Date(s?.createdAt), "dd/MM/yyyy")}
                       </SelectItem>
                     ))}
@@ -290,7 +306,7 @@ export default function AttendanceManage() {
             <CardContent className="divide-y">
               {students.map((s) => (
                 <div
-                  key={s.studentId}
+                  key={s.studentId._id}
                   className="grid grid-cols-4 items-center py-3"
                 >
                   <span className="col-span-2">{s.name}</span>
@@ -299,7 +315,7 @@ export default function AttendanceManage() {
                     <Checkbox
                       checked={s.attendance === true}
                       onCheckedChange={(v) =>
-                        toggleAttendance(s.studentId, v === true)
+                        toggleAttendance(s.studentId._id, v === true)
                       }
                     />
                     <span className="text-sm">Đã điểm danh</span>
@@ -309,7 +325,7 @@ export default function AttendanceManage() {
                     <Checkbox
                       checked={s.homework === true}
                       onCheckedChange={(v) =>
-                        toggleHomework(s.studentId, v === true)
+                        toggleHomework(s.studentId._id, v === true)
                       }
                     />
                     <span className="text-sm">Đã nộp BTVN</span>
