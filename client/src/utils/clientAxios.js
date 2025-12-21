@@ -51,7 +51,7 @@ const getCookie = (name) => {
 
 const removeCookie = (name, path = "/") => {
   const isLocalhost = window.location.hostname === "localhost";
-  const isProduction = import.meta.env.VITE_PROD === "production" || window.location.hostname !== "localhost";
+  // const isProduction = import.meta.env.VITE_PROD === "production" || window.location.hostname !== "localhost";
   const expires = "Thu, 01 Jan 1970 00:00:00 GMT";
 
   // Xóa cookie không có domain (cho localhost)
@@ -173,7 +173,14 @@ client.interceptors.response.use(
   (res) => {
     // Giải mã dữ liệu nếu server trả về dữ liệu mã hóa
     if (res.headers["x-encrypted"] === "true" && res.data.encryptedData) {
-      res.data = decryptData(res.data.encryptedData);
+      const decrypted = decryptData(res.data.encryptedData);
+      // Giữ lại structure response, chỉ thay thế encryptedData bằng data
+      res.data = {
+        success: res.data.success,
+        data: decrypted,
+        ...res.data
+      };
+      delete res.data.encryptedData;
     }
     return res;
   },

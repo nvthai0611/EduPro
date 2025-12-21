@@ -47,4 +47,39 @@ export default {
       .populate('studentId', 'fullName avatar')
       .populate('teacherReplies.teacherId', 'fullName avatar');
   },
+
+  // Delete student comment
+  async deleteComment(lessonId: string, studentId: string): Promise<ILessonCommentDocument | null> {
+    return await LessonComment.findOneAndDelete({ lessonId, studentId });
+  },
+
+  // Update teacher reply by index
+  async updateTeacherReply(commentId: string, replyIndex: number, content: string): Promise<ILessonCommentDocument | null> {
+    const comment = await LessonComment.findById(commentId);
+    if (!comment || !comment.teacherReplies || comment.teacherReplies.length <= replyIndex) {
+      return null;
+    }
+    
+    comment.teacherReplies[replyIndex].content = content;
+    await comment.save();
+    
+    return await LessonComment.findById(commentId)
+      .populate('studentId', 'fullName avatar')
+      .populate('teacherReplies.teacherId', 'fullName avatar');
+  },
+
+  // Delete teacher reply by index
+  async deleteTeacherReply(commentId: string, replyIndex: number): Promise<ILessonCommentDocument | null> {
+    const comment = await LessonComment.findById(commentId);
+    if (!comment || !comment.teacherReplies || comment.teacherReplies.length <= replyIndex) {
+      return null;
+    }
+    
+    comment.teacherReplies.splice(replyIndex, 1);
+    await comment.save();
+    
+    return await LessonComment.findById(commentId)
+      .populate('studentId', 'fullName avatar')
+      .populate('teacherReplies.teacherId', 'fullName avatar');
+  },
 };

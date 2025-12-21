@@ -1,6 +1,7 @@
 "use client"
 import { useNavigate } from "react-router-dom";
 import { BookOpen, Award, Target } from "lucide-react"
+import SideBar from "../Home/Courses/components/SideBar";
 
 const About = () => {
 
@@ -33,9 +34,20 @@ const About = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* About Section */}
+       
       <section className="py-20 bg-white">
         <div className="container mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <div className="flex items-start gap-8">
+            {/* Sidebar - sticky on large screens */}
+            <aside className="hidden lg:block w-28 flex-shrink-0">
+              <div className="sticky top-20"> 
+                <SideBar />
+              </div>
+            </aside>
+
+            {/* Main content */}
+            <div className="flex-1">
+              <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Image */}
             <div className="relative">
               <div className="relative overflow-hidden rounded-lg shadow-2xl">
@@ -85,6 +97,8 @@ const About = () => {
               </div>
             </div>
           </div>
+        </div>
+        </div>
         </div>
       </section>
 
