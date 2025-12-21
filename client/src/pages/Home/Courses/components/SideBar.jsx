@@ -20,7 +20,8 @@ const SideBar = () => {
   ];
 
   return (
-    <div className="sticky top-4 left-4   rounded-2xl p-3 z-40 item-center">
+    <div className="sticky top-20 left-4 z-40 rounded-2xl p-3">
+
       <nav className="flex flex-col gap-2">
         {menuItems.map(({ path, icon: Icon, label }) => (
           <Link
