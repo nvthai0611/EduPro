@@ -42,12 +42,8 @@ export default function AttendanceManage() {
 
   const { data: attendanceSessions = [], refetch } = useQuery({
     queryKey: ["attendance", selectedCourse?._id],
-    queryFn: () =>
-      selectedCourse && selectedCourse._id
-        ? getAttendanceByCourse(selectedCourse._id)
-        : Promise.resolve({ data: [] }),
+    queryFn: () => getAttendanceByCourse(selectedCourse._id),
     select: (res) => res.data,
-    enabled: !!selectedCourse?._id,
   });
 
   useEffect(() => {
@@ -126,7 +122,11 @@ export default function AttendanceManage() {
           records: students
         }
 
-        await createAttendance(dataFinal);
+        const respone = await createAttendance(dataFinal);  
+
+        setStudentAttendance(dataFinal.records || []);
+        setSelectedSession(respone.data);
+        setDate(new Date(respone.data.createdAt));
         toast.success("Lưu điểm danh thành công");
         setReload(!reload);
       }
@@ -164,9 +164,9 @@ export default function AttendanceManage() {
               <CardTitle>Danh sách lớp</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {courses.map((c) => (
+              {courses.map((c, index) => (
                 <Button
-                  key={c._id}
+                  key={index}
                   variant="outline"
                   className="w-full justify-start"
                   onClick={() => {
@@ -280,7 +280,7 @@ export default function AttendanceManage() {
                     ) : (
                       <ul className="space-y-1 text-sm">
                         {missingHomeworkStudents.map((s) => (
-                          <li key={s._id} className="text-orange-600">
+                          <li key={s._id} className="text-red-600">
                             • {s.studentId.fullName}
                           </li>
                         ))}

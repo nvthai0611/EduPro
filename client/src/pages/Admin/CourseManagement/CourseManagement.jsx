@@ -828,7 +828,7 @@ const CourseManagement = () => {
                       <div className="text-center py-8 border-2 border-dashed rounded-lg">
                         <CheckSquare className="w-8 h-8 mx-auto text-gray-400 mb-2" />
                         <p className="text-sm text-gray-500">
-                          Chưa có nội dung. Click "Thêm mục" để bắt đầu.
+                          Chưa có nội dung. Click `Thêm mục` để bắt đầu.
                         </p>
                       </div>
                     )}

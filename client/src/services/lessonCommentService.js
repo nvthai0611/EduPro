@@ -29,5 +29,23 @@ export const lessonCommentService = {
   teacherReply: async (commentId, data) => {
     const response = await apiClient.post(`/lessons/${commentId}/reply`, data);
     return response.data;
+  },
+
+  // Delete comment: DELETE /lessons/:lessonId/comment
+  deleteComment: async (lessonId) => {
+    const response = await apiClient.delete(`/lessons/${lessonId}/comment`);
+    return response.data;
+  },
+
+  // Update reply: PUT /lessons/:commentId/reply/:replyIndex
+  updateReply: async (commentId, replyIndex, data) => {
+    const response = await apiClient.put(`/lessons/${commentId}/reply/${replyIndex}`, data);
+    return response.data;
+  },
+
+  // Delete reply: DELETE /lessons/:commentId/reply/:replyIndex
+  deleteReply: async (commentId, replyIndex) => {
+    const response = await apiClient.delete(`/lessons/${commentId}/reply/${replyIndex}`);
+    return response.data;
   }
 };

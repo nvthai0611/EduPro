@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
-import { Reply } from "lucide-react";
+import { Reply, Trash2, Edit2, Check, X } from "lucide-react";
 import { toast } from "react-toastify";
 import { jwtDecode } from "jwt-decode";
 import Cookies from "js-cookie";
@@ -36,12 +36,18 @@ const LessonCommentDialog = ({
   onCreateComment,
   onUpdateComment,
   onTeacherReply,
+  onDeleteComment,
+  onUpdateReply,
+  onDeleteReply,
 }) => {
   const [commentText, setCommentText] = useState(myComment?.content || "");
   const [isSaving, setIsSaving] = useState(false);
   const [replyingTo, setReplyingTo] = useState(null); // commentId being replied to
   const [replyText, setReplyText] = useState("");
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
+  const [editingReply, setEditingReply] = useState(null); // { commentId, replyIndex }
+  const [editReplyText, setEditReplyText] = useState("");
+  const [isUpdatingReply, setIsUpdatingReply] = useState(false);
 
   // Check if current user is admin/manager
   const token = Cookies.get(AUTH_TOKEN.ACCESS_TOKEN);
@@ -88,6 +94,17 @@ const LessonCommentDialog = ({
     }
   };
 
+  const handleDeleteComment = async () => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa nhận xét của mình?')) return;
+    
+    try {
+      await onDeleteComment?.({ lessonId });
+      setCommentText('');
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+    }
+  };
+
   const handleReply = async (commentId) => {
     if (!replyText.trim() || isSubmittingReply) return;
     
@@ -110,6 +127,45 @@ const LessonCommentDialog = ({
     } else {
       setReplyingTo(commentId);
       setReplyText("");
+    }
+  };
+
+  const handleEditReply = (commentId, replyIndex, reply) => {
+    console.log('Edit reply:', { commentId, replyIndex, reply });
+    setEditingReply({ commentId, replyIndex });
+    setEditReplyText(reply.content);
+  };
+
+  const handleUpdateReply = async (commentId, replyIndex) => {
+    if (!editReplyText.trim() || isUpdatingReply) return;
+    if (replyIndex === undefined || replyIndex === null) {
+      toast.error('Không thể cập nhật: Index phản hồi không hợp lệ');
+      return;
+    }
+    
+    setIsUpdatingReply(true);
+    try {
+      await onUpdateReply?.({ commentId, replyIndex, payload: { content: editReplyText } });
+      setEditingReply(null);
+      setEditReplyText("");
+    } catch (error) {
+      console.error('Error updating reply:', error);
+    } finally {
+      setIsUpdatingReply(false);
+    }
+  };
+
+  const handleDeleteReply = async (commentId, replyIndex) => {
+    if (replyIndex === undefined || replyIndex === null) {
+      toast.error('Không thể xóa: Index phản hồi không hợp lệ');
+      return;
+    }
+    if (!window.confirm('Bạn có chắc chắn muốn xóa phản hồi này?')) return;
+    
+    try {
+      await onDeleteReply?.({ commentId, replyIndex });
+    } catch (error) {
+      console.error('Error deleting reply:', error);
     }
   };
 
@@ -138,20 +194,34 @@ const LessonCommentDialog = ({
             />
           </div>
 
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="outline"
-              onClick={() => { setCommentText(myComment?.content || ""); }}
-              disabled={isSaving}
-            >
-              Hủy
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={isSaving || !commentText.trim()}
-            >
-              {isSaving ? 'Đang lưu...' : (myComment ? 'Lưu thay đổi' : 'Gửi nhận xét')}
-            </Button>
+          <div className="flex justify-between items-center">
+            {myComment && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleDeleteComment}
+                disabled={isSaving}
+                className="gap-1"
+              >
+                <Trash2 className="h-4 w-4" />
+                Xóa
+              </Button>
+            )}
+            <div className="flex gap-2 ml-auto">
+              <Button
+                variant="outline"
+                onClick={() => { setCommentText(myComment?.content || ""); }}
+                disabled={isSaving}
+              >
+                Hủy
+              </Button>
+              <Button
+                onClick={handleSave}
+                disabled={isSaving || !commentText.trim()}
+              >
+                {isSaving ? 'Đang lưu...' : (myComment ? 'Lưu thay đổi' : 'Gửi nhận xét')}
+              </Button>
+            </div>
           </div>
 
           {/* Display all comments from other users */}
@@ -248,24 +318,86 @@ const LessonCommentDialog = ({
                             {comment.teacherReplies && comment.teacherReplies.length > 0 && (
                               <div className="mt-3 space-y-2 pl-4 border-l-2 border-blue-200">
                                 <p className="text-xs font-semibold text-blue-600">Phản hồi từ giảng viên:</p>
-                                {comment.teacherReplies.map((reply, idx) => (
+                                {comment.teacherReplies.map((reply, idx) => {
+                                  const isMyReply = userInfo && reply.teacherId?._id === userInfo.userId;
+                                  const isEditingThisReply = editingReply?.commentId === comment._id && editingReply?.replyIndex === idx;
+                                  
+                                  return (
                                   <div key={idx} className="bg-white rounded p-3">
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <img 
-                                        src={reply.teacherId?.avatar || "https://www.gravatar.com/avatar?d=mp&s=24"} 
-                                        alt={reply.teacherId?.fullName || "Teacher"}
-                                        className="w-6 h-6 rounded-full"
-                                      />
-                                      <span className="text-xs font-medium text-slate-700">
-                                        {reply.teacherId?.fullName || "Giảng viên"}
-                                      </span>
-                                      <span className="text-xs text-slate-500">
-                                        {formatTimeAgo(reply.createdAt)}
-                                      </span>
+                                    <div className="flex items-center justify-between gap-2 mb-1">
+                                      <div className="flex items-center gap-2">
+                                        <img 
+                                          src={reply.teacherId?.avatar || "https://www.gravatar.com/avatar?d=mp&s=24"} 
+                                          alt={reply.teacherId?.fullName || "Teacher"}
+                                          className="w-6 h-6 rounded-full"
+                                        />
+                                        <span className="text-xs font-medium text-slate-700">
+                                          {reply.teacherId?.fullName || "Giảng viên"}
+                                        </span>
+                                        <span className="text-xs text-slate-500">
+                                          {formatTimeAgo(reply.createdAt)}
+                                        </span>
+                                      </div>
+                                      {isStaff && isMyReply && !isEditingThisReply && (
+                                        <div className="flex gap-1">
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleEditReply(comment._id, idx, reply)}
+                                            className="h-6 w-6 p-0"
+                                            title="Sửa phản hồi (chưa hỗ trợ)"
+                                          >
+                                            <Edit2 className="h-3 w-3" />
+                                          </Button>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleDeleteReply(comment._id, idx)}
+                                            className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                                            title="Xóa phản hồi (chưa hỗ trợ)"
+                                          >
+                                            <Trash2 className="h-3 w-3" />
+                                          </Button>
+                                        </div>
+                                      )}
                                     </div>
-                                    <p className="text-sm text-slate-700">{reply.content}</p>
+                                    {isEditingThisReply ? (
+                                      <div className="space-y-2">
+                                        <Textarea
+                                          value={editReplyText}
+                                          onChange={(e) => setEditReplyText(e.target.value)}
+                                          className="min-h-[60px] text-sm"
+                                        />
+                                        <div className="flex justify-end gap-1">
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => {
+                                              setEditingReply(null);
+                                              setEditReplyText("");
+                                            }}
+                                            disabled={isUpdatingReply}
+                                            className="h-7"
+                                          >
+                                            <X className="h-3 w-3" />
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            onClick={() => handleUpdateReply(comment._id, idx)}
+                                            disabled={isUpdatingReply || !editReplyText.trim()}
+                                            className="h-7"
+                                          >
+                                            <Check className="h-3 w-3 mr-1" />
+                                            {isUpdatingReply ? 'Lưu...' : 'Lưu'}
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <p className="text-sm text-slate-700">{reply.content}</p>
+                                    )}
                                   </div>
-                                ))}
+                                  );
+                                })}
                               </div>
                             )}
                           </div>

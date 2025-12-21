@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import React, { useEffect, useState } from 'react'
+import  { useEffect, useState } from 'react'
 import { courseService } from '../../../services/admin/courseService';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Eye, XCircle } from 'lucide-react';
@@ -81,96 +81,7 @@ const CourseApprover = () => {
       
       //soft delete
       //isDeleted = true;
-      const handleDeleted = async (courseId) => {
-        if (window.confirm('Bạn có chắc chắn muốn xóa khóa học này?')) {
-          try {
-            await courseService.deleteCourse(courseId);
-            
-            await fetchCourses();
-          } catch (error) {
-            console.error('Error deleting course:', error);
-          }
-        }
-      };
-    
-      const handleCreateCourse = async () => {
-        try {
-          await courseService.createCourse(newCourse);
-          setShowCreateDialog(false);
-          setNewCourse({
-            title: '',
-            description: '',
-            thumbnail: '',
-            category: 'frontend',
-            level: 'beginner',
-            price: 0,
-            status: 'draft'
-          });
-          await fetchCourses();
-        } catch (error) {
-          console.error('Error creating course:', error);
-        }
-      };
-      const handleToggleDelete = async (course) => {
-        try {
-          const isDeleted = course?.isDeleted ? false : true;
-          const updatedCourse = { ...course, isDeleted: isDeleted };
-          await courseService.updateCourse(course._id, updatedCourse);
-          await fetchCourses();
-        } catch (error) {
-          console.error('Error updating course status:', error);
-        }
-      };
-      const handleEditCourse = async () => {
-        try {
-          await courseService.updateCourse(selectedCourse._id, selectedCourse);
-          setShowEditDialog(false);
-          setSelectedCourse(null);
-          await fetchCourses();
-        } catch (error) {
-          console.error('Error updating course:', error);
-        }
-      };
-    
-      const handleDeleteCourse = async (courseId) => {
-        if (window.confirm('Bạn có chắc chắn muốn xóa khóa học này?')) {
-          try {
-            await courseService.deleteCourse(courseId);
-            await fetchCourses();
-          } catch (error) {
-            console.error('Error deleting course:', error);
-          }
-        }
-      };
-    
-      const handleToggleStatus = async (course) => {
-        try {
-          const newStatus = course?.status === 'published' ? 'draft' : 'published';
-          const updatedCourse = { ...course, status: newStatus };
-          await courseService.updateCourse(course._id, updatedCourse);
-          await fetchCourses();
-        } catch (error) {
-          console.error('Error updating course status:', error);
-        }
-      };
-    
-      const formatPrice = (price) => {
-        if (price === 0) return 'Miễn phí';
-        return new Intl.NumberFormat('vi-VN', {
-          style: 'currency',
-          currency: 'VND'
-        }).format(price);
-      };
-    
-      const formatDuration = (minutes) => {
-        const hours = Math.floor(minutes / 60);
-        const mins = minutes % 60;
-        if (hours > 0) {
-          return `${hours}h ${mins}m`;
-        }
-        return `${mins}m`;
-      };
-    
+   
   return (
     <div className="p-6 space-y-6">
       <div>
