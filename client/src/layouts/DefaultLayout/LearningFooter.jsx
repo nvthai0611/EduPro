@@ -5,13 +5,13 @@ import LearningPlatformLogo from '../../components/Logo/LearningPlatformLogo';
 
 const Footer = () => {
 
-    const navigate = useNavigate();
+  const navigate = useNavigate();
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
-    <footer className="bg-gray-900 text-white">
+    <footer className="bg-gray-900 text-white mb-[70px] lg:mb-0">
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -19,7 +19,7 @@ const Footer = () => {
           <div className="space-y-4">
             <LearningPlatformLogo size="lg" />
             <p className="text-gray-300 text-sm leading-relaxed">
-              Nền tảng học lập trình hàng đầu Việt Nam. Chúng tôi cung cấp các khóa học chất lượng cao 
+              Nền tảng học lập trình hàng đầu Việt Nam. Chúng tôi cung cấp các khóa học chất lượng cao
               từ cơ bản đến nâng cao, giúp bạn phát triển kỹ năng lập trình và thăng tiến trong sự nghiệp.
             </p>
             <div className="flex space-x-4">
@@ -63,15 +63,15 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                        <button
-          onClick={() => {
-            navigate("/about");
-            window.scrollTo(0, 0);
-          }}
-          className="text-gray-300 hover:text-white transition-colors text-sm"
-        >
-          Về chúng tôi
-        </button>
+                <button
+                  onClick={() => {
+                    navigate("/about");
+                    window.scrollTo(0, 0);
+                  }}
+                  className="text-gray-300 hover:text-white transition-colors text-sm"
+                >
+                  Về chúng tôi
+                </button>
               </li>
             </ul>
           </div>
@@ -192,7 +192,7 @@ const Footer = () => {
       {/* Back to Top Button */}
       <button
         onClick={scrollToTop}
-        className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 z-50"
+        className="fixed bottom-[70px] right-8 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 z-50"
         title="Lên đầu trang"
       >
         <ArrowUp className="w-5 h-5" />

@@ -7,11 +7,10 @@ export default function AdvisoryPage() {
   return (
     
     <div className="min-h-screen bg-gray-50 py-12 flex">
-      <div className="w-28 flex-shrink-0 p-4">
+      <div className="w-30 flex-shrink-0 p-4">
         <SideBar />
       </div>
-      <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-4xl font-bold mb-8 text-center">Tư vấn lộ trình học tập</h1>
+      <div className="w-full p-3 mt-5">
         <Advisory plans={advisoryPlans} />
       </div>
     </div>
