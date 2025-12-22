@@ -69,41 +69,42 @@ const Carousel = () => {
   ];
 
   return (
-    <div className="relative w-full px-4 py-8">
+    <div className="z-40 w-full px-2 sm:px-4 py-4 sm:py-6 md:py-8">
       <div className="relative max-w-7xl mx-auto">
-        <div ref={emblaRef} className="overflow-hidden rounded-3xl">
+        <div ref={emblaRef} className="overflow-hidden rounded-2xl sm:rounded-3xl">
           <div className="flex">
             {banners.map((banner) => (
-              <div key={banner.id} className="flex-[0_0_100%] min-w-0 px-2">
+              <div key={banner.id} className="flex-[0_0_100%] min-w-0 px-1 sm:px-2">
                 {/* SLIDE */}
-                <div className="relative h-80 rounded-3xl overflow-hidden shadow-2xl">
+                <div className="relative h-48 sm:h-64 md:h-72 lg:h-80 rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg sm:shadow-2xl">
                   {/* IMAGE BACKGROUND (BLUR) */}
                   <img
                     src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQspEpYG7xA60kaNNTB5IoNVeWNB7nzRgT3gw&s"
                     alt=""
-                    className="absolute right-0 top-0 h-full w-[55%] object-cover blur-[1px] scale-110 opacity-50"
+                    className="absolute right-0 top-0 h-full w-[50%] sm:w-[55%] object-cover blur-[1px] scale-110 opacity-50"
                   />
 
                   {/* GRADIENT OVERLAY */}
                   <div className={`absolute inset-0 bg-gradient-to-r ${banner.gradient} from-0% via-60% to-transparent`}/>
 
                   {/* CONTENT */}
-                  <div className="relative z-10 h-full flex items-center px-16">
+                  <div className="relative z-10 h-full flex items-center px-4 sm:px-8 md:px-12 lg:px-16">
                     <div className="text-white max-w-xl">
-                      <h4 className="text-sm font-black tracking-widest mb-3">
+                      <h4 className="text-xs sm:text-sm font-black tracking-widest mb-2 sm:mb-3">
                         {banner.title}
                       </h4>
-                      <h2 className="text-3xl font-bold mb-4">
+                      <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 sm:mb-3 md:mb-4">
                         {banner.subtitle}
                       </h2>
-                      <p className="text-white/90">{banner.description}</p>
+                      <p className="text-white/90 text-xs sm:text-sm md:text-base hidden sm:block">{banner.description}</p>
 
                       <button
                         className="
-                        mt-8
+                        mt-4 sm:mt-6 md:mt-8
                         bg-white text-black
-                        px-8 py-3
+                        px-4 sm:px-6 md:px-8 py-2 sm:py-2.5 md:py-3
                         rounded-full
+                        text-xs sm:text-sm md:text-base
                         font-bold
                         hover:scale-105
                         transition
@@ -120,31 +121,31 @@ const Carousel = () => {
           </div>
         </div>
 
-        {/* NAV BUTTONS */}
+        {/* NAV BUTTONS - Hidden on mobile */}
         <button
           onClick={scrollPrev}
-          className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-4 shadow-xl z-20"
+          className="hidden sm:block absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-2 sm:p-3 md:p-4 shadow-xl z-20"
         >
-          <ChevronLeft className="w-6 h-6 text-gray-700" />
+          <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-gray-700" />
         </button>
 
         <button
           onClick={scrollNext}
-          className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-4 shadow-xl z-20"
+          className="hidden sm:block absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-2 sm:p-3 md:p-4 shadow-xl z-20"
         >
-          <ChevronRight className="w-6 h-6 text-gray-700" />
+          <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-gray-700" />
         </button>
 
         {/* DOTS */}
-        <div className="flex justify-center mt-6 gap-3">
+        <div className="flex justify-center mt-3 sm:mt-4 md:mt-6 gap-2 sm:gap-3">
           {banners.map((_, index) => (
             <button
               key={index}
               onClick={() => scrollTo(index)}
               className={`rounded-full transition-all ${
                 index === selectedIndex
-                  ? "bg-black w-4 h-3"
-                  : "bg-gray-300 w-3 h-3"
+                  ? "bg-black w-3 sm:w-4 h-2.5 sm:h-3"
+                  : "bg-gray-300 w-2.5 sm:w-3 h-2.5 sm:h-3"
               }`}
             />
           ))}

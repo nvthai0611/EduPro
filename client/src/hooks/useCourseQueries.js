@@ -68,7 +68,26 @@ export const useCourses = (filters = {}) => {
     retry: 2,
   });
 };
-
+export const useAdminCourses = (filters = {}) => {
+  return useQuery({
+    queryKey: courseKeys.list(filters),
+    queryFn: async () => {
+      const response = await courseService.getAdminCourses(filters);
+      
+      // Handle different response formats
+      if (Array.isArray(response)) {
+        return response;
+      } else if (response?.data) {
+        return Array.isArray(response.data) ? response.data : [];
+      }
+      return [];
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    retry: 2,
+  });
+};
 /**
  * Hook to fetch single course by ID
  */

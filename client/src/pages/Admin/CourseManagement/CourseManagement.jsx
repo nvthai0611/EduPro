@@ -1,25 +1,4 @@
-/**
- * Course Management Page
- * 
- * This page uses TanStack Query (React Query) for efficient data fetching and caching.
- * 
- * Key Features:
- * - Auto-refetch on filter changes (search, status, level)
- * - Optimistic updates and cache invalidation
- * - Loading and error states handled by React Query
- * - Mutations with automatic toast notifications
- * 
- * Custom Hooks Used:
- * - useCourses(filters) - Fetch courses list with filters
- * - useCreateCourse() - Create new course mutation
- * - useUpdateCourse() - Update course mutation
- * - useDeleteCourse() - Delete course mutation
- * - useSubmitCourseForReview() - Submit course for approval
- * 
- * All hooks are defined in: src/hooks/useCourseQueries.js
- */
-
-import React, { useState, useMemo } from 'react';
+import  { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { toast } from 'react-toastify';
+// import { toast } from 'react-toastify';
 import SubmitApprovalModal from '../../../components/Course/SubmitApprovalModal';
 import AdminNoteModal from '../../../components/Course/AdminNoteModal';
 import {
@@ -41,16 +20,11 @@ import {
   Edit,
   Trash2,
   Eye,
-  Play,
   Users,
   Star,
-  Clock,
-  DollarSign,
   BookOpen,
   TrendingUp,
-  MoreHorizontal,
   MessageSquare,
-  Minus,
   Info,
   CheckSquare,
   AlertCircle,
@@ -58,13 +32,13 @@ import {
   Layers,
   Loader2
 } from 'lucide-react';
-import { courseService } from '../../../services/admin/courseService';
+// import { courseService } from '../../../services/admin/courseService';
 import { 
-  useCourses, 
   useCreateCourse, 
   useUpdateCourse, 
   useDeleteCourse,
-  useSubmitCourseForReview 
+  useSubmitCourseForReview, 
+  useAdminCourses
 } from '../../../hooks/useCourseQueries';
 
 const CourseManagement = () => {
@@ -98,7 +72,25 @@ const CourseManagement = () => {
   }), [searchTerm, statusFilter, levelFilter]);
 
   // React Query hooks
-  const { data: courses = [], isLoading: loading, error, refetch } = useCourses(filters);
+  const { data: courses = [], isLoading: loading, error } = useAdminCourses(filters, {
+    select: (data) => {
+      if (!Array.isArray(data)) return [];
+      
+      // Debug: Log raw data from backend
+      console.log('Raw courses data from backend:', data.slice(0, 2));
+      
+      // Filter out invalid courses and add default status
+      return data
+        .filter(course => course && course._id)
+        .map(course => {
+          // console.log('Course status:', course.title, '- Status:', course.status);
+          return {
+            ...course,
+            status: course.status // Default to draft if status is missing
+          };
+        });
+    }
+  });
   const createCourseMutation = useCreateCourse();
   const updateCourseMutation = useUpdateCourse();
   const deleteCourseMutation = useDeleteCourse();
@@ -112,6 +104,8 @@ const CourseManagement = () => {
       approved: { label: "Đã duyệt", className: "bg-blue-100 text-blue-800" },
       rejected: { label: "Bị từ chối", className: "bg-red-100 text-red-800" },
     };
+    
+    // Return draft as default if status is undefined/null or not found
     return statusConfig[status] || statusConfig.draft;
   };
 
@@ -381,7 +375,11 @@ const CourseManagement = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {courses.filter(course => course && course._id).map(course => (
+                  {courses.map(course => {
+                    // Ensure course has status field
+                    const courseStatus = course?.status || 'draft';
+                    
+                    return (
                     <tr key={course._id} className="border-b hover:bg-gray-50">
                       <td className="p-4">
                         <div className="flex items-center space-x-3">
@@ -427,8 +425,8 @@ const CourseManagement = () => {
                         </div>
                       </td>
                       <td className="p-4">
-                        <Badge className={getStatusBadge(course?.status).className}>
-                          {getStatusBadge(course?.status).label}
+                        <Badge className={getStatusBadge(courseStatus).className}>
+                          {getStatusBadge(courseStatus).label}
                         </Badge>
                       </td>
                       <td className="p-4">
@@ -450,7 +448,7 @@ const CourseManagement = () => {
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
-                          {course?.status !== 'pending' && (
+                          {courseStatus !== 'pending' && (
                             <Button
                               variant="ghost"
                               size="sm"
@@ -462,7 +460,7 @@ const CourseManagement = () => {
                               <Edit className="w-4 h-4" />
                             </Button>
                           )}
-                          {course.status === 'draft' && (
+                          {courseStatus === 'draft' && (
                             <>
                               <Button
                                 variant="ghost"
@@ -478,7 +476,7 @@ const CourseManagement = () => {
                               
                             </>
                           )}
-                          {course.status === 'approved' && (
+                          {courseStatus === 'approved' && (
                             <Button
                                 variant="ghost"
                                 size="sm"
@@ -486,7 +484,7 @@ const CourseManagement = () => {
                               >
                                 Xuất bản
                               </Button>)}
-                          {(course.status === 'published') && (
+                          {courseStatus === 'published' && (
                             <Button
                               variant="ghost"
                               size="sm"
@@ -495,8 +493,8 @@ const CourseManagement = () => {
                             >
                               Xóa
                             </Button>
-                          ) }
-                          {(course.status === 'approved' || course.status === 'rejected') && (
+                          )}
+                          {(courseStatus === 'approved' || courseStatus === 'rejected') && (
                             <Button
                               variant="ghost"
                               size="sm"
@@ -523,7 +521,7 @@ const CourseManagement = () => {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  )})}
                 </tbody>
               </table>
             </div>

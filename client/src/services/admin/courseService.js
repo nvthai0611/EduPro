@@ -30,6 +30,15 @@ export const courseService = {
       console.error('Error fetching courses:', error);
     }
   },
+    getAdminCourses: async (params) => {
+    try {
+      const response = await apiClient.get('/admin/course/all', { params });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching admin courses:', error);
+      throw error;
+    }
+  },
 
   // Lấy chi tiết khóa học
   getCourseById: async (id) => {
