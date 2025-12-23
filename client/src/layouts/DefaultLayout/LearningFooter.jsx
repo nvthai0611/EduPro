@@ -2,13 +2,28 @@ import { useNavigate } from "react-router-dom";
 import { Link } from 'react-router-dom';
 import { ArrowUp, Mail, Phone, MapPin, Facebook, Youtube, Instagram, Github, BookOpen, Users, Award, Code } from 'lucide-react';
 import LearningPlatformLogo from '../../components/Logo/LearningPlatformLogo';
+import { useEffect, useState } from "react";
 
 const Footer = () => {
-
+  const [showBackToTop, setShowBackToTop] = useState(false);
   const navigate = useNavigate();
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 300) {
+        setShowBackToTop(true);
+      } else {
+        setShowBackToTop(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
     <footer className="bg-gray-900 text-white mb-[70px] lg:mb-0">
@@ -190,13 +205,16 @@ const Footer = () => {
       </div>
 
       {/* Back to Top Button */}
-      <button
-        onClick={scrollToTop}
-        className="fixed bottom-[70px] right-8 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 z-50"
-        title="Lên đầu trang"
-      >
-        <ArrowUp className="w-5 h-5" />
-      </button>
+      {showBackToTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-[70px] right-8 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 z-50"
+          title="Lên đầu trang"
+        >
+          <ArrowUp className="w-5 h-5" />
+        </button>
+      )}
+
     </footer>
   );
 };
