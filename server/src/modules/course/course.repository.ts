@@ -14,6 +14,7 @@ class CourseRepository {
     }
     
     return queryBuilder
+      .populate("instructorId", "fullName email image")
       .sort({ createdAt: -1 })
       .lean();
   }

@@ -78,7 +78,7 @@ export const useTeacherReply = () => {
       const res = await lessonCommentService.teacherReply(commentId, payload);
       return res;
     },
-    onSuccess: () => {
+    onSuccess: (data, vars) => {
       // Invalidate all lesson comments queries to refresh the list
       qc.invalidateQueries({ queryKey: ['lessonComments'] });
       toast.success('Phản hồi thành công');
@@ -86,61 +86,6 @@ export const useTeacherReply = () => {
     onError: (err) => {
       console.error('Error replying to comment', err);
       toast.error(err?.response?.data?.message || err?.message || 'Không thể phản hồi');
-    }
-  });
-};
-
-export const useDeleteLessonComment = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ lessonId }) => {
-      const res = await lessonCommentService.deleteComment(lessonId);
-      return res;
-    },
-    onSuccess: (data, vars) => {
-      qc.invalidateQueries({ queryKey: lessonCommentKeys.byLesson(vars.lessonId) });
-      qc.invalidateQueries({ queryKey: lessonCommentKeys.myComment(vars.lessonId) });
-      toast.success('Xóa nhận xét thành công');
-    },
-    onError: (err) => {
-      console.error('Error deleting lesson comment', err);
-      toast.error(err?.response?.data?.message || err?.message || 'Không thể xóa nhận xét');
-    }
-  });
-};
-
-export const useUpdateReply = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ commentId, replyIndex, payload }) => {
-      const res = await lessonCommentService.updateReply(commentId, replyIndex, payload);
-      return res;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['lessonComments'] });
-      toast.success('Cập nhật phản hồi thành công');
-    },
-    onError: (err) => {
-      console.error('Error updating reply', err);
-      toast.error(err?.response?.data?.message || err?.message || 'Không thể cập nhật phản hồi');
-    }
-  });
-};
-
-export const useDeleteReply = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ commentId, replyIndex }) => {
-      const res = await lessonCommentService.deleteReply(commentId, replyIndex);
-      return res;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['lessonComments'] });
-      toast.success('Xóa phản hồi thành công');
-    },
-    onError: (err) => {
-      console.error('Error deleting reply', err);
-      toast.error(err?.response?.data?.message || err?.message || 'Không thể xóa phản hồi');
     }
   });
 };

@@ -20,7 +20,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useCourses } from "../../../hooks/useCourseQueries";
 import { orderService } from "../../../services/admin/orderService"
 import { changeAttendance, createAttendance, getAttendanceByCourse } from "../../../services/admin/attendanceService";
-import { toast, ToastContainer } from "react-toastify";
 
 export default function AttendanceManage() {
   const [step, setStep] = useState("courses");
@@ -31,7 +30,6 @@ export default function AttendanceManage() {
   const [selectedSession, setSelectedSession] = useState("");
   const [absentStudents, setAbsentStudents] = useState([]);
   const [missingHomeworkStudents, setMissingHomeworkStudents] = useState([]);
-  const [reload, setReload] = useState(false);
 
   const { data: courses = [] } = useCourses();
 
@@ -52,7 +50,7 @@ export default function AttendanceManage() {
     const mappedStudents = orders
       .filter(o => o?.courseId?._id === selectedCourse._id)
       .map(o => ({
-        studentId: { _id: o.userId._id, fullName: o.userId.fullName, email: o.userId.email },
+        studentId: o.userId._id,
         name: o.userId.fullName,
         email: o.userId.email,
         attendance: false,
@@ -61,7 +59,7 @@ export default function AttendanceManage() {
       }));
 
     setStudents(mappedStudents);
-  }, [selectedCourse, orders, reload]);
+  }, [selectedCourse, orders]);
 
   useEffect(() => {
     setAbsentStudents(studentAttendance.filter(s => s.attendance === false));
@@ -72,7 +70,7 @@ export default function AttendanceManage() {
     if (step === "check") {
       setStudents(prev =>
         prev.map(s =>
-          s.studentId._id === studentId
+          s.studentId === studentId
             ? { ...s, attendance: value }
             : s
         )
@@ -93,7 +91,7 @@ export default function AttendanceManage() {
     if (step === "check") {
       setStudents(prev =>
         prev.map(s =>
-          s.studentId._id === studentId
+          s.studentId === studentId
             ? { ...s, homework: value }
             : s
         )
@@ -111,48 +109,29 @@ export default function AttendanceManage() {
   };
 
   const handleSubmit = async () => {
-    try {
-      if (step === "check") {
-        if (!students || students.length === 0) {
-          toast.error("Không có học viên để lưu");
-          return;
-        }
-        const dataFinal = {
-          courseId: selectedCourse?._id,
-          records: students
-        }
-
-        const respone = await createAttendance(dataFinal);  
-
-        setStudentAttendance(dataFinal.records || []);
-        setSelectedSession(respone.data);
-        setDate(new Date(respone.data.createdAt));
-        toast.success("Lưu điểm danh thành công");
-        setReload(!reload);
+    if (step === "check") {
+      const dataFinal = {
+        courseId: selectedCourse?._id,
+        records: students
       }
 
-      if (step === "change") {
-        const dataFinal = {
-          records: studentAttendance
-        }
-
-        await changeAttendance(selectedSession?._id, dataFinal);
-        toast.success("Cập nhật điểm danh thành công");
-      }
-
-      await refetch();
-      setStep("sessions");
-    } catch (error) {
-      const msg = error?.response?.data?.message || error?.message || "Có lỗi xảy ra";
-      console.error(error);
-      toast.error(msg);
+      await createAttendance(dataFinal);
     }
+
+    if (step === "change") {
+      const dataFinal = {
+        records: studentAttendance
+      }
+
+      await changeAttendance(selectedSession?._id, dataFinal);
+    }
+
+    await refetch();
+    setStep("sessions");
   }
 
   return (
     <div className="p-6 space-y-6">
-      <ToastContainer />
-
       {step === "courses" && (
         <>
           <div>
@@ -164,9 +143,9 @@ export default function AttendanceManage() {
               <CardTitle>Danh sách lớp</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {courses.map((c, index) => (
+              {courses.map((c) => (
                 <Button
-                  key={index}
+                  key={c._id}
                   variant="outline"
                   className="w-full justify-start"
                   onClick={() => {
@@ -211,14 +190,10 @@ export default function AttendanceManage() {
 
               <CardContent>
                 <Select
-                  value={selectedSession?._id || ""}
-                  onValueChange={(id) => {
-                    const session = attendanceSessions.find(x => x._id === id);
-                    if (session) {
-                      setStudentAttendance(session.records || []);
-                      setSelectedSession(session);
-                      setDate(new Date(session.createdAt));
-                    }
+                  onValueChange={(v) => {
+                    setStudentAttendance(v.records);
+                    setSelectedSession(v);
+                    setDate(new Date(v.createdAt));
                   }}
                 >
                   <SelectTrigger>
@@ -226,7 +201,7 @@ export default function AttendanceManage() {
                   </SelectTrigger>
                   <SelectContent>
                     {attendanceSessions.map((s) => (
-                      <SelectItem key={s?._id} value={s?._id}>
+                      <SelectItem key={s?._id} value={s}>
                         {format(new Date(s?.createdAt), "dd/MM/yyyy")}
                       </SelectItem>
                     ))}
@@ -280,7 +255,7 @@ export default function AttendanceManage() {
                     ) : (
                       <ul className="space-y-1 text-sm">
                         {missingHomeworkStudents.map((s) => (
-                          <li key={s._id} className="text-red-600">
+                          <li key={s._id} className="text-orange-600">
                             • {s.studentId.fullName}
                           </li>
                         ))}
@@ -298,7 +273,7 @@ export default function AttendanceManage() {
         <Card>
           <CardHeader>
             <CardTitle>
-              Điểm danh ngày {format(new Date(), "dd/MM/yyyy")}
+              Điểm danh ngày {format(date, "dd/MM/yyyy")}
             </CardTitle>
           </CardHeader>
 
@@ -306,7 +281,7 @@ export default function AttendanceManage() {
             <CardContent className="divide-y">
               {students.map((s) => (
                 <div
-                  key={s.studentId._id}
+                  key={s.studentId}
                   className="grid grid-cols-4 items-center py-3"
                 >
                   <span className="col-span-2">{s.name}</span>
@@ -315,7 +290,7 @@ export default function AttendanceManage() {
                     <Checkbox
                       checked={s.attendance === true}
                       onCheckedChange={(v) =>
-                        toggleAttendance(s.studentId._id, v === true)
+                        toggleAttendance(s.studentId, v === true)
                       }
                     />
                     <span className="text-sm">Đã điểm danh</span>
@@ -325,7 +300,7 @@ export default function AttendanceManage() {
                     <Checkbox
                       checked={s.homework === true}
                       onCheckedChange={(v) =>
-                        toggleHomework(s.studentId._id, v === true)
+                        toggleHomework(s.studentId, v === true)
                       }
                     />
                     <span className="text-sm">Đã nộp BTVN</span>

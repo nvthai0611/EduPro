@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 // import { createPortal } from "react-dom";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useCourseBySlug, useSectionsWithLessons } from "../../hooks/useCourseQueries";
@@ -6,9 +6,9 @@ import * as orderService from "../../services/user/orderService";
 import * as freeCourseService from "../../services/user/freeCourseService";
 import { useAuth } from "../../hooks/useAuth";
 import VideoPlayer from "../../components/Video/VideoPlayer";
-// import AssignmentSubmission from "../../components/Assignment/AssignmentSubmission";
+import AssignmentSubmission from "../../components/Assignment/AssignmentSubmission";
 import LessonCommentDialog from "../../components/LessonComment/LessonCommentDialog";
-import { useMyLessonComment, useCreateLessonComment, useUpdateLessonComment, useCommentsForLesson, useTeacherReply, useDeleteLessonComment, useUpdateReply, useDeleteReply } from "../../hooks/useLessonCommentQueries";
+import { useMyLessonComment, useCreateLessonComment, useUpdateLessonComment, useCommentsForLesson, useTeacherReply } from "../../hooks/useLessonCommentQueries";
 import { Loader2, CircleHelp } from "lucide-react";
 import parse from 'html-react-parser';
 
@@ -117,7 +117,8 @@ export default function CourseLearnDetail() {
 
   // State để quản lý video hiện tại đang phát
   const [currentPlayingVideo, setCurrentPlayingVideo] = useState(null);
-
+  const [isAssignmentOpen, setAssignmentOpen] = useState(false);
+  const [assignmentSubmissions, setAssignmentSubmissions] = useState([]);
 
   // Lesson comment state
   const [isCommentDialogOpen, setCommentDialogOpen] = useState(false);
@@ -127,9 +128,6 @@ export default function CourseLearnDetail() {
   const createCommentMutation = useCreateLessonComment();
   const updateCommentMutation = useUpdateLessonComment();
   const teacherReplyMutation = useTeacherReply();
-  const deleteCommentMutation = useDeleteLessonComment();
-  const updateReplyMutation = useUpdateReply();
-  const deleteReplyMutation = useDeleteReply();
 
   // State cho video controls
   const [videoRef, setVideoRef] = useState(null);
@@ -186,18 +184,6 @@ export default function CourseLearnDetail() {
     return teacherReplyMutation.mutateAsync({ commentId, payload });
   };
 
-  const handleDeleteComment = async ({ lessonId }) => {
-    return deleteCommentMutation.mutateAsync({ lessonId });
-  };
-
-  const handleUpdateReply = async ({ commentId, replyIndex, payload }) => {
-    return updateReplyMutation.mutateAsync({ commentId, replyIndex, payload });
-  };
-
-  const handleDeleteReply = async ({ commentId, replyIndex }) => {
-    return deleteReplyMutation.mutateAsync({ commentId, replyIndex });
-  };
-
   // Access checking logic using TanStack Query data
   useEffect(() => {
     const checkCourseAccess = async () => {
@@ -237,16 +223,69 @@ export default function CourseLearnDetail() {
 
 
 
-  // const fileInputRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   // when current video changes, select first assignment by default
   useEffect(() => {
-    // const vid = currentPlayingVideo?.videoId;
+    const vid = currentPlayingVideo?.videoId;
     // const assigns = getAssignmentsForVideo(vid);
     // setSelectedAssignmentId(assigns[0]?.id || null);
   }, [currentPlayingVideo]);
 
+  const handleLeftTextSubmit = () => {
+    if (!currentPlayingVideo?.videoId || !selectedAssignmentId) return;
+    const videoId = currentPlayingVideo.videoId;
+    const assignmentId = selectedAssignmentId;
+    const key = `${videoId}:${assignmentId}`;
 
+    const text = (document.getElementById("left-assignment-textarea") || {})
+      .value || "";
+    if (!text.trim()) return;
+
+    const newAns = {
+      id: `${Date.now()}`,
+      text,
+      createdAt: new Date().toISOString(),
+    };
+
+    setLeftPanelAnswers((prev) => ({
+      ...prev,
+      [key]: {
+        textAnswers: [newAns, ...(prev[key]?.textAnswers || [])],
+        fileAnswers: prev[key]?.fileAnswers || [],
+      },
+    }));
+
+    if (document.getElementById("left-assignment-textarea"))
+      document.getElementById("left-assignment-textarea").value = "";
+  };
+
+  const handleLeftFileSubmit = (e) => {
+    e?.preventDefault();
+    if (!currentPlayingVideo?.videoId || !selectedAssignmentId) return;
+    const videoId = currentPlayingVideo.videoId;
+    const assignmentId = selectedAssignmentId;
+    const key = `${videoId}:${assignmentId}`;
+
+    const file = fileInputRef.current?.files?.[0];
+    if (!file) return;
+
+    const newFileAns = {
+      id: `${Date.now()}`,
+      fileName: file.name,
+      createdAt: new Date().toISOString(),
+    };
+
+    setLeftPanelAnswers((prev) => ({
+      ...prev,
+      [key]: {
+        textAnswers: prev[key]?.textAnswers || [],
+        fileAnswers: [newFileAns, ...(prev[key]?.fileAnswers || [])],
+      },
+    }));
+
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
   // --- END NEW ---
 
   useEffect(() => {
@@ -284,6 +323,19 @@ export default function CourseLearnDetail() {
     }
   };
 
+  const handleAssignmentSubmit = ({ link, note }) => {
+    if (!link) return;
+
+    const newSubmission = {
+      id: `${Date.now()}`,
+      link,
+      note,
+      submittedAt: new Date().toISOString(),
+      status: "pending",
+    };
+
+    setAssignmentSubmissions((prev) => [newSubmission, ...prev]);
+  };
 
   // Video control functions
   const handleSpeedChange = (speed) => {
@@ -698,9 +750,6 @@ export default function CourseLearnDetail() {
         allComments={allCommentsQuery.data || []}
         onCreateComment={handleCreateComment}
         onUpdateComment={handleUpdateComment}
-        onDeleteComment={handleDeleteComment}
-        onUpdateReply={handleUpdateReply}
-        onDeleteReply={handleDeleteReply}
       />
     </>
   );

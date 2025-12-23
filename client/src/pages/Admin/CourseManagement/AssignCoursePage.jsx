@@ -232,8 +232,8 @@ const CourseAssign = () => {
               }}
             >
               <option value="">Chọn khóa học</option>
-              {filteredCourses.map((c, index) => (
-                <option key={index} value={c._id}>
+              {filteredCourses.map((c) => (
+                <option key={c._id} value={c._id}>
                   {c.title} - {formatPrice(c.salePrice)}
                 </option>
               ))}

@@ -1,3 +1,4 @@
+import React from 'react';
 import { useNavigate } from "react-router-dom";
 import { Link } from 'react-router-dom';
 import { ArrowUp, Mail, Phone, MapPin, Facebook, Youtube, Instagram, Github, BookOpen, Users, Award, Code } from 'lucide-react';
@@ -114,11 +115,11 @@ const Footer = () => {
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
                 <Mail className="w-4 h-4 text-blue-400" />
-                <span className="text-gray-300 text-sm">Lenin Real</span>
+                <span className="text-gray-300 text-sm">contact@hoanganit.edu.vn</span>
               </div>
               <div className="flex items-center space-x-3">
                 <Phone className="w-4 h-4 text-blue-400" />
-                <span className="text-gray-300 text-sm">None</span>
+                <span className="text-gray-300 text-sm">+84 123 456 789</span>
               </div>
               <div className="flex items-start space-x-3">
                 <MapPin className="w-4 h-4 text-blue-400 mt-1" />
@@ -172,7 +173,7 @@ const Footer = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="text-sm text-gray-400">
-              © 2025  EduPro Learning Platform. Tất cả quyền được bảo lưu.
+              © 2024  EduPro Learning Platform. Tất cả quyền được bảo lưu.
             </div>
             <div className="flex space-x-6 text-sm">
               <Link to="/privacy" className="text-gray-400 hover:text-white transition-colors">

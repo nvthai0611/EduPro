@@ -40,37 +40,4 @@ export default {
     }
     return updated;
   },
-
-  // Delete student comment
-  async deleteStudentComment(data: { lessonId: string; studentId: string }) {
-    const deleted = await repository.deleteComment(data.lessonId, data.studentId);
-    if (!deleted) {
-      const error: any = new Error("Không tìm thấy nhận xét để xóa");
-      error.status = 404;
-      throw error;
-    }
-    return deleted;
-  },
-
-  // Update teacher reply
-  async updateTeacherReply(data: { commentId: string; replyIndex: number; content: string }) {
-    const updated = await repository.updateTeacherReply(data.commentId, data.replyIndex, data.content);
-    if (!updated) {
-      const error: any = new Error("Không tìm thấy phản hồi để cập nhật");
-      error.status = 404;
-      throw error;
-    }
-    return updated;
-  },
-
-  // Delete teacher reply
-  async deleteTeacherReply(data: { commentId: string; replyIndex: number }) {
-    const updated = await repository.deleteTeacherReply(data.commentId, data.replyIndex);
-    if (!updated) {
-      const error: any = new Error("Không tìm thấy phản hồi để xóa");
-      error.status = 404;
-      throw error;
-    }
-    return updated;
-  },
 };
