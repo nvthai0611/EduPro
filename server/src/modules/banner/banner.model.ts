@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 
 export interface IBanner extends Document {
     title: string;
+    description?: string;
     imageUrl: string;
     linkUrl: string;
     isActive: boolean;
@@ -16,6 +17,10 @@ const bannerSchema = new mongoose.Schema({
     title: {
         type: String,
         required: true,
+        trim: true
+    },
+    description: {
+        type: String,
         trim: true
     },
     imageUrl: {
@@ -50,7 +55,22 @@ const bannerSchema = new mongoose.Schema({
     collection: 'Banners',
     timestamps: true
 });
-
+// Auto-increment order before saving
+bannerSchema.pre('save', async function(next) {
+    if (this.isNew && (this.order === 0 || this.order === undefined)) {
+        try {
+            const maxOrderBanner = await Banner.findOne({ isDeleted: false })
+                .sort({ order: -1 })
+                .select('order')
+                .lean();
+            
+            this.order = maxOrderBanner ? maxOrderBanner.order + 1 : 1;
+        } catch (error) {
+            return next(error as Error);
+        }
+    }
+    next();
+});
 const Banner = mongoose.model<IBanner>('Banner', bannerSchema);
 
 export default Banner;

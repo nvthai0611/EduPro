@@ -1,21 +1,22 @@
-import bannerSchema, { IBanner } from "./banner.model";
+import Banner, { IBanner } from "./banner.model";
 
 class BannerRepository {
+    // get all with param
     async findAll(): Promise<IBanner[]> {
-        return bannerSchema.find().sort({ order: 1 });
+        return Banner.find().sort({ order: 1 });
     }
     async findById(id: string): Promise<IBanner | null> {
-        return bannerSchema.findById(id);
+        return Banner.findById(id);
     }
     async create(data: Partial<IBanner>): Promise<IBanner> {
-        return bannerSchema.create(data);
+        return Banner.create(data);
     }
     async update(id: string, data: Partial<IBanner>): Promise<IBanner | null> {
-        return bannerSchema.findByIdAndUpdate(id, data, { new: true });
+        return Banner.findByIdAndUpdate(id, data, { new: true });
     }
     // Note: Changed delete method to perform a soft delete by setting isDeleted to true
     async delete(id: string, data: Partial<IBanner>): Promise<IBanner | null> {
-        return bannerSchema.findByIdAndUpdate(id, data, { new: true });
+        return Banner.findByIdAndUpdate(id, data, { new: true });
     }
 
 }

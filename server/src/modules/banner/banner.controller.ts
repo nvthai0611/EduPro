@@ -11,6 +11,17 @@ class BannerController {
       res.status(500).json({ message: "Internal Server Error" });
     }
   }
+  // GET /banners
+  async getBanner(req: any, res: any) {
+    try {
+      const banner = await BannerService.getAllBanners();
+      res
+        .status(200)
+        .json({ message: "Banner fetched successfully", data: banner });
+    } catch (error) {
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+}
   async getBannerById(req: any, res: any) {
     try {
       const banner = await BannerService.getBannerById(req.params.id);
@@ -46,6 +57,7 @@ class BannerController {
     try {
       const deletedBanner = await BannerService.deleteBanner(req.params.id, {
         isDeleted: true,
+        updatedAt: new Date()
       });
       res
         .status(200)
