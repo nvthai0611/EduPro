@@ -8,23 +8,23 @@ export const usePerformanceMonitor = (pageName) => {
   const startTime = useRef(Date.now());
   
   useEffect(() => {
-    // const loadTime = Date.now() - startTime.current;
+    const loadTime = Date.now() - startTime.current;
     
     // Log performance metrics in development
-    // if (import.meta.env.DEV) {
-    //   console.log(`🏁 ${pageName} loaded in ${loadTime}ms`);
+    if (import.meta.env.DEV) {
+      console.log(`🏁 ${pageName} loaded in ${loadTime}ms`);
       
-    //   // Performance benchmarks
-    //   if (loadTime < 500) {
-    //     console.log('🚀 Excellent performance!');
-    //   } else if (loadTime < 1000) {
-    //     console.log('✅ Good performance');
-    //   } else if (loadTime < 2000) {
-    //     console.log('⚠️ Fair performance');
-    //   } else {
-    //     console.log('🐌 Poor performance - needs optimization');
-    //   }
-    // }
+      // Performance benchmarks
+      if (loadTime < 500) {
+        console.log('🚀 Excellent performance!');
+      } else if (loadTime < 1000) {
+        console.log('✅ Good performance');
+      } else if (loadTime < 2000) {
+        console.log('⚠️ Fair performance');
+      } else {
+        console.log('🐌 Poor performance - needs optimization');
+      }
+    }
     
     // In production, you could send metrics to analytics
     if (import.meta.env.PROD) {
@@ -50,30 +50,30 @@ export const useAuthPerformanceMonitor = () => {
     authStartTime.current = Date.now();
   };
   
-  // const endAuthTimer = () => {
-  //   // if (authStartTime.current) {
-  //   //   const authTime = Date.now() - authStartTime.current;
+  const endAuthTimer = () => {
+    if (authStartTime.current) {
+      const authTime = Date.now() - authStartTime.current;
       
-  //   //   if (import.meta.env.DEV) {
-  //   //     // console.log(`🔐 OAuth completed in ${authTime}ms`);
+      if (import.meta.env.DEV) {
+        console.log(`🔐 OAuth completed in ${authTime}ms`);
         
-  //   //     if (authTime < 200) {
-  //   //       // console.log('🚀 Lightning fast auth!');
-  //   //     } else if (authTime < 500) {
-  //   //       // console.log('✅ Fast auth');
-  //   //     } else {
-  //   //       // console.log('⚠️ Slow auth - check optimization');
-  //   //     }
-  //   //   }
+        if (authTime < 200) {
+          console.log('🚀 Lightning fast auth!');
+        } else if (authTime < 500) {
+          console.log('✅ Fast auth');
+        } else {
+          console.log('⚠️ Slow auth - check optimization');
+        }
+      }
       
-  //   //   authStartTime.current = null;
-  //   //   return authTime;
-  //   // }
-  //   return 0;
-  // };
+      authStartTime.current = null;
+      return authTime;
+    }
+    return 0;
+  };
   
   return {
     startAuthTimer,
-    // endAuthTimer
+    endAuthTimer
   };
 };
