@@ -338,7 +338,7 @@ export const useUpdateSection = () => {
       const response = await adminSectionService.updateSection(id, data);
       return response?.data || response;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data) => {
       // Get courseId from the response or cache
       const courseId = data?.courseId;
       

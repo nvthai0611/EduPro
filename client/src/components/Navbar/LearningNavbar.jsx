@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import  { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { BookOpen, User, Menu, X, ChevronDown, LogOut } from 'lucide-react';
 import LearningPlatformLogo from '../Logo/LearningPlatformLogo';
@@ -13,7 +13,7 @@ const Navbar = () => {
   const navigate = useNavigate();
 
   const navigationItems = [
-    { path: '/', label: 'Trang chủ' },
+    { path: '/courses', label: 'Trang chủ' },
     { path: '/courses', label: 'Khóa học' },
     { path: '/about', label: 'Giới thiệu' },
     { path: '/advisory', label: 'Lộ trình' },
