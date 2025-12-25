@@ -72,7 +72,7 @@ router.get(
         sameSite: isProduction ? "none" : "strict", // lax thay vì strict để CORS hoạt động
         secure: isProduction,
         httpOnly: false,
-        domain: isProduction ? "edu-pro-delta.vercel.app" : undefined, // undefined cho localhost
+        domain: isProduction ? "fuedupro.com" : undefined, // undefined cho localhost
         maxAge: 24 * 60 * 60 * 1000, // 1 day
       };
 
