@@ -1,11 +1,6 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import {
-  Users,
-  PlayCircle,
-  Clock,
-  Star,
-} from "lucide-react";
+import { Users, PlayCircle, Clock, Star } from "lucide-react";
 import { useCourses } from "../../../hooks/useCourseQueries";
 import SideBar from "./components/SideBar";
 import Carousel from "./components/Carousel";
@@ -95,7 +90,6 @@ const GRADIENT_COLORS = [
 
 // Component Course Card với thông tin đầy đủ
 const CourseCard = ({ course }) => {
-
   const labelToUse = course.label || course.title;
   // const labelLines = labelToUse
   //   .split("\n")
@@ -116,7 +110,9 @@ const CourseCard = ({ course }) => {
 
   const color = useMemo(() => {
     const getRandomGradient = () => {
-      return GRADIENT_COLORS[Math.floor(Math.random() * GRADIENT_COLORS.length)];
+      return GRADIENT_COLORS[
+        Math.floor(Math.random() * GRADIENT_COLORS.length)
+      ];
     };
     return course.color || getRandomGradient();
   }, [course.color]);
@@ -125,62 +121,67 @@ const CourseCard = ({ course }) => {
     <Link
       to={`/courses/${course.slug}`}
       onClick={handleClick}
-      className="group rounded-2xl shadow-lg overflow-hidden bg-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer border border-gray-100"
+      className="group rounded-xl sm:rounded-2xl shadow-md sm:shadow-lg overflow-hidden bg-white hover:shadow-xl sm:hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 sm:hover:-translate-y-2 cursor-pointer border border-gray-100"
     >
       {/* Header with gradient background */}
       <div
-        className={`h-52 bg-gradient-to-br ${color} flex items-center justify-center text-white p-6 text-center relative overflow-hidden`}
+        className={`h-40 sm:h-48 md:h-52 bg-gradient-to-br ${color} flex items-center justify-center text-white p-4 sm:p-6 text-center relative overflow-hidden`}
       >
         {/* Decorative circles */}
-        <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full"></div>
-        <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-white/5 rounded-full"></div>
+        <div className="absolute -top-3 -right-3 sm:-top-4 sm:-right-4 w-20 h-20 sm:w-24 sm:h-24 bg-white/10 rounded-full"></div>
+        <div className="absolute -bottom-6 -left-6 sm:-bottom-8 sm:-left-8 w-24 h-24 sm:w-32 sm:h-32 bg-white/5 rounded-full"></div>
 
         <div className="relative z-10">
-          <h3 className="text-2xl font-bold mb-2 whitespace-pre-line leading-tight drop-shadow-sm">
+          <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-1 sm:mb-2 whitespace-pre-line leading-tight drop-shadow-sm">
             {labelToUse}
           </h3>
         </div>
       </div>
 
       {/* Card content */}
-      <div className="p-6">
+      <div className="p-3 sm:p-4 md:p-6">
         {/* Course title */}
-        <h4 className="font-bold text-gray-900 mb-3 text-lg line-clamp-2 min-h-[56px] group-hover:text-blue-600 transition-colors">
+        <h4 className="font-bold text-gray-900 sm:mb-3 text-sm sm:text-base md:text-lg line-clamp-2 min-h-[40px] sm:min-h-[48px] md:min-h-[56px] group-hover:text-blue-600 transition-colors">
           {course.title}
         </h4>
-
+        {/* Course Description */}
+        {/* <p className="text-gray-600 text-sm sm:text-base mb-3 sm:mb-4 line-clamp-3">
+          {course.description}
+        </p> */}
         {/* Price and rating section */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
           <div className="flex flex-col">
-            <p className="text-2xl font-bold text-orange-500 mb-1">
+            <p className="text-xl sm:text-2xl font-bold text-orange-500 mb-0.5 sm:mb-1">
               {formatPrice(course.salePrice)}
             </p>
             {course.price && course.price > 0 && (
-              <p className="text-sm text-gray-400 line-through">
+              <p className="text-xs sm:text-sm text-gray-400 line-through">
                 {formatPrice(course.price)}
               </p>
             )}
           </div>
 
-          <div className="flex items-center gap-1 bg-yellow-50 px-3 py-1 rounded-full">
-            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-            <span className="text-sm font-semibold text-gray-700">
+          <div className="flex items-center gap-0.5 sm:gap-1 bg-yellow-50 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
+            <Star className="w-3 h-3 sm:w-4 sm:h-4 fill-yellow-400 text-yellow-400" />
+            <span className="text-xs sm:text-sm font-semibold text-gray-700">
               {averageRating?.toFixed(1)}
             </span>
           </div>
         </div>
 
         {/* Divider */}
-        <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-4"></div>
+        <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-3 sm:mb-4"></div>
 
         {/* Stats section - Hiển thị thông tin đầy đủ */}
-        <div className="grid grid-cols-3 gap-4 text-sm">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 text-sm">
           <div className="flex flex-col items-center text-center">
-            <div className="flex items-center justify-center w-8 h-8 bg-blue-50 rounded-full mb-1">
-              <Users className="w-4 h-4 text-blue-500" />
+            <div className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-blue-50 rounded-full mb-0.5 sm:mb-1">
+              <Users className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500" />
             </div>
-            <span className="text-xs text-gray-500">Học viên</span>
-            <span className="font-semibold text-gray-700 text-xs">
+            <span className="text-[10px] sm:text-xs text-gray-500">
+              Học viên
+            </span>
+            <span className="font-semibold text-gray-700 text-[10px] sm:text-xs">
               {displayStudents > 0
                 ? displayStudents.toLocaleString("vi-VN")
                 : "0"}
@@ -188,21 +189,25 @@ const CourseCard = ({ course }) => {
           </div>
 
           <div className="flex flex-col items-center text-center">
-            <div className="flex items-center justify-center w-8 h-8 bg-green-50 rounded-full mb-1">
-              <PlayCircle className="w-4 h-4 text-green-500" />
+            <div className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-green-50 rounded-full mb-0.5 sm:mb-1">
+              <PlayCircle className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
             </div>
-            <span className="text-xs text-gray-500">Bài học</span>
-            <span className="font-semibold text-gray-700">
+            <span className="text-[10px] sm:text-xs text-gray-500">
+              Bài học
+            </span>
+            <span className="font-semibold text-gray-700 text-[10px] sm:text-xs">
               {totalLessons > 0 ? totalLessons : "0"}
             </span>
           </div>
 
           <div className="flex flex-col items-center text-center">
-            <div className="flex items-center justify-center w-8 h-8 bg-orange-50 rounded-full mb-1">
-              <Clock className="w-4 h-4 text-orange-500" />
+            <div className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-orange-50 rounded-full mb-0.5 sm:mb-1">
+              <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-orange-500" />
             </div>
-            <span className="text-xs text-gray-500">Thời lượng</span>
-            <span className="font-semibold text-gray-700 text-xs">
+            <span className="text-[10px] sm:text-xs text-gray-500">
+              Thời lượng
+            </span>
+            <span className="font-semibold text-gray-700 text-[10px] sm:text-xs">
               {courseDuration}
             </span>
           </div>
@@ -217,7 +222,7 @@ export default function CourseList() {
   // const { categorySlug } = useParams();
   // const isCategoryPage = !!categorySlug;
 
-  // ✅ TanStack Query với filters và data transformation
+  //  TanStack Query với filters và data transformation
   const filters = useMemo(
     () => ({
       status: "published",
@@ -226,9 +231,7 @@ export default function CourseList() {
     []
   );
 
-  const {
-    data: courseData = [],
-  } = useCourses(filters, {
+  const { data: courseData = [] } = useCourses(filters, {
     // Transform data để bao gồm thông tin đầy đủ
     select: (data) => {
       if (!Array.isArray(data)) return [];
@@ -265,21 +268,28 @@ export default function CourseList() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar Container */}
-      <div className="w-28 flex-shrink-0 p-4">
+      {/* Sidebar Container - Hidden on mobile, visible on lg+ */}
+      <div className="hidden lg:block lg:w-30 flex-shrink-0 p-4">
         <SideBar />
       </div>
 
       {/* Main Content */}
-      <div className="flex-1">
+      <div className="flex-1 w-full pt-10 lg:pt-12 pb-16 lg:pb-20 lg:px-8 mt-5">
         <Carousel />
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <h2 className="text-3xl font-bold mb-6 text-gray-800">Danh sách khóa học</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6 text-gray-800 px-1">
+            Danh sách khóa học
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
             {filteredCourses.map((course) => (
-              <CourseCard key={course.id  ?? course.slug} course={course} />
+              <CourseCard key={course.id ?? course.slug} course={course} />
             ))}
           </div>
+        </div>
+
+        {/* Mobile Bottom Navigation */}
+        <div className="lg:hidden">
+          <SideBar />
         </div>
       </div>
     </div>

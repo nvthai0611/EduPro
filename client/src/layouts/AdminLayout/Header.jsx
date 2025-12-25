@@ -198,10 +198,11 @@ export default function DashboardHeader() {
                 let toastContent;
 
                 switch (noti.type) {
-                  case "new_order":
+                  case "new_order":{
                     const orderData = noti.orderData;
                     notificationContent = (
                       <>
+                    
                         <div className="flex justify-between items-center w-full">
                           <div
                             className={`text-base font-semibold ${isUnread ? "text-blue-800" : "text-gray-700"
@@ -232,6 +233,7 @@ export default function DashboardHeader() {
                     );
                     toastContent = `🛍️ Đơn hàng mới từ khách: ${orderData?.userName || 'N/A'}\n🧾 Mã đơn: ${orderData?.orderCode || 'N/A'}`;
                     break;
+                  }
                   default:
                     notificationContent = (
                       <>

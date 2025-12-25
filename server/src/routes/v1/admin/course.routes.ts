@@ -19,7 +19,7 @@ router.get("/all", authenticateToken, authorizeRoles(["admin", "manager"]), getA
 router.post("/", authenticateToken, authorizeRoles(["admin", "manager"]), createCourse);
 router.get("/:id", authenticateToken, authorizeRoles(["admin", "manager"]), getCourseById);
 router.get("/manager/:managerId", authenticateToken, authorizeRoles(["admin", "manager"]), getCoursesByManager);
-
+router.get("/courses", authenticateToken, authorizeRoles(["admin", "manager"]), getAllCoursesAdmin);
 
 // Section Management
 

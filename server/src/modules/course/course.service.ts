@@ -95,7 +95,7 @@ class CourseService {
         title: 1,
         slug: 1,
         // thumbnail: 1,
-        // description: 1,
+        description: 1,
         // category: 1,
         level: 1,
         price: 1,

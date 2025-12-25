@@ -19,7 +19,7 @@ import GuestMiddleware from "../middlewares/GuestMiddleware";
 import RoleRedirectMiddleware from "../middlewares/RoleRedirectMiddleware";
 import CourseList from "../pages/Home/Courses/CourseList";
 import CourseDetail from "../pages/Home/Courses/CourseDetail";
-import Home from "../pages/Home/Home";
+// import Home from "../pages/Home/Home";
 
 // Learning Platform
 
@@ -29,7 +29,7 @@ export const publicRoutes = (
     {/* Wrapper check role cho toàn bộ public pages */}
     <Route element={<RoleRedirectMiddleware />}>
       <Route element={<DefaultLayout />}>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<CourseList />} />
         <Route path="/about" element={<About />} />
         <Route path="/advisory" element={<AdvisoryPage />} />
         {/* Course Routes */}

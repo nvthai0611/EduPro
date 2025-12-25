@@ -12,7 +12,16 @@ const courseService = {
       throw error;
     }
   },
-
+    getAdminCourses: async (params) => {
+    try {
+      // apiClient.get(url, params) - params là tham số thứ 2
+      const response = await apiClient.get('/admin/courses', { params });
+      return response;
+    } catch (error) {
+      console.error('Error fetching courses:', error);
+      throw error;
+    }
+  },
   // Lấy chi tiết khóa học theo ID
   getCourseById: async (id) => {
     try {

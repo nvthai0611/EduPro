@@ -32,7 +32,7 @@ const EmailVerifiedSuccess = () => {
     }, [id]);
 
     const handleGoToLogin = () => {
-        window.location.href = "/";
+        window.location.href = "/courses";
     };
 
     return (
@@ -55,7 +55,7 @@ const EmailVerifiedSuccess = () => {
                             <XCircle className="text-red-600 w-16 h-16 mb-4" />
                             <h2 className="text-2xl font-bold mb-2 text-red-700">Verify email failed !</h2>
                             <p className="text-gray-600 mb-6">{message}</p>
-                            <Button onClick={() => { window.location.href = "/" }} className="w-full">
+                            <Button onClick={() => { window.location.href = "/courses" }} className="w-full">
                                 Go to home page
                             </Button>
                         </>

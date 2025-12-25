@@ -20,10 +20,12 @@ import { submissionRoutes } from "./v1/submission.routes";
 import { limitRequestsMiddleware } from "../middlewares/auth/limitRequest.middleware";
 import blockDirectAccess from "../middlewares/auth/blockDirectAccess";
 import { attendanceRoutes } from "./v1/admin/attendance.route";
+import { bannerAdminRoutes } from "./v1/admin/banner.route";
+import { bannerRoutes } from "./v1/banner.route";
 
 export const apiRouter = (io?: Server) => {
   // Block direct browser access to API
-  router.use(blockDirectAccess);
+  // router.use(blockDirectAccess);
   
   // Apply rate limiting to all API routes
   router.use(limitRequestsMiddleware);
@@ -77,5 +79,10 @@ export const apiRouter = (io?: Server) => {
   // Course routes
   router.use("/admin/attendance", attendanceRoutes);
 
+  // Admin Banner routes
+  router.use("/admin/banner", bannerAdminRoutes);
+
+  //public Banner routes
+  router.use("/banner", bannerRoutes);
   return router;
 };

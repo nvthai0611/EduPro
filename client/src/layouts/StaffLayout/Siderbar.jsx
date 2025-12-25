@@ -44,7 +44,7 @@ const StaffSidebar = ({ position }) => {
       if (result.success) {
         toast.success(result.message);
         setTimeout(() => {
-          window.location.replace("/");
+          window.location.replace("/courses");
         }, 500);
       }
     } catch (error) {
