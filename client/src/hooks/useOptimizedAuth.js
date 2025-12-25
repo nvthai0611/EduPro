@@ -22,7 +22,7 @@ export const useOptimizedAuth = () => {
       // console.log("🍪 Cookie saved successfully");
       
       // Navigate ngay lập tức mà không delay
-      navigate("/", { replace: true });
+      window.location.href = "/";
       
       // Show toast sau khi navigate để không block UI
       setTimeout(() => {

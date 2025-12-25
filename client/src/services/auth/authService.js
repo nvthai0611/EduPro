@@ -47,7 +47,7 @@ class AuthService {
     // Domain phải khớp với server cookie domain: .edu-pro-delta.vercel.app
     const domain =
       import.meta.env.VITE_PROD === "production"
-        ? ".edu-pro-delta.vercel.app"
+        ? ".fuedupro.com"
         : undefined;
 
     // Xoá với cả domain và không domain để đảm bảo
