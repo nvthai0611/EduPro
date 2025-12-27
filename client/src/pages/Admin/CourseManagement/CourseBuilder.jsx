@@ -273,76 +273,37 @@ const CourseBuilder = () => {
   };
 
   const handleUpdateLesson = async () => {
-    if (selectedLesson.type === 'article' || lessonForm.type === 'article') {
-      // Validate article content
-      if (lessonForm.content && lessonForm.content.trim().length < 20) {
-        toast.error('Nội dung bài viết phải có ít nhất 20 ký tự');
-        return;
+    // Prepare lesson update data - only send fields expected by lesson validator
+    const lessonData = {
+      title: lessonForm.title,
+      description: lessonForm.description || '',
+      type: lessonForm.type,
+      videoUrl: lessonForm.videoUrl || '',
+      videoDuration: lessonForm.videoDuration || 0,
+      isFree: lessonForm.isFree || false
+    };
+
+    // Remove undefined/empty fields
+    Object.keys(lessonData).forEach(key => {
+      if (lessonData[key] === undefined || lessonData[key] === '') {
+        delete lessonData[key];
       }
+    });
 
-      // Prepare article update data - only send fields expected by article validator
-      const articleData = {
-        title: lessonForm.title,
-        description: lessonForm.description || '',
-        content: lessonForm.content,
-        readingTime: lessonForm.readingTime || 5,
-        isFree: lessonForm.isFree || false
-      };
-
-      // Remove undefined/empty fields
-      Object.keys(articleData).forEach(key => {
-        if (articleData[key] === undefined || articleData[key] === '') {
-          delete articleData[key];
+    // Update lesson in Lesson collection
+    updateLessonMutation.mutate(
+      {
+        id: selectedLesson._id,
+        data: lessonData
+      },
+      {
+        onSuccess: () => {
+          setShowEditLessonDialog(false);
+          setSelectedLesson(null);
+          toast.success('Cập nhật bài học thành công!');
         }
-      });
-
-      // Update article in Article collection
-      updateArticleMutation.mutate(
-        {
-          id: selectedLesson._id,
-          data: articleData
-        },
-        {
-          onSuccess: () => {
-            setShowEditLessonDialog(false);
-            setSelectedLesson(null);
-            toast.success('Cập nhật bài viết thành công!');
-          }
-        }
-      );
-    } else {
-      // Prepare lesson update data - only send fields expected by lesson validator
-      const lessonData = {
-        title: lessonForm.title,
-        description: lessonForm.description || '',
-        type: lessonForm.type,
-        videoUrl: lessonForm.videoUrl || '',
-        videoDuration: lessonForm.videoDuration || 0,
-        isFree: lessonForm.isFree || false
-      };
-
-      // Remove undefined/empty fields
-      Object.keys(lessonData).forEach(key => {
-        if (lessonData[key] === undefined || lessonData[key] === '') {
-          delete lessonData[key];
-        }
-      });
-
-      // Update lesson in Lesson collection
-      updateLessonMutation.mutate(
-        {
-          id: selectedLesson._id,
-          data: lessonData
-        },
-        {
-          onSuccess: () => {
-            setShowEditLessonDialog(false);
-            setSelectedLesson(null);
-            toast.success('Cập nhật bài học thành công!');
-          }
-        }
-      );
-    }
+      }
+    );
   };
 
   const handleDelete = React.useCallback(() => {
@@ -371,7 +332,7 @@ const CourseBuilder = () => {
           }
           return false;
         })?.lessons.find(l => l._id === deleteTarget.id);
-        
+
       if (lesson?.type === 'article') {
         // Delete from Article collection
         deleteArticleMutation.mutate(
@@ -452,13 +413,13 @@ const CourseBuilder = () => {
 
     const newSections = [...sections];
     const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-    
+
     // Swap sections
     [newSections[currentIndex], newSections[targetIndex]] = [newSections[targetIndex], newSections[currentIndex]];
-    
+
     // Extract section IDs in new order
     const sectionIds = newSections.map(s => s._id);
-    
+
     reorderSectionsMutation.mutate({
       courseId: courseId,
       sectionIds: sectionIds
@@ -477,13 +438,13 @@ const CourseBuilder = () => {
 
     const newLessons = [...section.lessons];
     const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-    
+
     // Swap lessons
     [newLessons[currentIndex], newLessons[targetIndex]] = [newLessons[targetIndex], newLessons[currentIndex]];
-    
+
     // Extract lesson IDs in new order
     const lessonIds = newLessons.map(l => l._id);
-    
+
     reorderLessonsMutation.mutate({
       sectionId: sectionId,
       lessonIds: lessonIds,
