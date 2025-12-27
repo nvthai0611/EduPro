@@ -93,7 +93,7 @@ const CourseManagement = () => {
   });
   const createCourseMutation = useCreateCourse();
   const updateCourseMutation = useUpdateCourse();
-  const deleteCourseMutation = useDeleteCourse();
+  // const deleteCourseMutation = useDeleteCourse();
   const submitForReviewMutation = useSubmitCourseForReview();
 
   const getStatusBadge = (status) => {
@@ -149,11 +149,11 @@ const CourseManagement = () => {
     });
   };
 
-  const handleDeleteCourse = async (courseId) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa khóa học này?')) {
-      deleteCourseMutation.mutate(courseId);
-    }
-  };
+  // const handleDeleteCourse = async (courseId) => {
+  //   if (window.confirm('Bạn có chắc chắn muốn xóa khóa học này?')) {
+  //     deleteCourseMutation.mutate(courseId);
+  //   }
+  // };
 
   const handleToggleStatus = async (course, newStatus) => {
     const updatedCourse = { ...course, status: newStatus };
@@ -187,14 +187,14 @@ const CourseManagement = () => {
     }).format(price);
   };
 
-  const formatDuration = (minutes) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    if (hours > 0) {
-      return `${hours}h ${mins}m`;
-    }
-    return `${mins}m`;
-  };
+  // const formatDuration = (minutes) => {
+  //   const hours = Math.floor(minutes / 60);
+  //   const mins = minutes % 60;
+  //   if (hours > 0) {
+  //     return `${hours}h ${mins}m`;
+  //   }
+  //   return `${mins}m`;
+  // };
 
     const handleArrayFieldChange = (field, index, value) => {
     const newArray = [...(selectedCourse[field] || [])];

@@ -1,12 +1,12 @@
-import React, { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState } from "react";
 import YouTube from "react-youtube";
 import { Play, Pause, Volume2, VolumeX, Maximize, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { formatDuration } from "../../utils/format";
 
-const VideoPlayer = ({ src, poster, title, className = "", onRef, showCustomControls = false, speedControls }) => {
-  const isYouTube = src.includes("youtube.com") || src.includes("youtu.be");
+const VideoPlayer = ({ src, className = "", onRef, showCustomControls = false, speedControls }) => {
+  // const isYouTube = src.includes("youtube.com") || src.includes("youtu.be");
   const playerRef = useRef(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
