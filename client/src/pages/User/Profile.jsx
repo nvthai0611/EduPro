@@ -9,7 +9,14 @@ import { useAuth } from '../../hooks/useAuth';
 import { getUserProfile } from '../../services/user/userService';
 
 const Profile = () => {
-  const [infoUser, setInfoUser] = useState(null);
+  const [infoUser, setInfoUser] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    image: "",
+    createdAt: "",
+  });
+
   const { user } = useAuth();
 
   // Fetch dữ liệu khi load
@@ -51,7 +58,7 @@ const Profile = () => {
           </div>
 
           <div className="flex-1">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               {infoUser?.fullName}
             </h1>
             <p className="text-sm text-gray-500 mt-1">{formatDate(infoUser?.createdAt)}</p>

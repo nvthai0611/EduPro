@@ -1,7 +1,7 @@
 "use client"
 import { useNavigate } from "react-router-dom";
 import { BookOpen, Award, Target } from "lucide-react"
-import SideBar from "../Home/Courses/components/SideBar";
+import SideBar from "../Home/components/SideBar";
 
 const About = () => {
 
@@ -33,13 +33,13 @@ const About = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 flex">
-      <div className="w-30 flex-shrink-0 p-4">
+      <div className="lg:w-30 lg:p-4 lg:flex-shrink-0">
         <SideBar />
       </div>
 
-      <div>
+      <div className="mx-auto">
         {/* About Section */}
-        <section className="py-20 bg-white">
+        <section className="py-20 bg-gray-50">
           <div className="container mx-auto px-6">
             <div className="flex items-start gap-8">
               {/* Sidebar - sticky on large screens */}
@@ -107,7 +107,7 @@ const About = () => {
         </section>
 
         {/* Experience Section */}
-        <section className="py-20 bg-slate-50">
+        <section className="py-20 bg-gray-50">
           <div className="container mx-auto px-6">
             <div className="text-center mb-16">
               <div className="text-blue-600 text-sm tracking-[0.3em] uppercase font-medium mb-4">Trải Nghiệm Học Tập</div>
@@ -180,7 +180,7 @@ const About = () => {
         </section>
 
         {/* Journey Section */}
-        <section className="py-20 bg-white">
+        <section className="py-20 bg-gray-50">
           <div className="container mx-auto px-6">
             <div className="text-center mb-16">
               <div className="text-blue-600 text-sm tracking-[0.3em] uppercase font-medium mb-4">Hành Trình Học Tập</div>
@@ -207,7 +207,7 @@ const About = () => {
         </section>
 
         {/* Philosophy Section */}
-        <section className="py-20 bg-slate-50">
+        <section className="py-20 bg-gray-50">
           <div className="container mx-auto px-6">
             <div className="max-w-4xl mx-auto text-center">
               <div className="text-blue-600 text-sm tracking-[0.3em] uppercase font-medium mb-4">Triết Lý Giáo Dục</div>

@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { useAuth } from "../../../../hooks/useAuth";
-import * as orderService from "../../../../services/user/orderService";
+import { useAuth } from "../../../hooks/useAuth";
+import * as orderService from "../../../services/user/orderService";
 import { useLocation } from "react-router-dom";
-import { courseService } from "../../../../services/courseService";
-import SocketService from "../../../../utils/socket"
+import { courseService } from "../../../services/courseService";
+import SocketService from "../../../utils/socket"
 
 export const useQuery = () => new URLSearchParams(useLocation().search);
 
@@ -109,10 +109,10 @@ const PaymentPage = () => {
     if (!course) return <p>Đang tải thông tin khóa học...</p>;
 
     return (
-        <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-            <Card className="w-full shadow-lg">
+        <div className="min-h-screen bg-gray-100 flex items-center justify-center mt-[100px]">
+            <Card className="w-full border-none">
                 <CardHeader>
-                    <CardTitle className="text-2xl">Thanh toán khóa học</CardTitle>
+                    <CardTitle className="text-3xl">Thanh toán khóa học</CardTitle>
                 </CardHeader>
 
                 <CardContent className="space-y-6">

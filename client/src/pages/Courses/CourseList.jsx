@@ -1,10 +1,10 @@
 import { useEffect, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Users, PlayCircle, Clock, Star } from "lucide-react";
-import { useCourses } from "../../../hooks/useCourseQueries";
-import SideBar from "./components/SideBar";
-import Carousel from "./components/Carousel";
-import { useOptimizedAuth } from "../../../hooks/useOptimizedAuth";
+import { useCourses } from "../../hooks/useCourseQueries";
+import SideBar from "../Home/components/SideBar";
+import Carousel from "../Home/components/Carousel";
+import { useOptimizedAuth } from "../../hooks/useOptimizedAuth";
 
 const handleClick = () => {
   window.scrollTo({ top: 0, behavior: "instant" });
