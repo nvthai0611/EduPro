@@ -5,11 +5,11 @@ import { Plus, Edit, Trash2, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'react-toastify';
 import BannerFormModal from './components/BannerFormModal';
-import { useBanners } from '../../../hooks/useBanners';
+import { useAdminBanners } from '../../../hooks/useBanners';
 
 const BannerManagement = () => {
   // Fetch banners using TanStack Query
-  const { data: banners = [], isLoading, isError, error } = useBanners();
+  const { data: banners = [], isLoading, isError, error } = useAdminBanners();
   
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('create');

@@ -3,7 +3,7 @@ import BannerService from "./banner.service";
 class BannerController {
   async getAllBanners(req: any, res: any) {
     try {
-      const banners = await BannerService.getAllBanners();
+      const banners = await BannerService.getBannerAdmin();
       res
         .status(200)
         .json({ message: "Banners fetched successfully", data: banners });

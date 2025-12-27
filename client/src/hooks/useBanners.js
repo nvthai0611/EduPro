@@ -37,8 +37,26 @@ export const useBanners = (filters = {}) => {
 
 }
 
-export const useAdminBanners = () => {
+export const useAdminBanners = (filters ={}) => {
   // Placeholder for future admin banner-related hooks
+  return useQuery({
+      queryKey: bannerKeys.list(filters),
+      queryFn: async () => {
+        const response = await bannersService.getAdminBanners(filters);
+        
+        // Handle different response formats
+        if (Array.isArray(response)) {
+          return response;
+        } else if (response?.data) {
+          return Array.isArray(response.data) ? response.data : [];
+        }
+        return [];
+      },
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 10, // 10 minutes
+      refetchOnWindowFocus: false, // Don't refetch on window focus
+      retry: 2,
+    });
 }
 
 export const useCreateBanner = () => {
