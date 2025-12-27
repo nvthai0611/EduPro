@@ -23,15 +23,19 @@ const LessonItem = ({ item, isCurrent, onClick }) => (
   >
     <div className="flex items-center justify-between">
       <span className="flex items-center text-sm">
+        {item.type === "video" ? <>
+          <Video className={`text-blue-600 border-blue-500`} />
+        </> : <>
+          <BookOpen className={`text-green-600 text-green-600`} />
+        </>}
         <i
           className={`mr-2 far fa-circle ${isCurrent ? "text-orange-500" : "text-gray-400"
             }`}
         ></i>
         {item.title}
       </span>
-      <span className="text-xs text-gray-500 flex items-center gap-1 justify-center">
+      <span className="text-xs text-gray-500">
         {item.videoDuration ? item?.videoDuration / 60 + " ph" : item?.readingTime + " ph"}
-        {item.type === "video" ? <Video /> : <BookOpen />}
       </span>
     </div>
   </div>
