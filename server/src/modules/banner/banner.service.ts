@@ -4,8 +4,13 @@ import BannerRepository from './banner.repository';
 
 class BannerService {
     async getAllBanners() {
-        return BannerRepository.findAll();
+        return BannerRepository.findAll(
+          );
     }
+    async getBannerAdmin() {
+      return BannerRepository.findAllAdmin(
+        );
+  }
     async getBannerById(id: string) {
         return BannerRepository.findById(id);
     }

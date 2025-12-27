@@ -1,0 +1,95 @@
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'react-toastify';
+import { bannersService } from '../services/admin/bannersService';
+
+export const bannerKeys = {
+  all: ['banners'],
+  lists: () => [...bannerKeys.all, 'list'],
+  list: (filters) => [...bannerKeys.lists(), filters],
+//   details: () => [...bannerKeys.all, 'detail'],
+//   detail: (id) => [...bannerKeys.details(), id],
+//   bySlug: (slug) => [...bannerKeys.all, 'slug', slug],
+};
+
+
+
+export const useBanners = (filters = {}) => {
+  // Placeholder for future banner-related hooks
+   return useQuery({
+      queryKey: bannerKeys.list(filters),
+      queryFn: async () => {
+        const response = await bannersService.getBanners(filters);
+        
+        // Handle different response formats
+        if (Array.isArray(response)) {
+          return response;
+        } else if (response?.data) {
+          return Array.isArray(response.data) ? response.data : [];
+        }
+        return [];
+      },
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 10, // 10 minutes
+      refetchOnWindowFocus: false, // Don't refetch on window focus
+      retry: 2,
+    });
+
+}
+
+export const useAdminBanners = (filters ={}) => {
+  // Placeholder for future admin banner-related hooks
+  return useQuery({
+      queryKey: bannerKeys.list(filters),
+      queryFn: async () => {
+        const response = await bannersService.getAdminBanners(filters);
+        
+        // Handle different response formats
+        if (Array.isArray(response)) {
+          return response;
+        } else if (response?.data) {
+          return Array.isArray(response.data) ? response.data : [];
+        }
+        return [];
+      },
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 10, // 10 minutes
+      refetchOnWindowFocus: false, // Don't refetch on window focus
+      retry: 2,
+    });
+}
+
+export const useCreateBanner = () => {
+  // Placeholder for future create banner hook
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: bannersService.createBanner,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: bannerKeys.all });
+      toast.success('Banner created successfully');
+    },
+    onError: (error) => {
+      toast.error(`Error creating banner: ${error.message}`);
+    },
+  });
+}
+
+export const useUpdateBanner = () => {
+    // Placeholder for future update banner hook
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({id, bannerData}) => bannersService.updateBanner(id, bannerData),
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: bannerKeys.all });
+          // toast.success('Banner updated successfully');
+        },
+        onError: (error) => {
+          toast.error(`Error updating banner: ${error.message}`);
+        },
+      });
+}
+
+export const useDeleteBanner = () => {
+    // Placeholder for future delete banner hook
+}

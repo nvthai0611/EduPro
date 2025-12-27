@@ -11,7 +11,7 @@ router.get("/health", (req, res) => {
 
 
 // Public routes - No authentication required
-router.get("/", BannerController.getAllBanners);
+router.get("/", BannerController.getBanner);
 router.get("/:id", BannerController.getBannerById);
 // (Add public routes here if needed)
 
