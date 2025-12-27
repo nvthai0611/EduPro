@@ -9,7 +9,7 @@ import VideoPlayer from "../../components/Video/VideoPlayer";
 // import AssignmentSubmission from "../../components/Assignment/AssignmentSubmission";
 import LessonCommentDialog from "../../components/LessonComment/LessonCommentDialog";
 import { useMyLessonComment, useCreateLessonComment, useUpdateLessonComment, useCommentsForLesson, useTeacherReply, useDeleteLessonComment, useUpdateReply, useDeleteReply } from "../../hooks/useLessonCommentQueries";
-import { Loader2, CircleHelp } from "lucide-react";
+import { Loader2, CircleHelp, Video, BookOpen } from "lucide-react";
 import parse from 'html-react-parser';
 
 // Component cho từng bài học trong danh sách bên phải
@@ -23,6 +23,11 @@ const LessonItem = ({ item, isCurrent, onClick }) => (
   >
     <div className="flex items-center justify-between">
       <span className="flex items-center text-sm">
+        {item.type === "video" ? <>
+          <Video className={`text-blue-600 border-blue-500`} />
+        </> : <>
+          <BookOpen className={`text-green-600 text-green-600`} />
+        </>}
         <i
           className={`mr-2 far fa-circle ${isCurrent ? "text-orange-500" : "text-gray-400"
             }`}

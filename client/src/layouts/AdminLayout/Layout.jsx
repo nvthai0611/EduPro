@@ -1,6 +1,5 @@
 "use client"
 import { SidebarProvider } from "@/components/ui/sidebar"
-import React from 'react'
 import DashboardHeader from "./Header"
 import DashboardSidebar from "./Siderbar"
 import DashboardFooter from "./Footer"

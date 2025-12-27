@@ -1,24 +1,16 @@
 import { Route } from "react-router-dom";
-import AdvisoryPage from '../pages/AdvisoryPage';
+import AdvisoryPage from '../pages/Home/AdvisoryPage';
 
 // Layouts
 import DefaultLayout from "../layouts/DefaultLayout/DefaultLayout";
-import AuthLayout from "../layouts/AuthLayout/AuthLayout";
 
 // Pages
 import About from "../pages/About/About";
-import Login from "../pages/Auth/Login";
-import LoginUserForm from "../components/AuthForm/login-user-form";
-import RegisterPage from "../pages/Auth/Register";
-import ForgotPasswordPage from "../pages/Auth/ForgotPass";
-import ConfirmEmailResetPasswordSuccess from "../pages/Auth/ConfirmEmail";
-import EmailVerifiedSuccess from "../pages/Admin/User/VerifyPage";
 
 // Middlewares
-import GuestMiddleware from "../middlewares/GuestMiddleware";
 import RoleRedirectMiddleware from "../middlewares/RoleRedirectMiddleware";
-import CourseList from "../pages/Home/Courses/CourseList";
-import CourseDetail from "../pages/Home/Courses/CourseDetail";
+import CourseList from "../pages/Courses/CourseList";
+import CourseDetail from "../pages/Courses/CourseDetail";
 // import Home from "../pages/Home/Home";
 
 // Learning Platform
@@ -40,24 +32,5 @@ export const publicRoutes = (
         </Route>
       </Route>
     </Route>
-
-    {/* Auth Pages – chỉ cho guest vào */}
-    <Route element={<AuthLayout />}>
-      <Route element={<GuestMiddleware />}>
-        <Route path="/dang-nhap" element={<LoginUserForm />} />
-        <Route path="/dang-ky" element={<RegisterPage />} />
-        <Route path="/manager/dang-nhap" element={<Login />} />
-        <Route path="/forget-password" element={<ForgotPasswordPage />} />
-      </Route>
-    </Route>
-
-    {/* Verify email */}
-    <Route path="/verify-account/:id" element={<EmailVerifiedSuccess />} />
-
-    {/* Confirm reset password */}
-    <Route
-      path="/confirm-temp-password"
-      element={<ConfirmEmailResetPasswordSuccess />}
-    />
   </>
 );

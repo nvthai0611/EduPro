@@ -19,13 +19,13 @@ import {
   Users2,
   Loader2,
 } from "lucide-react";
-import { useAuth } from "../../../hooks/useAuth";
-import { useCourseBySlug, useCourses } from "../../../hooks/useCourseQueries";
-import * as orderService from "../../../services/user/orderService";
-import * as freeCourseService from "../../../services/user/freeCourseService";
+import { useAuth } from "../../hooks/useAuth";
+import { useCourseBySlug, useCourses } from "../../hooks/useCourseQueries";
+import * as orderService from "../../services/user/orderService";
+import * as freeCourseService from "../../services/user/freeCourseService";
 import { useParams } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
-import { formatPrice, formatDuration } from "../../../utils/format";
+import { formatPrice, formatDuration } from "../../utils/format";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
 

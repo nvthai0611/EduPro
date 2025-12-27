@@ -11,7 +11,6 @@ export const lessonService = {
       return response.data;
     } catch (error) {
     //   console.error('Error creating lesson:', error);
-      throw error;
     }
   },
 
@@ -22,7 +21,6 @@ export const lessonService = {
       return response.data;
     } catch (error) {
     //   console.error('Error fetching lessons by course:', error);
-      throw error;
     }
   },
 
@@ -33,7 +31,6 @@ export const lessonService = {
       return response.data;
     } catch (error) {
     //   console.error('Error fetching lessons by section:', error);
-      throw error;
     }
   },
 
@@ -44,7 +41,6 @@ export const lessonService = {
       return response.data;
     } catch (error) {
     //   console.error('Error fetching lesson:', error);
-      throw error;
     }
   },
 
@@ -55,7 +51,6 @@ export const lessonService = {
       return response.data;
     } catch (error) {
     //   console.error('Error updating lesson:', error);
-      throw error;
     }
   },
 
@@ -66,7 +61,6 @@ export const lessonService = {
       return response.data;
     } catch (error) {
     //   console.error('Error deleting lesson:', error);
-      throw error;
     }
   },
 
@@ -78,7 +72,6 @@ export const lessonService = {
       return response.data;
     } catch (error) {
     //   console.error('Error reordering lessons:', error);
-      throw error;
     }
   },
 
@@ -109,7 +102,6 @@ export const lessonService = {
       return response.data;
     } catch (error) {
       console.error('Error uploading video:', error);
-      throw error;
     }
   },
   */
