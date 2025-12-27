@@ -61,10 +61,33 @@ export const useAdminBanners = (filters ={}) => {
 
 export const useCreateBanner = () => {
   // Placeholder for future create banner hook
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: bannersService.createBanner,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: bannerKeys.all });
+      toast.success('Banner created successfully');
+    },
+    onError: (error) => {
+      toast.error(`Error creating banner: ${error.message}`);
+    },
+  });
 }
 
 export const useUpdateBanner = () => {
     // Placeholder for future update banner hook
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({id, bannerData}) => bannersService.updateBanner(id, bannerData),
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: bannerKeys.all });
+          // toast.success('Banner updated successfully');
+        },
+        onError: (error) => {
+          toast.error(`Error updating banner: ${error.message}`);
+        },
+      });
 }
 
 export const useDeleteBanner = () => {

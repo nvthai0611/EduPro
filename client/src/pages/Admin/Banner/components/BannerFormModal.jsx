@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Image } from 'lucide-react';
+// import { useCreateBanner } from '../../../hooks/useBanners';
 
 const BannerFormModal = ({ 
   show, 
@@ -26,13 +27,13 @@ const BannerFormModal = ({
           </h3>
         </CardHeader>
         <CardContent className="p-6 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          {/* <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Subtitle *</label>
               <input
                 type="text"
-                value={formData.subtitle}
-                onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
+                // value={formData.subtitle}
+                // onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
                 placeholder="GIẢM GIÁ ĐẶC BIỆT"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
@@ -41,13 +42,13 @@ const BannerFormModal = ({
               <label className="block text-sm font-medium text-gray-700 mb-2">Button Text *</label>
               <input
                 type="text"
-                value={formData.buttonText}
-                onChange={(e) => setFormData({ ...formData, buttonText: e.target.value })}
+                // value={formData.buttonText}
+                // onChange={(e) => setFormData({ ...formData, buttonText: e.target.value })}
                 placeholder="Tìm hiểu ngay"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
-          </div>
+          </div> */}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Title *</label>
@@ -76,8 +77,8 @@ const BannerFormModal = ({
               <label className="block text-sm font-medium text-gray-700 mb-2">Button Link *</label>
               <input
                 type="text"
-                value={formData.buttonLink}
-                onChange={(e) => setFormData({ ...formData, buttonLink: e.target.value })}
+                value={formData.linkUrl}
+                onChange={(e) => setFormData({ ...formData, linkUrl: e.target.value })}
                 placeholder="/courses"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
@@ -89,8 +90,8 @@ const BannerFormModal = ({
               </label>
               <input
                 type="text"
-                value={formData.backgroundImage}
-                onChange={(e) => setFormData({ ...formData, backgroundImage: e.target.value })}
+                value={formData.imageUrl}
+                onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
                 placeholder="https://..."
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               />

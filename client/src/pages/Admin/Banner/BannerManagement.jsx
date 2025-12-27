@@ -1,61 +1,59 @@
-import { Card } from '@/components/ui/card';
-import { useState } from 'react'
-import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Eye, EyeOff, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { toast } from 'react-toastify';
-import BannerFormModal from './components/BannerFormModal';
-import { useAdminBanners } from '../../../hooks/useBanners';
+import { Card } from "@/components/ui/card";
+import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Edit, Trash2, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "react-toastify";
+import BannerFormModal from "./components/BannerFormModal";
+import { useAdminBanners, useCreateBanner, useUpdateBanner } from "../../../hooks/useBanners";
 
 const BannerManagement = () => {
   // Fetch banners using TanStack Query
   const { data: banners = [], isLoading, isError, error } = useAdminBanners();
-  
+
   const [showModal, setShowModal] = useState(false);
-  const [modalType, setModalType] = useState('create');
+  const [modalType, setModalType] = useState("create");
   const [selectedBanner, setSelectedBanner] = useState(null);
 
   const [formData, setFormData] = useState({
-    title: '',
-    subtitle: '',
-    description: '',
-    buttonText: '',
-    buttonLink: '',
-    backgroundImage: '',
-    isActive: true
+    title: "",
+    subtitle: "",
+    description: "",
+    // buttonText: '',
+    // buttonLink: '',
+    linkUrl: "",
+    imageUrl: "",
+    isActive: true,
   });
-
+  const createBannerMutation = useCreateBanner();
+  const updateBannerMutation = useUpdateBanner();
   const handleCreate = () => {
-    setModalType('create');
+    setModalType("create");
     setFormData({
-      title: '',
-      subtitle: '',
-      description: '',
-      buttonText: '',
-      buttonLink: '',
-      backgroundImage: '',
-      gradientFrom: '#FF6B35',
-      gradientTo: '#F7931E',
-      textColor: '#FFFFFF',
-      isActive: true
+      title: "",
+      description: "",
+      // buttonText: '',
+      linkUrl: "",
+      imageUrl: "",
+      isActive: true,
     });
     setShowModal(true);
   };
 
   const handleEdit = (banner) => {
-    setModalType('edit');
+    setModalType("edit");
     setSelectedBanner(banner);
     setFormData({
       title: banner.title,
-      subtitle: banner.subtitle,
+      // subtitle: banner.subtitle,
       description: banner.description,
-      buttonText: banner.buttonText,
-      buttonLink: banner.buttonLink,
-      backgroundImage: banner.backgroundImage,
-      gradientFrom: banner.gradientFrom,
-      gradientTo: banner.gradientTo,
-      textColor: banner.textColor,
-      isActive: banner.isActive
+      // buttonText: banner.buttonText,
+      linkUrl: banner.linkUrl,
+      imageUrl: banner.imageUrl,
+      // gradientFrom: banner.gradientFrom,
+      // gradientTo: banner.gradientTo,
+      // textColor: banner.textColor,
+      isActive: banner.isActive,
     });
     setShowModal(true);
   };
@@ -63,27 +61,63 @@ const BannerManagement = () => {
   const handleDelete = (banner) => {
     if (window.confirm(`Bạn có chắc chắn muốn xóa banner "${banner.title}"?`)) {
       // TODO: Implement delete mutation
-      toast.success('Đã xóa banner thành công!');
+      toast.success("Đã xóa banner thành công!");
     }
   };
 
   const toggleActive = (banner) => {
     // TODO: Implement update mutation
-    toast.success(`Đã ${!banner.isActive ? 'kích hoạt' : 'ẩn'} banner!`);
+    toast.success(`Đã ${!banner.isActive ? "kích hoạt" : "ẩn"} banner!`);
   };
 
   const handleSubmit = () => {
-    if (modalType === 'create') {
-      // TODO: Implement create mutation
-      toast.success('Tạo banner mới thành công!');
-    } else {
-      // TODO: Implement update mutation
-      toast.success('Cập nhật banner thành công!');
+    if (modalType === "create") {
+      createBannerMutation.mutate(formData, {
+        onSuccess: () => {
+          toast.success("Tạo banner mới thành công!");
+          setShowModal(false);
+          setFormData({
+            title: "",
+            description: "",
+            buttonText: "",
+            buttonLink: "",
+            backgroundImage: "",
+            isActive: true,
+          });
+        },
+        onError: (error) => {
+          toast.error(
+            error?.response?.data?.message || "Có lỗi xảy ra khi tạo banner!"
+          );
+        },
+      });
+    } else if(modalType === "edit") {
+      updateBannerMutation.mutate(
+        { id: selectedBanner._id, bannerData: formData },
+        {
+          onSuccess: () => {
+            toast.success("Cập nhật banner thành công!");
+            setShowModal(false);
+            setFormData({
+              title: "",
+              description: "",
+              // buttonText: "",
+              linkUrl: "",
+              imageUrl: "",
+              isActive: true,
+            });
+          },
+          onError: (error) => {
+            toast.error(
+              error?.response?.data?.message || "Có lỗi xảy ra khi cập nhật banner!"
+            );
+          },
+        }
+      );
     }
-    setShowModal(false);
   };
 
-  const activeBanners = banners.filter(b => b.isActive);
+  const activeBanners = banners.filter((b) => b.isActive);
 
   // Loading state
   if (isLoading) {
@@ -103,7 +137,9 @@ const BannerManagement = () => {
       <div className="min-h-screen p-6 flex items-center justify-center">
         <div className="text-center bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
           <div className="text-red-600 mb-2">Lỗi tải dữ liệu</div>
-          <p className="text-gray-700">{error?.message || 'Không thể tải dữ liệu banner'}</p>
+          <p className="text-gray-700">
+            {error?.message || "Không thể tải dữ liệu banner"}
+          </p>
         </div>
       </div>
     );
@@ -114,9 +150,7 @@ const BannerManagement = () => {
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <div>
-           <h1 className="text-3xl font-bold text-gray-900">
-            Quản lý Banner
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900">Quản lý Banner</h1>
           <p className="text-gray-600 mt-2">
             Quản lý banner quảng cáo hiển thị trên trang chủ
           </p>
@@ -130,10 +164,7 @@ const BannerManagement = () => {
             <div className="text-sm text-black-500">Đang hoạt động: </div>
             <div className="text-green-600">{activeBanners.length}</div>
           </div>
-          <Button 
-            onClick={handleCreate}
-            className="text-white shadow-lg"
-          >
+          <Button onClick={handleCreate} className="text-white shadow-lg">
             <Plus className="w-5 h-5 mr-2" />
             Tạo banner mới
           </Button>
@@ -154,7 +185,10 @@ const BannerManagement = () => {
       {/* Banners List */}
       <div className="grid grid-cols-1 gap-6">
         {banners.map((banner) => (
-          <Card key={banner._id} className="overflow-hidden hover:shadow-2xl transition-all duration-300 border-0">
+          <Card
+            key={banner._id}
+            className="overflow-hidden hover:shadow-2xl transition-all duration-300 border-0"
+          >
             <div className="flex">
               {/* Preview Thumbnail */}
               <div className="w-96 h-48 relative overflow-hidden">
@@ -162,7 +196,7 @@ const BannerManagement = () => {
                   className="absolute inset-0 bg-cover bg-center"
                   style={{
                     backgroundImage: ` url(${banner.imageUrl})`,
-                    backgroundBlendMode: 'overlay'
+                    backgroundBlendMode: "overlay",
                   }}
                 >
                   {/* <div className="p-6 h-full flex flex-col justify-center" style={{ color: banner.textColor }}>
@@ -171,7 +205,7 @@ const BannerManagement = () => {
                     <p className="text-sm opacity-90 line-clamp-2 mb-3">{banner.description}</p>
                     <div className="text-xs bg-white text-gray-900 px-4 py-1.5 rounded-full inline-block font-semibold w-fit">
                       {banner.buttonText} */}
-                    {/* </div> */}
+                  {/* </div> */}
                   {/* </div> */}
                 </div>
               </div>
@@ -181,24 +215,41 @@ const BannerManagement = () => {
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-xl font-bold text-gray-900">{banner.title}</h3>
-                      <Badge className={banner.isActive ? 'bg-green-100 text-green-700 border-green-200' : 'bg-gray-100 text-gray-600 border-gray-200'}>
-                        {banner.isActive ? 'Đang hoạt động' : 'Đã ẩn'}
+                      <h3 className="text-xl font-bold text-gray-900">
+                        {banner.title}
+                      </h3>
+                      <Badge
+                        className={
+                          banner.isActive
+                            ? "bg-green-100 text-green-700 border-green-200"
+                            : "bg-gray-100 text-gray-600 border-gray-200"
+                        }
+                      >
+                        {banner.isActive ? "Đang hoạt động" : "Đã ẩn"}
                       </Badge>
                     </div>
                     <p className="text-gray-600 mb-3">{banner.description}</p>
                     <div className="flex flex-wrap gap-4 text-sm">
                       <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded" style={{ background: `linear-gradient(135deg, ${banner.gradientFrom}, ${banner.gradientTo})` }}></div>
+                        <div
+                          className="w-4 h-4 rounded"
+                          style={{
+                            background: `linear-gradient(135deg, ${banner.gradientFrom}, ${banner.gradientTo})`,
+                          }}
+                        ></div>
                         <span className="text-gray-500">Gradient</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-gray-500">Button:</span>
-                        <span className="font-medium text-gray-700">{banner.buttonText}</span>
+                        <span className="font-medium text-gray-700">
+                          {banner.buttonText}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-gray-500">Link:</span>
-                        <span className="font-medium text-gray-900">{banner.buttonLink}</span>
+                        <span className="font-medium text-gray-900">
+                          {banner.buttonLink}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -211,10 +262,18 @@ const BannerManagement = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => toggleActive(banner)}
-                      className={banner.isActive ? 'text-gray-600 border-gray-300' : 'text-green-600 border-green-300'}
+                      className={
+                        banner.isActive
+                          ? "text-gray-600 border-gray-300"
+                          : "text-green-600 border-green-300"
+                      }
                     >
-                      {banner.isActive ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
-                      {banner.isActive ? 'Ẩn' : 'Hiển thị'}
+                      {banner.isActive ? (
+                        <EyeOff className="w-4 h-4 mr-2" />
+                      ) : (
+                        <Eye className="w-4 h-4 mr-2" />
+                      )}
+                      {banner.isActive ? "Ẩn" : "Hiển thị"}
                     </Button>
                     <Button
                       variant="outline"
@@ -250,7 +309,7 @@ const BannerManagement = () => {
         onSubmit={handleSubmit}
       />
     </div>
-  )
-}
+  );
+};
 
-export default BannerManagement
+export default BannerManagement;

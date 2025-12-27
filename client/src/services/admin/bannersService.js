@@ -35,7 +35,7 @@ export const bannersService = {
     // Cập nhật banner
     updateBanner: async (id, bannerData) => {
     try {
-      const response = await apiClient.patch(`/admin/banners/${id}`, bannerData);   
+      const response = await apiClient.put(`/admin/banner/${id}`, bannerData);   
         return response.data;
     } catch (error) {
       console.error('Error updating banner:', error);
@@ -46,7 +46,7 @@ export const bannersService = {
     // Xóa banner   
     deleteBanner: async (id) => {
     try {
-      const response = await apiClient.delete(`/admin/banners/${id}`);  
+      const response = await apiClient.delete(`/admin/banner/${id}`);  
         return response.data;
     } catch (error) {
       console.error('Error deleting banner:', error);
