@@ -136,17 +136,32 @@ class SectionService {
                 
                 // Merge lessons và articles - chỉ giữ minimal fields và extract videoId
                 const combinedContent = [
-                    ...(populatedSection.lessons || []).map((lesson: any) => ({
-                        _id: lesson._id,
-                        title: lesson.title,
-                        type: lesson.type || 'video',
-                        videoId: extractVideoId(lesson.videoUrl), // Extract videoId từ videoUrl
-                        videoDuration: lesson.videoDuration,
-                        readingTime: lesson.readingTime,
-                        order: lesson.order,
-                        isPreview: lesson.isPreview,
-                        isFree: lesson.isFree
-                    })),
+                    ...(populatedSection.lessons || []).map((lesson: any) => {
+                        // SAFEGUARD: Lessons từ lessons collection KHÔNG BAO GIỜ có type='article'
+                        // Nếu có, đây là data bị sai trong DB - force về 'video'
+                        const lessonType = lesson.type === 'article' ? 'video' : (lesson.type || 'video');
+                        
+                        if (lesson.type === 'article') {
+                            console.warn('⚠️ BAD DATA: Lesson has type="article" in lessons collection:', {
+                                lessonId: lesson._id,
+                                title: lesson.title,
+                                originalType: lesson.type,
+                                correctedType: lessonType
+                            });
+                        }
+                        
+                        return {
+                            _id: lesson._id,
+                            title: lesson.title,
+                            type: lessonType, // Use corrected type
+                            videoId: extractVideoId(lesson.videoUrl), // Extract videoId từ videoUrl
+                            videoDuration: lesson.videoDuration,
+                            readingTime: lesson.readingTime,
+                            order: lesson.order,
+                            isPreview: lesson.isPreview,
+                            isFree: lesson.isFree
+                        };
+                    }),
                     ...minimalArticles
                 ].sort((a, b) => (a.order || 0) - (b.order || 0));
                 

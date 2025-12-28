@@ -524,6 +524,11 @@ export const useLesson = (lessonId, options = {}) => {
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 10, // 10 minutes cache
     refetchOnWindowFocus: false,
+    retry: (failureCount, error) => {
+      // Don't retry 404 errors
+      if (error?.response?.status === 404) return false;
+      return failureCount < 2;
+    },
     ...options,
   });
 };
@@ -676,19 +681,25 @@ export const useArticlesBySection = (sectionId, options = {}) => {
 };
 
 /**
- * Hook to fetch single article by ID
+ * Hook to fetch single article by ID (public content for learners)
  */
 export const useArticle = (articleId, options = {}) => {
   return useQuery({
     queryKey: articleKeys.detail(articleId),
     queryFn: async () => {
-      const response = await articleService.getArticleById(articleId);
+      // Dùng getArticleContent (public endpoint) thay vì getArticleById (admin only)
+      const response = await articleService.getArticleContent(articleId);
       return response?.data || response;
     },
     enabled: !!articleId,
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 10, // 10 minutes cache
     refetchOnWindowFocus: false,
+    retry: (failureCount, error) => {
+      // Don't retry 404 errors - content doesn't exist
+      if (error?.response?.status === 404) return false;
+      return failureCount < 2;
+    },
     ...options,
   });
 };
