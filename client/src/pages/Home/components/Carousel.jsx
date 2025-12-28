@@ -2,7 +2,7 @@ import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useBanners } from "../../../../hooks/useBanners";
+import { useBanners } from "../../../hooks/useBanners";
 
 const GRADIENT_COLORS = [
   "from-blue-500 via-blue-600 to-blue-700",
