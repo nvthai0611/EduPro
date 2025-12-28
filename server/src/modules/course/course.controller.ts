@@ -37,7 +37,7 @@ export const getAllCoursesPublic = async (req: any, res: any) => {
     // Chỉ trả về các fields cần thiết cho public
     const courses = await courseService.getAllCoursesPublic(filters);
         res.setHeader("x-encrypted", "true");
-    res.status(200).json({ success: true, encryptedData: encryptData(courses)});
+    res.status(200).json({ success: true, encryptedData: encryptData(courses) });
   } catch (error: any) {
     res.status(400).json({ success: false, message: error.message });
   }
