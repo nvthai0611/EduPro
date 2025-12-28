@@ -98,10 +98,10 @@ QUY TẮC IMPORT
 ---
 
 ## 📏 QUY ƯỚC COMMIT CODE
-# Quy tắc đặt tên nhánh
+QUY TẮC ĐẶT TÊN NHÁNH
 git checkout -b feat/author/feature-name/date-created
 
-# Quy tắc đặt tên commit
+QUY TẮC ĐẶT TÊN COMMIT
 git commit -m "[author/date-created] feature-name"
 
 
