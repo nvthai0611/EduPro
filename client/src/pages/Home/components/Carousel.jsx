@@ -3,19 +3,12 @@ import Autoplay from "embla-carousel-autoplay";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useBanners } from "../../../hooks/useBanners";
+import { formatGradientColor } from "../../../utils/format";
 
-const GRADIENT_COLORS = [
-  "from-blue-500 via-blue-600 to-blue-700",
-  "from-purple-500 via-purple-600 to-purple-700",
-  "from-pink-500 via-pink-600 to-pink-700",
-  "from-green-500 via-green-600 to-green-700",
-  "from-yellow-500 via-yellow-600 to-yellow-700",
-  "from-red-500 via-red-600 to-red-700",
-  "from-indigo-500 via-indigo-600 to-indigo-700",
-  "from-teal-500 via-teal-600 to-teal-700",
-  "from-orange-500 via-orange-600 to-orange-700",
-  "from-cyan-500 via-cyan-600 to-cyan-700",
-];
+
+
+
+const GRADIENT_COLORS = formatGradientColor();
 
 const AUTOPLAY_DELAY = 5000;
 
@@ -108,13 +101,13 @@ const Carousel = () => {
     return (
       <div className="z-40 w-full px-2 sm:px-4 py-4 sm:py-6 md:py-8">
         <div className="relative max-w-7xl mx-auto">
-          <div
+          {/* <div
             className={`h-48 sm:h-64 md:h-72 lg:h-80 rounded-2xl sm:rounded-3xl bg-gradient-to-r ${randomGradient} flex items-center justify-center text-white`}
           >
             <p className="text-lg font-semibold">
               Không có banner nào để hiển thị
             </p>
-          </div>
+          </div> */}
         </div>
       </div>
     );
