@@ -51,7 +51,7 @@ class ArticleService {
   }
 
   async createArticle(payload: CreateArticleLessonPayload) {
-    console.log("🔍 [ArticleService] Creating article with payload:", payload);
+    // console.log("🔍 [ArticleService] Creating article with payload:", payload);
     
     await this.validateSectionAndCourse({
       sectionId: payload.sectionId,
@@ -62,8 +62,6 @@ class ArticleService {
     const readingTime =
       payload.readingTime ?? this.calculateReadingTime(payload.content);
 
-    console.log("🔍 [ArticleService] Calculated order:", order, "readingTime:", readingTime);
-
     const articleData = {
       ...payload,
       sectionId: new mongoose.Types.ObjectId(payload.sectionId),
@@ -73,11 +71,11 @@ class ArticleService {
       isDeleted: false,
     };
 
-    console.log("🔍 [ArticleService] Article data to save:", articleData);
+    // console.log("🔍 [ArticleService] Article data to save:", articleData);
 
     const article = await ArticleRepository.createArticle(articleData);
 
-    console.log("🔍 [ArticleService] Article saved successfully:", article);
+    // console.log("🔍 [ArticleService] Article saved successfully:", article);
 
     return article;
   }
@@ -123,17 +121,17 @@ class ArticleService {
     articleId: string,
     context?: { userId?: string; role?: string }
   ) {
-    console.log('🔍 Getting article content for ID:', articleId);
-    console.log('👤 User context:', context);
+    // console.log('🔍 Getting article content for ID:', articleId);
+    // console.log('👤 User context:', context);
     
     // Nếu là admin/instructor, cho phép xem mọi article
     if (context?.role && ["admin", "instructor"].includes(context.role)) {
       const article = await ArticleRepository.findArticleById(articleId);
       if (!article) {
-        console.log('❌ Article not found (admin):', articleId);
+        // console.log('❌ Article not found (admin):', articleId);
         throw new Error("Bài viết không tồn tại");
       }
-      console.log('✅ Article found for admin/instructor:', article.title);
+      // console.log('✅ Article found for admin/instructor:', article.title);
       return article;
     }
 
@@ -142,18 +140,18 @@ class ArticleService {
 
     // Nếu không có published article, kiểm tra xem có article chưa publish không
     if (!article) {
-      console.log('⚠️ Published article not found, checking unpublished...');
+      // console.log('⚠️ Published article not found, checking unpublished...');
       article = await ArticleRepository.findArticleById(articleId);
       
       if (!article) {
-        console.log('❌ Article does not exist:', articleId);
+        // console.log('❌ Article does not exist:', articleId);
         throw new Error("Bài viết không tồn tại");
       }
       
-      console.log('📝 Found unpublished article:', article.title, {
-        isPublished: article.isPublished,
-        isDeleted: article.isDeleted
-      });
+      // console.log('📝 Found unpublished article:', article.title, {
+        //isPublished: article.isPublished,
+        //isDeleted: article.isDeleted
+      // });
       
       // Article chưa publish - check quyền truy cập qua purchase
       if (!context?.userId) {
@@ -170,31 +168,30 @@ class ArticleService {
         ? article.courseId._id.toString()  // Populated - extract _id
         : article.courseId?.toString();     // Non-populated - use directly
       
-      console.log('🔍 Checking if user purchased course:', {
-        userId: context.userId,
-        courseId: courseIdString,
-        courseIdType: typeof article.courseId,
-        hasIdProperty: !!article.courseId?._id
-      });
+      // console.log('🔍 Checking if user purchased course:', {
+      //   userId: context.userId,
+      //   courseId: courseIdString,
+      //   courseIdType: typeof article.courseId,
+      //   hasIdProperty: !!article.courseId?._id
+      // });
       
       const hasPurchased = await OrderService.checkUserPurchased(
         context.userId,
         courseIdString
       );
       
-      console.log('💰 Purchase check result:', hasPurchased);
+      // console.log('💰 Purchase check result:', hasPurchased);
       
       if (!hasPurchased) {
-        console.log('❌ User has not purchased course:', context.userId, courseIdString);
+        // console.log('❌ User has not purchased course:', context.userId, courseIdString);
         throw new Error("Bạn cần mua khóa học để truy cập bài viết này");
       }
       
-      console.log('✅ User purchased course, allowing access to unpublished article');
+      // console.log('✅ User purchased course, allowing access to unpublished article');
       return article;
     }
 
-    console.log('✅ Published article found:', article.title);
-
+    // console.log('✅ Published article found:', article.title);
     if (!article.isFree && !article.isPreviewed) {
       if (context?.role && ["admin", "instructor"].includes(context.role)) {
         return article;
@@ -204,9 +201,9 @@ class ArticleService {
         throw new Error("Yêu cầu xác thực để truy cập bài viết này");
       }
 
-      if (!article.courseId) {
-        throw new Error("Bài viết không liên kết khóa học hợp lệ");
-      }
+      // if (!article.courseId) {
+      //   throw new Error("Bài viết không liên kết khóa học hợp lệ");
+      // }
 
       // Handle both populated and non-populated courseId
       const courseIdString = article.courseId?._id 

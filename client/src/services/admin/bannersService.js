@@ -3,10 +3,11 @@ import {apiClient} from '../../utils/clientAxios';
 export const bannersService = {
 
   // Lấy danh sách banner
-    getBanners: async (params) => {
+    getBanners: async (key = 'homepage') => {
     try {
-      const response = await apiClient.get('/banner', { params });
-      return response.data;
+      const response = await apiClient.get(`/setting/${key}/slides`);
+      console.log('Response from getBanners:', response);
+      return response;
     } catch (error) {
       console.error('Error fetching banners:', error);
       throw error;
@@ -15,7 +16,8 @@ export const bannersService = {
   // Lấy danh sách banner cho admin
     getAdminBanners: async (params) => {
     try {
-      const response = await apiClient.get('/admin/banner', { params });
+      const key = params.key || 'homepage';
+      const response = await apiClient.get(`/admin/setting/${key}/slides`);
       return response.data;
     } catch (error) {
       console.error('Error fetching admin banners:', error);
@@ -25,7 +27,8 @@ export const bannersService = {
     // Tạo banner mới
     createBanner: async (bannerData) => {
     try {
-      const response = await apiClient.post('/admin/banner', bannerData);
+      const key = bannerData.key || 'homepage';
+      const response = await apiClient.post(`/admin/setting/${key}/slides`, bannerData);
         return response.data;
     } catch (error) {
       console.error('Error creating banner:', error);
@@ -35,7 +38,8 @@ export const bannersService = {
     // Cập nhật banner
     updateBanner: async (id, bannerData) => {
     try {
-      const response = await apiClient.put(`/admin/banner/${id}`, bannerData);   
+      const key = bannerData.key || 'homepage';
+      const response = await apiClient.put(`/admin/setting/${key}/slides/${id}`, bannerData);   
         return response.data;
     } catch (error) {
       console.error('Error updating banner:', error);
@@ -46,7 +50,8 @@ export const bannersService = {
     // Xóa banner   
     deleteBanner: async (id) => {
     try {
-      const response = await apiClient.delete(`/admin/banner/${id}`);  
+      const key = 'homepage'; // or pass in params
+      const response = await apiClient.delete(`/admin/setting/${key}/slides/${id}`);  
         return response.data;
     } catch (error) {
       console.error('Error deleting banner:', error);

@@ -127,43 +127,43 @@ export default function CourseLearnDetail() {
   
   // Fetch FULL lesson detail khi cần (lazy load) - CHỈ khi type là video
   const currentLessonId = currentPlayingVideo?._id;
-  const { data: fullLessonData, isLoading: lessonDetailLoading, error: lessonError } = useLesson(
+  const { data: fullLessonData, isLoading: lessonDetailLoading} = useLesson(
     currentPlayingVideo?.type === 'video' ? currentLessonId : null,
     { enabled: !!currentLessonId && currentPlayingVideo?.type === 'video' }
   );
 
   // Fetch FULL article detail khi cần (lazy load) - CHỈ khi type là article
-  const { data: fullArticleData, isLoading: articleDetailLoading, error: articleError } = useArticle(
+  const { data: fullArticleData, isLoading: articleDetailLoading } = useArticle(
     currentPlayingVideo?.type === 'article' ? currentLessonId : null,
     { enabled: !!currentLessonId && currentPlayingVideo?.type === 'article' }
   );
 
   // Debug logging
-  useEffect(() => {
-    if (currentPlayingVideo) {
-      console.log('📹 Current Playing Video:', currentPlayingVideo);
-      console.log('🎬 Video ID:', currentPlayingVideo.videoId);
-      console.log('📝 Type:', currentPlayingVideo.type);
-    }
-  }, [currentPlayingVideo]);
+  // useEffect(() => {
+  //   if (currentPlayingVideo) {
+  //     console.log('📹 Current Playing Video:', currentPlayingVideo);
+  //     console.log('🎬 Video ID:', currentPlayingVideo.videoId);
+  //     console.log('📝 Type:', currentPlayingVideo.type);
+  //   }
+  // }, [currentPlayingVideo]);
 
-  useEffect(() => {
-    if (fullLessonData) {
-      console.log('✅ Full Lesson Data loaded:', fullLessonData);
-    }
-    if (lessonError) {
-      console.error('❌ Lesson Error:', lessonError);
-    }
-  }, [fullLessonData, lessonError]);
+    // useEffect(() => {
+    //   if (fullLessonData) {
+    //     console.log('✅ Full Lesson Data loaded:', fullLessonData);
+    //   }
+    //   if (lessonError) {
+    //     console.error('❌ Lesson Error:', lessonError);
+    //   }
+    // }, [fullLessonData, lessonError]);
 
-  useEffect(() => {
-    if (fullArticleData) {
-      console.log('✅ Full Article Data loaded:', fullArticleData);
-    }
-    if (articleError) {
-      console.error('❌ Article Error:', articleError);
-    }
-  }, [fullArticleData, articleError]);
+  // useEffect(() => {
+  //   if (fullArticleData) {
+  //     console.log('✅ Full Article Data loaded:', fullArticleData);
+  //   }
+  //   if (articleError) {
+  //     console.error('❌ Article Error:', articleError);
+  //   }
+  // }, [fullArticleData, articleError]);
 
   // State cho dialog
   const [isCommentDialogOpen, setCommentDialogOpen] = useState(false);

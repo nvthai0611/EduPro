@@ -28,14 +28,36 @@ const Carousel = () => {
   );
 
   const [selectedIndex, setSelectedIndex] = useState(0);
-
+  
   const {
-    data: banners = [],
+    data: fetchedBanners = [],
     isLoading,
     isError,
-  } = useBanners({
-    location: "home_carousel",
-  });
+  } = useBanners("homepage");
+console.log('Fetched Banners in Carousel:', fetchedBanners);
+// console.log(data);
+  // Default banner if no banners
+  const defaultBanners = [
+    {
+      id: "default",
+      title: "Chào mừng đến với EduPro",
+      description: "Nền tảng học tập trực tuyến hàng đầu",
+      imageUrl: "https://via.placeholder.com/800x400/4F46E5/FFFFFF?text=EduPro",
+      linkUrl: "/courses",
+      isActive: true,
+    },
+  ];
+
+  const banners = fetchedBanners.length > 0 ? fetchedBanners.map(banner => ({
+    ...banner,
+    title: banner.title || 'EduPro',
+    description: banner.description || 'Nền tảng học tập trực tuyến hàng đầu',
+    imageUrl: banner.imageUrl || 'https://via.placeholder.com/800x400/4F46E5/FFFFFF?text=EduPro',
+    subtitle: banner.subtitle || 'Khám phá khóa học chất lượng cao với giá ưu đãi',
+  })) : defaultBanners;
+
+  console.log('Fetched banners:', fetchedBanners);
+  console.log('Banners to render:', banners);
 
   const scrollPrev = useCallback(() => {
     emblaApi?.scrollPrev();
@@ -101,13 +123,13 @@ const Carousel = () => {
     return (
       <div className="z-40 w-full px-2 sm:px-4 py-4 sm:py-6 md:py-8">
         <div className="relative max-w-7xl mx-auto">
-          {/* <div
+          <div
             className={`h-48 sm:h-64 md:h-72 lg:h-80 rounded-2xl sm:rounded-3xl bg-gradient-to-r ${randomGradient} flex items-center justify-center text-white`}
           >
             <p className="text-lg font-semibold">
               Không có banner nào để hiển thị
             </p>
-          </div> */}
+          </div>
         </div>
       </div>
     );
@@ -127,7 +149,7 @@ const Carousel = () => {
 
               return (
                 <div
-                  key={banner.id}
+                  key={banner._id || banner.id || `banner-${idx}`}
                   className="flex-[0_0_100%] min-w-0 px-1 sm:px-2"
                 >
                   {/* SLIDE */}

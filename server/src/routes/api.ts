@@ -21,8 +21,10 @@ import { submissionRoutes } from "./v1/submission.routes";
 import { limitRequestsMiddleware } from "../middlewares/auth/limitRequest.middleware";
 import blockDirectAccess from "../middlewares/auth/blockDirectAccess";
 import { attendanceRoutes } from "./v1/admin/attendance.route";
-import { bannerAdminRoutes } from "./v1/admin/banner.route";
-import { bannerRoutes } from "./v1/banner.route";
+// import { bannerAdminRoutes } from "./v1/admin/banner.route";
+// import { bannerRoutes } from "./v1/banner.route";
+import { settingAdminRoutes } from "./v1/admin/setting.routes";
+import { settingRoutes } from "./v1/setting.routes";
 
 export const apiRouter = (io?: Server) => {
   // Block direct browser access to API
@@ -87,9 +89,12 @@ export const apiRouter = (io?: Server) => {
   router.use("/admin/attendance", attendanceRoutes);
 
   // Admin Banner routes
-  router.use("/admin/banner", bannerAdminRoutes);
+  // router.use("/admin/banner", bannerAdminRoutes);
 
   //public Banner routes
-  router.use("/banner", bannerRoutes);
+  // router.use("/banner", bannerRoutes);
+  // setting routes
+  router.use("/admin/setting", settingAdminRoutes);
+  router.use("/setting", settingRoutes);
   return router;
 };
