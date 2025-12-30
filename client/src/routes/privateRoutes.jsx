@@ -1,5 +1,5 @@
 import { Route, Navigate } from "react-router-dom";
-import Profile from "../pages/Auth/Profile";
+import Profile from "../pages/User/Profile";
 import AuthMiddleware from "../middlewares/AuthMiddleware";
 import PageUserManagement from "../pages/Admin/User/Page";
 import LayoutAdmin from "../layouts/AdminLayout/Layout";
@@ -14,7 +14,6 @@ import CustomerCare from "../pages/Admin/CustomerCare/Page";
 import SettingPage from "../pages/Admin/Setting/SettingsManagement";
 // Learning Platform Pages
 import MyCourses from "../pages/User/MyCourses";
-import LearningPage from "../pages/Learning/LearningPage";
 // Learning Platform Admin Pages
 import CourseManagement from "../pages/Admin/CourseManagement/CourseManagement";
 import CourseBuilder from "../pages/Admin/CourseManagement/CourseBuilder";
@@ -22,10 +21,11 @@ import StudentProgress from "../pages/Admin/StudentProgress/StudentProgress";
 import LearningPlatformDashboard from "../pages/Admin/LearningDashboard/LearningDashboard";
 import CourseApprover from "../pages/Admin/CourseManagement/CourseApprover";
 import CourseLearnDetail from "../pages/Courses/CourseLearnDetail";
-import PaymentPage from "../pages/Cart/CheckOut/components/PaymentPage";
+import PaymentPage from "../pages/Cart/CheckOut/PaymentPage";
 import CourseAssign from "../pages/Admin/CourseManagement/AssignCoursePage";
 import StudentQuestion from "../pages/Admin/StudentQuestion/QuestionPage";
 import AttendanceManage from "../pages/Admin/Attendance/Attendance";
+import BannerManagement from "../pages/Admin/Banner/BannerManagement";
 
 // được bảo mật, phải có quyền mới vào được, và phải đăng nhập
 export const privateRoutes = (
@@ -39,7 +39,6 @@ export const privateRoutes = (
       }
     >
       <Route path="/my-learning" element={<MyCourses />} />
-      <Route path="/learn/:courseId/:lessonId" element={<LearningPage />} />
       <Route path="/tai-khoan" element={<Profile />} />
       <Route path="/checkout" element={<PaymentPage />} />
     </Route>
@@ -81,6 +80,7 @@ export const privateRoutes = (
       <Route path="assign-course" element={<CourseAssign />} />
       <Route path="student-question" element={<StudentQuestion/>}/>
       <Route path="attendance" element={<AttendanceManage />}/>
+      <Route path="banner" element={<BannerManagement />} />
     </Route>
       
   </>

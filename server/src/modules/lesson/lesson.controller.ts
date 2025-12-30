@@ -38,6 +38,23 @@ export const getLessonById = async (req: any, res: any) => {
   }
 };
 
+// Public endpoint - Get lesson content for learners
+export const getLessonContent = async (req: any, res: any) => {
+  try {
+    const lessonId = req.params.lessonId;
+    const lesson = await LessonService.getLessonById(lessonId);
+    if (!lesson) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Lesson not found" });
+    }
+    res.setHeader("x-encrypted", "true");
+    res.status(200).json({ success: true, encryptedData: encryptData(lesson) });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
 export const createLesson = async (req: any, res: any) => {
   try {
     const data = req.body;

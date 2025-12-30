@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,57 +10,48 @@ import {
   BookOpen,
   Award,
   TrendingUp,
-  Calendar
 } from 'lucide-react';
-import ProgressBar from '../../components/Progress/ProgressBar';
 import { courseService } from '../../services/courseService';
 import { getUserProfile } from '../../services/user/userService';
 import { useAuth } from '../../hooks/useAuth';
+import { useQuery } from '@tanstack/react-query';
 
 const MyCourses = () => {
   const { user } = useAuth();
-  const [courses, setCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('learning');
-  const [learningCourses, setLearningCourses] = useState([]);
-  const [completedCourses, setCompletedCourses] = useState([]);
-  
-  useEffect(() => {
-    fetchMyCourses();
-    
-  }, [user]);
+  const completedCourses = [];
 
-  const fetchMyCourses = async () => {
-    try {
-      setLoading(true);
-      // Backend sẽ tự động dùng req.user.id nếu không truyền id hoặc id là undefined
+  const {
+    data: purchasedCourses = [],
+    isLoading,
+  } = useQuery({
+    queryKey: ["my-courses", user?.userId],
+    queryFn: async () => {
       const response = await getUserProfile(user?.userId || null);
       if (response.success && response.data) {
-        setCourses(response.data.purchasedCourses || []);
+        return response.data.purchasedCourses || [];
       }
+      return [];
+    },
+    enabled: !!user, // chỉ gọi khi đã có user
+    staleTime: 1000 * 60 * 5, // cache 5 phút
+  });
 
-    } catch (error) {
-      console.error('Error fetching my courses:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    const fetchLearningCourses = async () => {
-      const infos = [];
-      for (const course of courses) {
-        const info = await courseService.getCourseById(course.courseId);
-        infos.push(info.data);
-      }
-      setLearningCourses(infos);
-    };
-
-    if (courses.length > 0) {
-      fetchLearningCourses();
-    }
-  }, [courses]);
-
+  const {
+    data: learningCourses = [],
+  } = useQuery({
+    queryKey: ['learningCourses', purchasedCourses.map(c => c.courseId)],
+    queryFn: async () => {
+      const results = await Promise.all(
+        purchasedCourses.map(c =>
+          courseService.getCourseById(c.courseId)
+        )
+      );
+      return results.map(r => r.data);
+    },
+    enabled: purchasedCourses.length > 0,
+    staleTime: 1000 * 60 * 5,
+  });
 
   const handleContinueLearning = (course) => {
     // Redirect to learning page
@@ -168,7 +159,7 @@ const MyCourses = () => {
     </Card>
   );
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
@@ -201,7 +192,7 @@ const MyCourses = () => {
                 <BookOpen className="w-8 h-8 text-blue-600" />
               </div>
               <div className="text-2xl font-bold text-gray-900">
-                {courses.length}
+                {purchasedCourses.length}
               </div>
               <div className="text-sm text-gray-600">Tổng khóa học</div>
             </CardContent>

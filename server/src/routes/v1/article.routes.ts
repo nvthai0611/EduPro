@@ -7,6 +7,7 @@ const router = Router();
 // Require authentication to access course articles
 router.use(authenticateToken);
 
-router.get("/:lessonId", getArticleContent);
+// Route for getting article content by articleId
+router.get("/:articleId", getArticleContent);
 
 export const articleRoutes = router;

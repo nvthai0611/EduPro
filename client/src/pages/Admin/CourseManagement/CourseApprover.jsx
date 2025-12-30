@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import  { useEffect, useState } from 'react'
+import  {  useState } from 'react'
 import { courseService } from '../../../services/admin/courseService';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Eye, XCircle } from 'lucide-react';
@@ -10,25 +10,25 @@ import ApproveRejectModal from '../../../components/Course/ApproveRejectModal';
 const CourseApprover = () => {
      const [courses, setCourses] = useState([]);
       const [loading, setLoading] = useState(true);
-      const [searchTerm, setSearchTerm] = useState('');
-      const [statusFilter, setStatusFilter] = useState('all');
-      const [levelFilter, setLevelFilter] = useState('all');
+      // const [searchTerm, setSearchTerm] = useState('');
+      // const [statusFilter, setStatusFilter] = useState('all');
+      // const [levelFilter, setLevelFilter] = useState('all');
       const [showApproveModal, setShowApproveModal] = useState(false);
       const [showRejectModal, setShowRejectModal] = useState(false);
       const [selectedCourse, setSelectedCourse] = useState(null);
     
-      useEffect(() => {
-        fetchCourses();
-      }, [searchTerm, statusFilter, levelFilter]);
+      // useEffect(() => {
+      //   fetchCourses();
+      // }, [searchTerm, statusFilter, levelFilter]);
     
       const fetchCourses = async () => {
         try {
           setLoading(true);
     
           const response = await courseService.getCourses({
-            search: searchTerm,
-            status: "pending",
-            level: levelFilter === 'all' ? '' : levelFilter,
+            // search: searchTerm,
+            // status: "pending",
+            // level: levelFilter === 'all' ? '' : levelFilter,
           });
     
           // Backend returns { success: true, data: [...] }

@@ -18,7 +18,7 @@ export default function Advisory({ plans = [] }) {
   }
 
   return (
-    <div className="relative p-8 bg-white rounded-3xl shadow-xl border">
+    <div className="relative p-8 bg-gray-50">
       {/* Header */}
       <div className="text-center mb-10">
         <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-blue-100 mb-4">

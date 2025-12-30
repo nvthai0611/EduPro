@@ -164,6 +164,19 @@ export default function DashboardSidebar() {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
+                  tooltip="Banner"
+                  isActive={activeMenu == "banner"}
+                  onClick={() => setActiveMenu("banner")}
+                >
+                  <Link to={"/admin/banner"}>
+                    <HelpCircleIcon />
+                    <span>Quản lí banner</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
                   tooltip="Services"
                   isActive={activeMenu == "services"}
                   onClick={() => setActiveMenu("services")}

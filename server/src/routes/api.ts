@@ -13,6 +13,7 @@ import { userRoutes } from "./v1/users.routes";
 import { sectionRoutes } from "./v1/admin/section.routes";
 import { publicSectionRoutes } from "./v1/section.routes";
 import { lessonRoutes } from "./v1/admin/lesson.routes";
+import { lessonRoutes as publicLessonRoutes } from "./v1/lesson.routes";
 import { articleRoutes } from "./v1/article.routes";
 import { articleAdminRoutes } from "./v1/admin/article.routes";
 import { orderAdminRoutes } from "./v1/admin/order.route";
@@ -20,8 +21,10 @@ import { submissionRoutes } from "./v1/submission.routes";
 import { limitRequestsMiddleware } from "../middlewares/auth/limitRequest.middleware";
 import blockDirectAccess from "../middlewares/auth/blockDirectAccess";
 import { attendanceRoutes } from "./v1/admin/attendance.route";
-import { bannerAdminRoutes } from "./v1/admin/banner.route";
-import { bannerRoutes } from "./v1/banner.route";
+// import { bannerAdminRoutes } from "./v1/admin/banner.route";
+// import { bannerRoutes } from "./v1/banner.route";
+import { settingAdminRoutes } from "./v1/admin/setting.routes";
+import { settingRoutes } from "./v1/setting.routes";
 
 export const apiRouter = (io?: Server) => {
   // Block direct browser access to API
@@ -41,6 +44,9 @@ export const apiRouter = (io?: Server) => {
   
   // Public sections routes (for learners)
   router.use("/sections", publicSectionRoutes);
+
+  // Public lesson routes (for learners to view lesson content)
+  router.use("/lessons", publicLessonRoutes);
 
   // Order routes
   router.use("/orders", orderRoutes);
@@ -70,8 +76,11 @@ export const apiRouter = (io?: Server) => {
   // Article content routes for learners
   router.use("/articles", articleRoutes);
   
-  // Lesson comments (student comments + teacher replies)
-  router.use("/lessons", submissionRoutes);
+  // Lesson content routes for learners
+  router.use("/lessons", publicLessonRoutes);
+  
+  // Lesson comment and submission routes
+  router.use("/lesson-comments", submissionRoutes);
   
   // Course routes
   router.use("/admin/order", orderAdminRoutes);
@@ -80,9 +89,12 @@ export const apiRouter = (io?: Server) => {
   router.use("/admin/attendance", attendanceRoutes);
 
   // Admin Banner routes
-  router.use("/admin/banner", bannerAdminRoutes);
+  // router.use("/admin/banner", bannerAdminRoutes);
 
   //public Banner routes
-  router.use("/banner", bannerRoutes);
+  // router.use("/banner", bannerRoutes);
+  // setting routes
+  router.use("/admin/setting", settingAdminRoutes);
+  router.use("/setting", settingRoutes);
   return router;
 };

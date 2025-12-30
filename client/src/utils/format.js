@@ -222,3 +222,20 @@ export const formatDuration = (minutes, format = 'text') => {
   }
   return `${mins} phút`;
 };
+//format color gradient
+export const formatGradientColor = () => {
+  const gradients = [
+    "from-blue-500 via-blue-600 to-blue-700",
+  "from-purple-500 via-purple-600 to-purple-700",
+  "from-pink-500 via-pink-600 to-pink-700",
+  "from-green-500 via-green-600 to-green-700",
+  "from-yellow-500 via-yellow-600 to-yellow-700",
+  "from-red-500 via-red-600 to-red-700",
+  "from-indigo-500 via-indigo-600 to-indigo-700",
+  "from-teal-500 via-teal-600 to-teal-700",
+  "from-orange-500 via-orange-600 to-orange-700",
+  "from-cyan-500 via-cyan-600 to-cyan-700",
+  ];
+
+  return gradients;
+}

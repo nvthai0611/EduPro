@@ -2,7 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { courseService } from '../services/admin/courseService';
 import adminSectionService from '../services/admin/sectionService';
 import userSectionService from '../services/user/sectionService';
-import lessonService from '../services/admin/lessonService';
+import adminLessonService from '../services/admin/lessonService';
+import lessonService from '../services/lessonService';
 import { articleService } from '../services/articleService';
 import { toast } from 'react-toastify';
 
@@ -273,6 +274,26 @@ export const useSectionsWithLessons = (courseId, options = {}) => {
 };
 
 /**
+ * Hook to fetch sections with MINIMAL lesson data (for list view - lightweight)
+ * Chỉ load title, type, duration - KHÔNG load content, assignments, etc.
+ */
+export const useSectionsWithMinimalLessons = (courseId, options = {}) => {
+  return useQuery({
+    queryKey: [...sectionKeys.withLessons(courseId), 'minimal'],
+    queryFn: async () => {
+      const response = await userSectionService.getSectionsWithMinimalLessons(courseId);
+      return response?.data || response;
+    },
+    enabled: !!courseId,
+    staleTime: 1000 * 60 * 10, // 10 minutes - cache lâu hơn vì dữ liệu ít thay đổi
+    gcTime: 1000 * 60 * 30, // 30 minutes cache
+    refetchOnWindowFocus: false,
+    select: (data) => Array.isArray(data) ? data : [],
+    ...options,
+  });
+};
+
+/**
  * Hook to fetch sections with lessons by course ID (for admin course builder)
  */
 export const useAdminSectionsWithLessons = (courseId, options = {}) => {
@@ -489,17 +510,31 @@ export const useLessonsBySection = (sectionId, options = {}) => {
   });
 };
 
-/**
- * Hook to fetch single lesson by ID
- */
 export const useLesson = (lessonId, options = {}) => {
   return useQuery({
     queryKey: lessonKeys.detail(lessonId),
     queryFn: async () => {
-      const response = await lessonService.getLessonById(lessonId);
-      return response?.data || response;
+      try {
+        const response = await lessonService.getLessonById(lessonId);
+        return response?.data || response;
+      } catch (error) {
+        // If lesson not found (404), return null instead of throwing
+        if (error?.response?.status === 404) {
+          console.warn(`Lesson  not found, returning null`);
+          return null;
+        }
+        throw error; // Re-throw other errors
+      }
     },
     enabled: !!lessonId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes cache
+    refetchOnWindowFocus: false,
+    retry: (failureCount, error) => {
+      // Don't retry 404 errors
+      if (error?.response?.status === 404) return false;
+      return failureCount < 2;
+    },
     ...options,
   });
 };
@@ -512,7 +547,7 @@ export const useCreateLesson = () => {
 
   return useMutation({
     mutationFn: async (lessonData) => {
-      const response = await lessonService.createLesson(lessonData);
+      const response = await adminLessonService.createLesson(lessonData);
       return response?.data || response;
     },
     onSuccess: (data, variables) => {
@@ -545,7 +580,7 @@ export const useUpdateLesson = () => {
 
   return useMutation({
     mutationFn: async ({ id, data }) => {
-      const response = await lessonService.updateLesson(id, data);
+      const response = await adminLessonService.updateLesson(id, data);
       return response?.data || response;
     },
     onSuccess: (data, variables) => {
@@ -579,7 +614,7 @@ export const useDeleteLesson = () => {
 
   return useMutation({
     mutationFn: async ({ id, courseId, sectionId }) => {
-      const response = await lessonService.deleteLesson(id);
+      const response = await adminLessonService.deleteLesson(id);
       return { ...response, courseId, sectionId };
     },
     onSuccess: (data) => {
@@ -612,7 +647,7 @@ export const useReorderLessons = () => {
 
   return useMutation({
     mutationFn: async ({ sectionId, lessonIds, courseId }) => {
-      const response = await lessonService.reorderLessons(sectionId, lessonIds);
+      const response = await adminLessonService.reorderLessons(sectionId, lessonIds);
       return { ...response, sectionId, courseId };
     },
     onSuccess: (data) => {
@@ -652,16 +687,25 @@ export const useArticlesBySection = (sectionId, options = {}) => {
 };
 
 /**
- * Hook to fetch single article by ID
+ * Hook to fetch single article by ID (public content for learners)
  */
 export const useArticle = (articleId, options = {}) => {
   return useQuery({
     queryKey: articleKeys.detail(articleId),
     queryFn: async () => {
-      const response = await articleService.getArticleById(articleId);
+      // Dùng getArticleContent (public endpoint) thay vì getArticleById (admin only)
+      const response = await articleService.getArticleContent(articleId);
       return response?.data || response;
     },
     enabled: !!articleId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes cache
+    refetchOnWindowFocus: false,
+    retry: (failureCount, error) => {
+      // Don't retry 404 errors - content doesn't exist
+      if (error?.response?.status === 404) return false;
+      return failureCount < 2;
+    },
     ...options,
   });
 };

@@ -13,11 +13,11 @@ export const lessonService = {
     }
   },
 
-  // Lấy chi tiết bài học
+  // Lấy chi tiết bài học (full content)
   getLessonById: async (lessonId) => {
     try {
-      const response = await apiClient.get(`/api/v1/lessons/${lessonId}`);
-      return response.data;
+      const response = await apiClient.get(`/lessons/${lessonId}`);
+      return response;
     } catch (error) {
       console.error('Error fetching lesson:', error);
       throw error;
@@ -204,3 +204,5 @@ export const lessonService = {
     }
   },
 };
+
+export default lessonService;

@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 // import { createPortal } from "react-dom";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useCourseBySlug, useSectionsWithLessons } from "../../hooks/useCourseQueries";
+import { useCourseBySlug, useSectionsWithMinimalLessons, useLesson, useArticle } from "../../hooks/useCourseQueries";
 import * as orderService from "../../services/user/orderService";
 import * as freeCourseService from "../../services/user/freeCourseService";
 import { useAuth } from "../../hooks/useAuth";
@@ -9,7 +9,7 @@ import VideoPlayer from "../../components/Video/VideoPlayer";
 // import AssignmentSubmission from "../../components/Assignment/AssignmentSubmission";
 import LessonCommentDialog from "../../components/LessonComment/LessonCommentDialog";
 import { useMyLessonComment, useCreateLessonComment, useUpdateLessonComment, useCommentsForLesson, useTeacherReply, useDeleteLessonComment, useUpdateReply, useDeleteReply } from "../../hooks/useLessonCommentQueries";
-import { Loader2, CircleHelp } from "lucide-react";
+import { Loader2, CircleHelp, Video, BookOpen } from "lucide-react";
 import parse from 'html-react-parser';
 
 // Component cho từng bài học trong danh sách bên phải
@@ -23,6 +23,19 @@ const LessonItem = ({ item, isCurrent, onClick }) => (
   >
     <div className="flex items-center justify-between">
       <span className="flex items-center text-sm">
+        {item.type === "video" ? (
+          <span className="inline-flex items-center gap-2 px-3 py-1.5
+                   rounded-full bg-blue-50 text-blue-600
+                   border border-blue-200">
+            <Video className="w-4 h-4" />
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-2 px-3 py-1.5
+                   rounded-full bg-green-50 text-green-600
+                   border border-green-200">
+            <BookOpen className="w-4 h-4" />
+          </span>
+        )}
         <i
           className={`mr-2 far fa-circle ${isCurrent ? "text-orange-500" : "text-gray-400"
             }`}
@@ -101,7 +114,9 @@ export default function CourseLearnDetail() {
   });
 
   const courseId = course?._id;
-  const { data: sections = [], isLoading: sectionsLoading, error: sectionsError } = useSectionsWithLessons(courseId);
+  
+  // SỬ DỤNG MINIMAL DATA CHO LIST - Chỉ load title, type, duration
+  const { data: sections = [], isLoading: sectionsLoading, error: sectionsError } = useSectionsWithMinimalLessons(courseId);
 
   // Local states
   const [accessChecked, setAccessChecked] = useState(false);
@@ -115,13 +130,53 @@ export default function CourseLearnDetail() {
   const [noteText, setNoteText] = useState("");
   const [notes, setNotes] = useState({}); // { [videoId]: [{id,text,createdAt}, ...] }
 
-  // State để quản lý video hiện tại đang phát
+  // State để quản lý video hiện tại đang phát (chỉ minimal data từ list)
   const [currentPlayingVideo, setCurrentPlayingVideo] = useState(null);
+  
+  // Fetch FULL lesson detail khi cần (lazy load) - CHỈ khi type là video
+  const currentLessonId = currentPlayingVideo?._id;
+  const { data: fullLessonData, isLoading: lessonDetailLoading} = useLesson(
+    currentPlayingVideo?.type === 'video' ? currentLessonId : null,
+    { enabled: !!currentLessonId && currentPlayingVideo?.type === 'video' }
+  );
 
+  // Fetch FULL article detail khi cần (lazy load) - CHỈ khi type là article
+  const { data: fullArticleData, isLoading: articleDetailLoading } = useArticle(
+    currentPlayingVideo?.type === 'article' ? currentLessonId : null,
+    { enabled: !!currentLessonId && currentPlayingVideo?.type === 'article' }
+  );
+
+  // Debug logging
+  // useEffect(() => {
+  //   if (currentPlayingVideo) {
+  //     console.log('📹 Current Playing Video:', currentPlayingVideo);
+  //     console.log('🎬 Video ID:', currentPlayingVideo.videoId);
+  //     console.log('📝 Type:', currentPlayingVideo.type);
+  //   }
+  // }, [currentPlayingVideo]);
+
+    // useEffect(() => {
+    //   if (fullLessonData) {
+    //     console.log('✅ Full Lesson Data loaded:', fullLessonData);
+    //   }
+    //   if (lessonError) {
+    //     console.error('❌ Lesson Error:', lessonError);
+    //   }
+    // }, [fullLessonData, lessonError]);
+
+  // useEffect(() => {
+  //   if (fullArticleData) {
+  //     console.log('✅ Full Article Data loaded:', fullArticleData);
+  //   }
+  //   if (articleError) {
+  //     console.error('❌ Article Error:', articleError);
+  //   }
+  // }, [fullArticleData, articleError]);
+
+  // State cho dialog
+  const [isCommentDialogOpen, setCommentDialogOpen] = useState(false);
 
   // Lesson comment state
-  const [isCommentDialogOpen, setCommentDialogOpen] = useState(false);
-  const currentLessonId = currentPlayingVideo?._id;
   const myCommentQuery = useMyLessonComment(currentLessonId, { enabled: !!currentLessonId });
   const allCommentsQuery = useCommentsForLesson(currentLessonId, { enabled: !!currentLessonId });
   const createCommentMutation = useCreateLessonComment();
@@ -135,6 +190,43 @@ export default function CourseLearnDetail() {
   const [videoRef, setVideoRef] = useState(null);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [showVideoSettings, setShowVideoSettings] = useState(false);
+
+  // Helper function to extract YouTube video ID from URL - đặt trước useMemo
+  const extractVideoId = useCallback((url) => {
+    if (!url) return null;
+    
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+      /^([a-zA-Z0-9_-]{11})$/ // Direct video ID
+    ];
+    
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+    return null;
+  }, []);
+
+  // Get videoId from minimal data, or extract from full data's videoUrl - di chuyển lên trước
+  const videoId = currentPlayingVideo?.videoId || 
+                  (fullLessonData?.videoUrl ? extractVideoId(fullLessonData.videoUrl) : null);
+  
+  // Dùng embed URL với các tham số tối ưu cho loading nhanh hơn
+  const videoEmbedUrl = useMemo(() => {
+    if (!videoId) return "";
+    // Dùng /embed/ thay vì /watch để load nhanh hơn
+    // Thêm các params: rel=0 (không hiện related videos), modestbranding=1 (ẩn logo), autoplay=1
+    return `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&enablejsapi=1`;
+  }, [videoId]);
+
+  // Content - sử dụng full data khi đã load, fallback về minimal data
+  const finalContent = useMemo(() => {
+    return currentPlayingVideo?.type === 'article' 
+      ? (fullArticleData?.content || currentPlayingVideo?.content)
+      : (fullLessonData?.content || currentPlayingVideo?.content);
+  }, [currentPlayingVideo?.type, fullArticleData?.content, fullLessonData?.content, currentPlayingVideo?.content]);
 
   const handleSubmitQuestion = () => {
     if (!questionText.trim()) return;
@@ -249,40 +341,41 @@ export default function CourseLearnDetail() {
 
   // --- END NEW ---
 
+  // Auto-select first lesson when sections load
   useEffect(() => {
     if (!sections || sections.length === 0) return;
+    if (currentPlayingVideo) return; // Đã có video đang phát
 
+    // Tìm section đầu tiên có lessons
     for (const section of sections) {
-      if (section.lessons?.length) {
-        const first = section.lessons.find((item) => item.videoUrl ? item?.videoUrl : item?.content);
-        if (first) {
-          setCurrentPlayingVideo({
-            _id: first._id,
-            title: first.title,
-            videoId: first.videoUrl ? first.videoUrl.split("/")[first.videoUrl.split("/").length - 1] : null,
-            content: first.content,
-            updatedAt: first.updatedAt,
-            type: first.type || (first.videoUrl ? 'video' : 'article')
-          });
-          break;
-        }
+      if (section.lessons?.length > 0) {
+        const firstLesson = section.lessons[0];
+        // Set minimal data từ list - full data sẽ được fetch tự động
+        setCurrentPlayingVideo({
+          _id: firstLesson._id,
+          title: firstLesson.title,
+          videoId: firstLesson.videoId || null,
+          type: firstLesson.type || 'video',
+          videoDuration: firstLesson.videoDuration,
+          readingTime: firstLesson.readingTime
+        });
+        break;
       }
     }
-  }, [sections]);
+  }, [sections, currentPlayingVideo]);
 
-  // Xử lý khi click vào một bài học hoặc article
-  const handleLessonClick = (item) => {
-    if (item.videoUrl || item.content) {
-      setCurrentPlayingVideo({
-        _id: item._id,
-        title: item.title,
-        videoId: item.videoUrl ? item.videoUrl.split("/")[item.videoUrl.split("/").length - 1] : null,
-        content: item.content,
-        updatedAt: item.updatedAt,
-        type: item.type || (item.videoUrl ? 'video' : 'article')
-      });
-    }
-  };
+  // Xử lý khi click vào một bài học hoặc article - optimize với useCallback
+  const handleLessonClick = useCallback((item) => {
+    // Set minimal data - full content sẽ được fetch automatically qua useLesson/useArticle hooks
+    setCurrentPlayingVideo({
+      _id: item._id,
+      title: item.title,
+      videoId: item.videoId || null,
+      type: item.type || 'video',
+      videoDuration: item.videoDuration,
+      readingTime: item.readingTime
+    });
+  }, []);
 
 
   // Video control functions
@@ -410,16 +503,12 @@ export default function CourseLearnDetail() {
     );
   }
 
-  // Video Embed URL
-  const videoEmbedUrl = currentPlayingVideo?.videoId
-    ? `https://www.youtube.com/watch?v=${currentPlayingVideo?.videoId}`
-    : "";
-
-  const finalContent = currentPlayingVideo?.content;
-
   return (
     <>
-
+      {/* Preconnect to YouTube domains để tăng tốc load video */}
+      <link rel="preconnect" href="https://www.youtube.com" />
+      <link rel="preconnect" href="https://i.ytimg.com" />
+      <link rel="dns-prefetch" href="https://www.youtube.com" />
 
       <div className="flex flex-col lg:flex-row w-full min-h-screen bg-gray-100">
         {/* Left - Video Player & Lesson Info */}
@@ -440,7 +529,15 @@ export default function CourseLearnDetail() {
           {/* Video Player hoặc Article Content - Tăng kích thước */}
           <div className="w-full bg-black">
             <div className="aspect-[16/9] min-h-[600px] w-full">
-              {currentPlayingVideo?.type === 'article' || (!videoEmbedUrl && finalContent) ? (
+              {/* Show loading khi đang fetch full content */}
+              {(lessonDetailLoading || articleDetailLoading) ? (
+                <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                  <div className="text-center">
+                    <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
+                    <p className="text-gray-600">Đang tải nội dung bài học...</p>
+                  </div>
+                </div>
+              ) : currentPlayingVideo?.type === 'article' || (!videoEmbedUrl && finalContent) ? (
                 <div className="w-full h-full bg-white overflow-y-auto">
                   <div className="p-8 max-w-4xl mx-auto">
                     <h1 className="text-3xl font-bold mb-6 text-gray-900">{currentPlayingVideo?.title}</h1>
@@ -631,21 +728,21 @@ export default function CourseLearnDetail() {
         </div >
 
         {/* Right - Course Content List */}
-        < div className="w-full lg:w-[500px] flex-shrink-0 bg-white border-r overflow-y-auto p-4 shadow-inner" >
+        < div className="w-full lg:w-[500px] flex-shrink-0 bg-white border-r overflow-y-auto p-4" >
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-bold text-gray-800">
+            <h3 className="text-lg font-bold text-gray-800 hidden lg:block">
               Nội dung khóa học
             </h3>
             <div className="flex items-center text-gray-600 text-sm">
               <Link to="/" className="hover:underline text-blue-600">
                 <i className="fas fa-home"></i>
               </Link>
-              <span className="mx-2">/</span>
-              <Link to="/courses" className="hover:underline text-blue-600">
+              <span className="mx-2 hidden lg:block">/</span>
+              <Link to="/courses" className="hover:underline text-blue-600 hidden lg:block">
                 Khóa học
               </Link>
-              <span className="mx-2">/</span>
-              <span className="text-gray-700 font-semibold line-clamp-1">
+              <span className="mx-2 hidden lg:block">/</span>
+              <span className="text-gray-700 font-semibold line-clamp-1 text-xl lg:text-sm">
                 {course.title}
               </span>
             </div>
@@ -660,7 +757,7 @@ export default function CourseLearnDetail() {
           </button>
 
           {/* List Sections */}
-          <div className="h-[1100px] overflow-y-auto">
+          <div className="h-[1100px] overflow-y-auto scrollbar-hide">
             {
               sections &&
               sections.map((section) => (
