@@ -2,22 +2,22 @@ import { apiClient } from "../../utils/clientAxios"
 
 const addNewBanner = async (data) => {
     const key = data.key || 'homepage';
-    return await apiClient.post(`/admin/setting/${key}/banners`, data)
+    return await apiClient.post(`/admin/setting/${key}/slides`, data)
 }
 
 const getAllBanners = async (params = {}) => {
     const key = params.key || 'homepage';
-    return await apiClient.get(`/admin/setting/${key}/banners`)
+    return await apiClient.get(`/admin/setting/${key}/slides`)
 }
 
 const updateBanner = async (id, data) => {
     const key = data.key || 'homepage';
-    return await apiClient.put(`/admin/setting/${key}/banners/${id}`, data)
+    return await apiClient.put(`/admin/setting/${key}/slides/${id}`, data)
 }
 
 const deleteBanner = async (id) => {
     const key = 'homepage'; // or pass key
-    return await apiClient.delete(`/admin/setting/${key}/banners/${id}`)
+    return await apiClient.delete(`/admin/setting/${key}/slides/${id}`)
 }
 
 const reorderBanners = async (data) => {
@@ -32,7 +32,7 @@ const addNewSetting = async (data) => {
 }
 
 const getAllSetting = async (key = 'homepage') => {
-    return await apiClient.get(`/admin/setting/${key}`)
+    return await apiClient.get(`/admin/setting`)
 }
 
 const updateSetting = async (key, data) => {

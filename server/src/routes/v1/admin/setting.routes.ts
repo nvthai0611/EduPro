@@ -13,6 +13,8 @@ router.get('/health', (req, res) => {
 router.post('/:key', authenticateToken, authorizeRoles(['admin']), settingController.createSetting);
 // Get full setting (admin) by key
 router.get('/:key', authenticateToken, authorizeRoles(['admin']), settingController.getSetting);
+// Get all settings
+router.get('/', authenticateToken, authorizeRoles(['admin']), settingController.getAllSettings);
 // Banners routes scoped by key
 router.post('/:key/slides', authenticateToken, authorizeRoles(['admin']), settingController.addBanner);
 router.get('/:key/slides', authenticateToken, authorizeRoles(['admin']), settingController.getAdminBanners);

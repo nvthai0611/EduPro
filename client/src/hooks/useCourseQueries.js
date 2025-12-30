@@ -510,15 +510,21 @@ export const useLessonsBySection = (sectionId, options = {}) => {
   });
 };
 
-/**
- * Hook to fetch single lesson by ID
- */
 export const useLesson = (lessonId, options = {}) => {
   return useQuery({
     queryKey: lessonKeys.detail(lessonId),
     queryFn: async () => {
-      const response = await lessonService.getLessonById(lessonId);
-      return response?.data || response;
+      try {
+        const response = await lessonService.getLessonById(lessonId);
+        return response?.data || response;
+      } catch (error) {
+        // If lesson not found (404), return null instead of throwing
+        if (error?.response?.status === 404) {
+          console.warn(`Lesson  not found, returning null`);
+          return null;
+        }
+        throw error; // Re-throw other errors
+      }
     },
     enabled: !!lessonId,
     staleTime: 1000 * 60 * 5, // 5 minutes

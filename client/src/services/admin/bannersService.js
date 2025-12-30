@@ -6,7 +6,7 @@ export const bannersService = {
     getBanners: async (key = 'homepage') => {
     try {
       const response = await apiClient.get(`/setting/${key}/slides`);
-      console.log('Response from getBanners:', response);
+      // console.log('Response from getBanners:', response);
       return response;
     } catch (error) {
       console.error('Error fetching banners:', error);
@@ -27,7 +27,9 @@ export const bannersService = {
     // Tạo banner mới
     createBanner: async (bannerData) => {
     try {
+      console.log('Original bannerData:', bannerData);
       const key = bannerData.key || 'homepage';
+      
       const response = await apiClient.post(`/admin/setting/${key}/slides`, bannerData);
         return response.data;
     } catch (error) {
