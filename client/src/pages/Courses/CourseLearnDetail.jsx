@@ -23,11 +23,19 @@ const LessonItem = ({ item, isCurrent, onClick }) => (
   >
     <div className="flex items-center justify-between">
       <span className="flex items-center text-sm">
-        {item.type === "video" ? <>
-          <Video className={`text-blue-600 border-blue-500`} />
-        </> : <>
-          <BookOpen className={`text-green-600 text-green-600`} />
-        </>}
+        {item.type === "video" ? (
+          <span className="inline-flex items-center gap-2 px-3 py-1.5
+                   rounded-full bg-blue-50 text-blue-600
+                   border border-blue-200">
+            <Video className="w-4 h-4" />
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-2 px-3 py-1.5
+                   rounded-full bg-green-50 text-green-600
+                   border border-green-200">
+            <BookOpen className="w-4 h-4" />
+          </span>
+        )}
         <i
           className={`mr-2 far fa-circle ${isCurrent ? "text-orange-500" : "text-gray-400"
             }`}
@@ -720,21 +728,21 @@ export default function CourseLearnDetail() {
         </div >
 
         {/* Right - Course Content List */}
-        < div className="w-full lg:w-[500px] flex-shrink-0 bg-white border-r overflow-y-auto p-4 shadow-inner" >
+        < div className="w-full lg:w-[500px] flex-shrink-0 bg-white border-r overflow-y-auto p-4" >
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-bold text-gray-800">
+            <h3 className="text-lg font-bold text-gray-800 hidden lg:block">
               Nội dung khóa học
             </h3>
             <div className="flex items-center text-gray-600 text-sm">
               <Link to="/" className="hover:underline text-blue-600">
                 <i className="fas fa-home"></i>
               </Link>
-              <span className="mx-2">/</span>
-              <Link to="/courses" className="hover:underline text-blue-600">
+              <span className="mx-2 hidden lg:block">/</span>
+              <Link to="/courses" className="hover:underline text-blue-600 hidden lg:block">
                 Khóa học
               </Link>
-              <span className="mx-2">/</span>
-              <span className="text-gray-700 font-semibold line-clamp-1">
+              <span className="mx-2 hidden lg:block">/</span>
+              <span className="text-gray-700 font-semibold line-clamp-1 text-xl lg:text-sm">
                 {course.title}
               </span>
             </div>
@@ -749,7 +757,7 @@ export default function CourseLearnDetail() {
           </button>
 
           {/* List Sections */}
-          <div className="h-[1100px] overflow-y-auto">
+          <div className="h-[1100px] overflow-y-auto scrollbar-hide">
             {
               sections &&
               sections.map((section) => (
