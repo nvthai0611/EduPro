@@ -3,21 +3,27 @@ import {
   Home,
   BookOpen,
   HelpCircle,
-  Route 
+  Route,
+  LayoutDashboard,
+  Library
 } from 'lucide-react';
+import { useAuth } from '../../../hooks/useAuth';
 
 const SideBar = () => {
   // const location = useLocation();
 
   const isActive = (path) => location.pathname === path;
+  const { user } = useAuth();
+  const isAdmin = user && (user.role === 'admin');
 
   const menuItems = [
-    { path: '/courses', icon: Home, label: 'Trang chủ' },
-    // { path: '/courses', icon: BookOpen, label: 'Khóa học' },
+    { path: '/', icon: Home, label: 'Trang chủ' },
+    { path: '/my-learning', icon: Library, label: 'Khóa học' },
     { path: '/about', icon: BookOpen, label: 'Giới thiệu' },
-    { path: '/advisory', icon: Route , label: 'Lộ trình' },
-    { path:"", icon: HelpCircle, label: 'Help' }
-  ];
+    { path: '/advisory', icon: Route, label: 'Lộ trình' },
+    { path: "", icon: HelpCircle, label: 'Help' },
+    isAdmin && { path: "/admin/dashboard", icon: LayoutDashboard, label: 'Dashboard' }
+  ].filter(Boolean);
 
   return (
     <>
@@ -28,11 +34,10 @@ const SideBar = () => {
             <Link
               key={path}
               to={path}
-              className={`flex flex-col items-center justify-center p-3 rounded-xl transition-all hover:scale-110 ${
-                isActive(path) 
-                  ? 'bg-grey-500 text-black shadow-lg' 
+              className={`flex flex-col items-center justify-center p-3 rounded-xl transition-all hover:scale-110 ${isActive(path)
+                  ? 'bg-grey-500 text-black shadow-lg'
                   : 'text-gray-600 hover:bg-gray-100'
-              }`}
+                }`}
               title={label}
             >
               <Icon className="w-5 h-5 mb-1" />
@@ -49,11 +54,10 @@ const SideBar = () => {
             <Link
               key={path}
               to={path}
-              className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all min-w-[60px] ${
-                isActive(path) 
-                  ? 'bg-blue-50 text-blue-600' 
+              className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all min-w-[60px] ${isActive(path)
+                  ? 'bg-blue-50 text-blue-600'
                   : 'text-gray-600 hover:bg-gray-50'
-              }`}
+                }`}
             >
               <Icon className="w-5 h-5 mb-1" />
               <span className="text-[9px] sm:text-[10px] font-medium text-center">{label}</span>

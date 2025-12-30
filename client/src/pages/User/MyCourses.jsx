@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -37,19 +37,25 @@ const MyCourses = () => {
     staleTime: 1000 * 60 * 5, // cache 5 phút
   });
 
+  const courseIds = useMemo(
+    () => purchasedCourses.map(c => c.courseId),
+    [purchasedCourses]
+  );
+
   const {
     data: learningCourses = [],
   } = useQuery({
-    queryKey: ['learningCourses', purchasedCourses.map(c => c.courseId)],
+    queryKey: ['learningCourses', courseIds],
     queryFn: async () => {
-      const results = await Promise.all(
-        purchasedCourses.map(c =>
-          courseService.getCourseById(c.courseId)
-        )
+      const results = await Promise.allSettled(
+        courseIds.map(id => courseService.getCourseById(id))
       );
-      return results.map(r => r.data);
+
+      return results
+        .filter(r => r.status === 'fulfilled')
+        .map(r => r.value.data);
     },
-    enabled: purchasedCourses.length > 0,
+    enabled: courseIds.length > 0,
     staleTime: 1000 * 60 * 5,
   });
 

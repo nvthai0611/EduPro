@@ -164,45 +164,6 @@ export default function DashboardSidebar() {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
-                  tooltip="Banner"
-                  isActive={activeMenu == "banner"}
-                  onClick={() => setActiveMenu("banner")}
-                >
-                  <Link to={"/admin/banner"}>
-                    <HelpCircleIcon />
-                    <span>Quản lí banner</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  tooltip="Services"
-                  isActive={activeMenu == "services"}
-                  onClick={() => setActiveMenu("services")}
-                >
-                  <Link to={"/admin/manager-service"}>
-                    <Scissors />
-                    <span>Quản lý dịch vụ</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  tooltip="Products"
-                  isActive={activeMenu == "room"}
-                  onClick={() => setActiveMenu("room")}
-                >
-                  <Link to={"/admin/manager-room"}>
-                    <HousePlus />
-                    <span>Quản lý phòng</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
                   tooltip="Coupons"
                   isActive={activeMenu == "coupons"}
                   onClick={() => setActiveMenu("coupons")}
@@ -213,53 +174,6 @@ export default function DashboardSidebar() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  tooltip="Promotions"
-                  isActive={activeMenu == "promotions"}
-                  onClick={() => setActiveMenu("promotions")}
-                >
-                  <Link to={"/admin/manager-promotion"}>
-                    <Percent />
-                    <span>Quản lý Promotion</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  tooltip="Branch Management"
-                  isActive={activeMenu == "branch"}
-                  onClick={() => setActiveMenu("branch")}
-                >
-                  <Link to={"/admin/manager-branch"}>
-                    <Warehouse />
-                    <span>Quản lý chi nhánh</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              {/* <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  tooltip="Product Management"
-                  isActive={activeMenu == "product"}
-                  onClick={() => setActiveMenu("product")}
-                >
-                  <Link to={"/admin/manager-product"}>
-                    <Package />
-                    <span>Quản lý sản phẩm</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem> */}
-              {/* <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Analytics">
-                  <a href="#">
-                    <BarChart3 />
-                    <span>Thống kê</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem> */}
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild

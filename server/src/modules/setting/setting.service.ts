@@ -42,7 +42,6 @@ class SettingService {
         banners: []
       });
     }
-    console.log('Getting banners for key:', key, 'banners:', setting.banners);
     return setting.banners.filter((b) => b.isActive && !b.isDeleted).sort((a, b) => a.order - b.order);
   }
   // Get Banners 
