@@ -27,7 +27,9 @@ export const bannersService = {
     // Tạo banner mới
     createBanner: async (bannerData) => {
     try {
+      console.log('Original bannerData:', bannerData);
       const key = bannerData.key || 'homepage';
+      
       const response = await apiClient.post(`/admin/setting/${key}/slides`, bannerData);
         return response.data;
     } catch (error) {

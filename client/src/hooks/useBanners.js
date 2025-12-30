@@ -31,13 +31,27 @@ export const useBanners = (key = "homepage") => {
 };
 
 export const useAdminBanners = (key) => {
-  // Placeholder for future admin banner-related hooks
   return useQuery({
     queryKey: bannerKeys.list(key),
     queryFn: async () => {
       const response = await bannersService.getAdminBanners(key ? { key } : {});
       console.log("admin queryFn response:", response);
-      return response ?? [];
+      
+      // Transform backend data to frontend format
+      if (Array.isArray(response)) {
+        return response.map(banner => ({
+          ...banner,
+          link: banner.linkUrl,
+          isActive: banner.isActive
+        }));
+      } else if (response?.data && Array.isArray(response.data)) {
+        return response.data.map(banner => ({
+          ...banner,
+          link: banner.linkUrl,
+          isActive: banner.isActive
+        }));
+      }
+      return [];
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -76,5 +90,15 @@ export const useUpdateBanner = () => {
 };
 
 export const useDeleteBanner = () => {
-  // Placeholder for future delete banner hook
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: bannersService.deleteBanner,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: bannerKeys.all });
+      toast.success("Banner deleted successfully");
+    },
+    onError: (error) => {
+      toast.error(`Error deleting banner: ${error.message}`);
+    },
+  });
 };

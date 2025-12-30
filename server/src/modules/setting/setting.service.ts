@@ -1,6 +1,7 @@
 // import Setting from "./setting.model";
 
 import settingRepository from "./setting.repository";
+import Setting from "./setting.model";
 
 class SettingService {
     /**
@@ -124,6 +125,24 @@ class SettingService {
       return await settingRepository.updateSetting(existing._id.toString(), payload);
     }
     return await settingRepository.createSetting({ ...payload, key });
+  }
+
+  // Get full setting by key
+  async getSetting(key: string) {
+    let setting = await settingRepository.getSettingByKey(key);
+    if (!setting) {
+      // Create default setting if it doesn't exist
+      setting = await settingRepository.createSetting({
+        key: key,
+        banners: []
+      });
+    }
+    return setting;
+  }
+
+  // Get all settings
+  async getAllSettings() {
+    return await Setting.find({});
   }
 
 }

@@ -20,15 +20,6 @@ const settingSchema = new mongoose.Schema({
     collection: 'Settings',
     timestamps: true
 });
-settingSchema.pre('save', async function(next) {
-    if (this.isNew) {
-        const existingSettings = await Setting.find({});
-        if (existingSettings.length > 0) {
-            throw new Error("Chỉ được phép có một tài liệu Setting duy nhất.");
-        }
-    }
-    next();
-});
 const Setting = mongoose.model<ISetting>('Setting', settingSchema);
 
 export default Setting;
