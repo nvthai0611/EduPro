@@ -134,15 +134,22 @@ export const getArticlesBySection = async (req: Request, res: Response) => {
 
 export const getArticleContent = async (req: Request, res: Response) => {
   try {
-    const { lessonId } = req.params;
+    const { articleId } = req.params;
     const user = (req as any).user;
+    
+    if (!articleId) {
+      return res.status(400).json({
+        success: false,
+        message: "Article ID is required",
+      });
+    }
     
     const context = {
       userId: user?.userId,
       role: user?.role,
     };
 
-    const article = await ArticleService.getPublishedArticleContent(lessonId, context);
+    const article = await ArticleService.getPublishedArticleContent(articleId, context);
 
     return res.status(200).json({
       success: true,

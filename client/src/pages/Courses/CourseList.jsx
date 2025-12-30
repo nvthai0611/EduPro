@@ -5,6 +5,8 @@ import { useCourses } from "../../hooks/useCourseQueries";
 import SideBar from "../Home/components/SideBar";
 import Carousel from "../Home/components/Carousel";
 import { useOptimizedAuth } from "../../hooks/useOptimizedAuth";
+import { formatGradientColor } from "../../utils/format";
+import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
 
 const handleClick = () => {
   window.scrollTo({ top: 0, behavior: "instant" });
@@ -69,25 +71,7 @@ const calculateTotalLessons = (sections = []) => {
 };
 
 // Gradient colors constant
-const GRADIENT_COLORS = [
-  "from-blue-400 to-blue-600",
-  "from-purple-400 to-purple-600",
-  "from-pink-400 to-pink-600",
-  "from-green-400 to-green-600",
-  "from-yellow-400 to-yellow-600",
-  "from-red-400 to-red-600",
-  "from-indigo-400 to-indigo-600",
-  "from-teal-400 to-teal-600",
-  "from-orange-400 to-orange-600",
-  "from-cyan-400 to-cyan-600",
-  "from-violet-400 to-violet-600",
-  "from-fuchsia-400 to-fuchsia-600",
-  "from-rose-400 to-rose-600",
-  "from-sky-400 to-sky-600",
-  "from-emerald-400 to-emerald-600",
-  "from-amber-400 to-amber-600",
-  "from-lime-400 to-lime-600",
-];
+const GRADIENT_COLORS = formatGradientColor();
 
 // Component Course Card với thông tin đầy đủ
 const CourseCard = ({ course }) => {
@@ -249,7 +233,7 @@ export default function CourseList() {
     []
   );
 
-  const { data: courseData = [] } = useCourses(filters, {
+  const { data: courseData = [], isLoading } = useCourses(filters, {
     // Transform data để bao gồm thông tin đầy đủ
     select: (data) => {
       if (!Array.isArray(data)) return [];
@@ -298,11 +282,15 @@ export default function CourseList() {
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6 text-gray-800 px-1">
             Danh sách khóa học
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-            {filteredCourses.map((course) => (
-              <CourseCard key={course.id ?? course.slug} course={course} />
-            ))}
-          </div>
+          {isLoading ? (
+            <LoadingSpinner />
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+              {filteredCourses.map((course) => (
+                <CourseCard key={course.id ?? course.slug} course={course} />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Mobile Bottom Navigation */}

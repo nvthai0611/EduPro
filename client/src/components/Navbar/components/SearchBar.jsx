@@ -1,9 +1,10 @@
 import { Search, X, BookOpen } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useCourses } from "../../../hooks/useCourseQueries";
 
 const SearchBar = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -79,11 +80,22 @@ const SearchBar = () => {
         </div>
         <div className="space-y-1">
           {items.slice(0, 3).map((item) => (
-            <Link
-              key={item.id}
-              to={type === 'course' ? `/courses/${item.slug}` : `/${type}s/${item.slug}`}
-              onClick={() => setIsOpen(false)}
-              className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors"
+            <button
+              key={item.id ?? item.slug ?? item.title}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Item clicked:', item);
+                console.log('Item slug:', item.slug);
+                console.log('Type:', type);
+                const path = type === 'course' ? `/courses/${item.slug}` : `/${type}s/${item.slug}`;
+                console.log('Navigating to:', path);
+                navigate(path);
+                setIsOpen(false);
+                setSearchQuery("");
+                setDebouncedQuery("");
+              }}
+              className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors cursor-pointer text-left"
             >
               {item.image || item.thumbnail ? (
                 <img 
@@ -101,7 +113,7 @@ const SearchBar = () => {
                 </div>
               )}
               <span className="text-sm text-gray-700 line-clamp-2 flex-1">{item.title}</span>
-            </Link>
+            </button>
           ))}
         </div>
       </div>

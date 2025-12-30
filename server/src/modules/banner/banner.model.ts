@@ -1,9 +1,10 @@
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 
 
-export interface IBanner extends Document {
+export interface IBanner {
+    _id: Types.ObjectId;
     title: string;
-    description?: string;
+    description: string;
     imageUrl: string;
     linkUrl: string;
     isActive: boolean;
@@ -13,7 +14,7 @@ export interface IBanner extends Document {
     isDeleted: boolean;
 }
 
-const bannerSchema = new mongoose.Schema({
+export const bannerSchema = new mongoose.Schema({
     title: {
         type: String,
         required: true,
@@ -39,38 +40,30 @@ const bannerSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    createdAt:{
-        type: Date,
-        default: Date.now
-    },
-    updatedAt:{
-        type: Date,
-        default: Date.now
-    },
+
     isDeleted: {
         type: Boolean,
         default: false
     }
 }, {
-    collection: 'Banners',
+   _id: true,
     timestamps: true
 });
-// Auto-increment order before saving
-bannerSchema.pre('save', async function(next) {
-    if (this.isNew && (this.order === 0 || this.order === undefined)) {
-        try {
-            const maxOrderBanner = await Banner.findOne({ isDeleted: false })
-                .sort({ order: -1 })
-                .select('order')
-                .lean();
+// // Auto-increment order before saving
+// bannerSchema.pre('save', async function(next) {
+//     if (this.isNew && (this.order === 0 || this.order === undefined)) {
+//         try {
+//             const maxOrderBanner = await Banner.findOne({ isDeleted: false })
+//                 .sort({ order: -1 })
+//                 .select('order')
+//                 .lean();
             
-            this.order = maxOrderBanner ? maxOrderBanner.order + 1 : 1;
-        } catch (error) {
-            return next(error as Error);
-        }
-    }
-    next();
-});
-const Banner = mongoose.model<IBanner>('Banner', bannerSchema);
+//             this.order = maxOrderBanner ? maxOrderBanner.order + 1 : 1;
+//         } catch (error) {
+//             return next(error as Error);
+//         }
+//     }
+//     next();
+// });
 
-export default Banner;
+// export default Banner;

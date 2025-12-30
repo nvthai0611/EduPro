@@ -136,3 +136,15 @@ export const getSectionsWithContentForLearners = async (req: any, res: any) => {
     res.status(400).json({ success: false, message: error.message });
   }
 };
+
+// Public endpoint - Get sections with minimal lesson data for list view (lightweight)
+export const getSectionsWithMinimalLessons = async (req: any, res: any) => {
+  try {
+    const courseId = req.params.courseId;
+    const sections = await SectionService.getSectionsWithMinimalLessons(courseId);
+    res.setHeader("x-encrypted", "true");
+    res.status(200).json({ success: true, encryptedData: encryptData(sections) });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};

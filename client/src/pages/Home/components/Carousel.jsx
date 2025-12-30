@@ -3,19 +3,12 @@ import Autoplay from "embla-carousel-autoplay";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useBanners } from "../../../hooks/useBanners";
+import { formatGradientColor } from "../../../utils/format";
 
-const GRADIENT_COLORS = [
-  "from-blue-500 via-blue-600 to-blue-700",
-  "from-purple-500 via-purple-600 to-purple-700",
-  "from-pink-500 via-pink-600 to-pink-700",
-  "from-green-500 via-green-600 to-green-700",
-  "from-yellow-500 via-yellow-600 to-yellow-700",
-  "from-red-500 via-red-600 to-red-700",
-  "from-indigo-500 via-indigo-600 to-indigo-700",
-  "from-teal-500 via-teal-600 to-teal-700",
-  "from-orange-500 via-orange-600 to-orange-700",
-  "from-cyan-500 via-cyan-600 to-cyan-700",
-];
+
+
+
+const GRADIENT_COLORS = formatGradientColor();
 
 const AUTOPLAY_DELAY = 5000;
 
@@ -35,14 +28,36 @@ const Carousel = () => {
   );
 
   const [selectedIndex, setSelectedIndex] = useState(0);
-
+  
   const {
-    data: banners = [],
+    data: fetchedBanners = [],
     isLoading,
     isError,
-  } = useBanners({
-    location: "home_carousel",
-  });
+  } = useBanners("homepage");
+console.log('Fetched Banners in Carousel:', fetchedBanners);
+// console.log(data);
+  // Default banner if no banners
+  const defaultBanners = [
+    {
+      id: "default",
+      title: "Chào mừng đến với EduPro",
+      description: "Nền tảng học tập trực tuyến hàng đầu",
+      imageUrl: "https://via.placeholder.com/800x400/4F46E5/FFFFFF?text=EduPro",
+      linkUrl: "/courses",
+      isActive: true,
+    },
+  ];
+
+  const banners = fetchedBanners.length > 0 ? fetchedBanners.map(banner => ({
+    ...banner,
+    title: banner.title || 'EduPro',
+    description: banner.description || 'Nền tảng học tập trực tuyến hàng đầu',
+    imageUrl: banner.imageUrl || 'https://via.placeholder.com/800x400/4F46E5/FFFFFF?text=EduPro',
+    subtitle: banner.subtitle || 'Khám phá khóa học chất lượng cao với giá ưu đãi',
+  })) : defaultBanners;
+
+  console.log('Fetched banners:', fetchedBanners);
+  console.log('Banners to render:', banners);
 
   const scrollPrev = useCallback(() => {
     emblaApi?.scrollPrev();
@@ -134,7 +149,7 @@ const Carousel = () => {
 
               return (
                 <div
-                  key={banner.id}
+                  key={banner._id || banner.id || `banner-${idx}`}
                   className="flex-[0_0_100%] min-w-0 px-1 sm:px-2"
                 >
                   {/* SLIDE */}
