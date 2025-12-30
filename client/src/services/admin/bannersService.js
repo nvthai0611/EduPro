@@ -6,7 +6,7 @@ export const bannersService = {
     getBanners: async (key = 'homepage') => {
     try {
       const response = await apiClient.get(`/setting/${key}/slides`);
-      console.log('Response from getBanners:', response);
+      // console.log('Response from getBanners:', response);
       return response;
     } catch (error) {
       console.error('Error fetching banners:', error);

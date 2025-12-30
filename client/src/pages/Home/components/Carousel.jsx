@@ -34,7 +34,7 @@ const Carousel = () => {
     isLoading,
     isError,
   } = useBanners("homepage");
-console.log('Fetched Banners in Carousel:', fetchedBanners);
+// console.log('Fetched Banners in Carousel:', fetchedBanners);
 // console.log(data);
   // Default banner if no banners
   const defaultBanners = [
@@ -56,8 +56,8 @@ console.log('Fetched Banners in Carousel:', fetchedBanners);
     subtitle: banner.subtitle || 'Khám phá khóa học chất lượng cao với giá ưu đãi',
   })) : defaultBanners;
 
-  console.log('Fetched banners:', fetchedBanners);
-  console.log('Banners to render:', banners);
+  // consolBanners to rendere.log('Fetched banners:', fetchedBanners);
+  // console.log(':', banners);
 
   const scrollPrev = useCallback(() => {
     emblaApi?.scrollPrev();

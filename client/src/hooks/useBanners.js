@@ -15,7 +15,7 @@ export const useBanners = (key = "homepage") => {
     queryKey: bannerKeys.list(key),
     queryFn: async () => {
       const response = await bannersService.getBanners(key);
-      console.log("Response from useBanners queryFn:", response );
+      // console.log("Response from useBanners queryFn:", response );
       // Handle different response formats
       if (Array.isArray(response)) {
         return response;
