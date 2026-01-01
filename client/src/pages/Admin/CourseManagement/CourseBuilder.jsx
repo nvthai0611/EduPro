@@ -371,7 +371,7 @@ const CourseBuilder = () => {
           }
           return false;
         })?.lessons.find(l => l._id === deleteTarget.id);
-        
+
       if (lesson?.type === 'article') {
         // Delete from Article collection
         deleteArticleMutation.mutate(
@@ -452,13 +452,13 @@ const CourseBuilder = () => {
 
     const newSections = [...sections];
     const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-    
+
     // Swap sections
     [newSections[currentIndex], newSections[targetIndex]] = [newSections[targetIndex], newSections[currentIndex]];
-    
+
     // Extract section IDs in new order
     const sectionIds = newSections.map(s => s._id);
-    
+
     reorderSectionsMutation.mutate({
       courseId: courseId,
       sectionIds: sectionIds
@@ -477,13 +477,13 @@ const CourseBuilder = () => {
 
     const newLessons = [...section.lessons];
     const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-    
+
     // Swap lessons
     [newLessons[currentIndex], newLessons[targetIndex]] = [newLessons[targetIndex], newLessons[currentIndex]];
-    
+
     // Extract lesson IDs in new order
     const lessonIds = newLessons.map(l => l._id);
-    
+
     reorderLessonsMutation.mutate({
       sectionId: sectionId,
       lessonIds: lessonIds,
@@ -740,7 +740,13 @@ const CourseBuilder = () => {
                                       </div>
                                       <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
                                         <Clock className="w-3 h-3" />
-                                        <span>{lesson.videoDuration ? formatDuration(lesson.videoDuration) : lesson.readingTime + "m"}</span>
+                                        <span>
+                                          {lesson?.videoDuration != null
+                                            ? formatDuration(lesson.videoDuration)
+                                            : lesson?.readingTime != null
+                                              ? `${lesson.readingTime}m`
+                                              : null}
+                                        </span>
                                       </div>
                                     </div>
 

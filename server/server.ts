@@ -13,7 +13,6 @@ import session from "express-session";
 import connectFlash from "connect-flash";
 import cors from "cors";
 import connectDB from "./src/config/db";
-import "./src/utils/cron/clearExpiredSessions";
 
 // //Test bull
 // const { ExpressAdapter } = require('@bull-board/express');
@@ -25,6 +24,7 @@ import passport from "passport";
 import "./src/passports/passport.google";
 import { apiRouter } from "./src/routes/api";
 import { limitRequestsMiddleware } from "./src/middlewares/auth/limitRequest.middleware";
+import requireAuth from "./src/middlewares/auth/requireActiveAuth";
 // const User = require("./src/models/user.model");
 
 // // Cron
@@ -48,6 +48,8 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false, // Allow embedding
   crossOriginResourcePolicy: { policy: "cross-origin" }, // Allow CORS
 }));
+
+app.set('trust proxy', true); // Cấu hình express tin tưởng proxy
 
 // Add custom security headers
 app.use((req, res, next) => {
@@ -82,7 +84,7 @@ const corsOptions = {
   },
   methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
   credentials: true,
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "x-desktop-ref"],
   exposedHeaders: ["x-encrypted"],
 };
 app.use(cors(corsOptions));

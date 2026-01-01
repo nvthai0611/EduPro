@@ -18,7 +18,7 @@ const SideBar = () => {
 
   const menuItems = [
     { path: '/', icon: Home, label: 'Trang chủ' },
-    { path: '/my-learning', icon: Library, label: 'Khóa học' },
+    user && { path: '/my-learning', icon: Library, label: 'Khóa học' },
     { path: '/about', icon: BookOpen, label: 'Giới thiệu' },
     { path: '/advisory', icon: Route, label: 'Lộ trình' },
     { path: "", icon: HelpCircle, label: 'Help' },

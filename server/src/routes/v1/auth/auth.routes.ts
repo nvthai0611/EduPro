@@ -1,17 +1,12 @@
 import { Router, Request, Response } from "express";
 import passport from "passport";
+import crypto from "crypto";
 
 import { createAccessToken, decodeToken } from "../../../utils/jwt";
 import userService from "../../../modules/user/user.service";
-import authController from "../../../modules/auth/auth.controller";
+import Session from "../../../modules/session/session.model";
 
 const router: Router = Router();
-
-// ===============================
-//     MANAGER/ADMIN LOGIN
-// ===============================
-
-router.post("/login/manager", authController.loginManager);
 
 // ===============================
 //        GOOGLE AUTH
@@ -50,19 +45,33 @@ router.get(
       const user = req.user as any;
       console.log("✅ User authenticated:", user.email || user._id);
 
+      const sessionId = crypto.randomUUID();
+
       // Luôn tạo JWT mới mỗi lần đăng nhập Google
       // Cho phép user đăng nhập từ nhiều thiết bị
       const accessToken = await createAccessToken({
         userId: (req.user as any)["_id"],
         role: (req.user as any).role || "customer",
         image: (req.user as any).image,
+        sessionId: sessionId,
       });
       console.log("🔑 Access token created, length:", accessToken.length);
 
-      // Cập nhật sessionToken mới nhất (optional - để track login gần nhất)
-      await userService.updateUser(user._id, {
-        sessionToken: accessToken,
-        sessionTokenExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
+      // Vô hiệu hóa các phiên đăng nhập trước đó của user
+      // await Session.updateMany(
+      //   { userId: user._id, isValid: true },
+      //   { $set: { isValid: false } }
+      // );
+      await Session.deleteMany({ userId: user._id });
+
+      // Lưu phiên đăng nhập mới
+      await Session.create({
+        userId: user._id,
+        sessionId,
+        deviceId: req.cookies.runtime_ctx,
+        userAgent: req.headers["user-agent"],
+        ip: req.ip,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
       });
 
       const isProduction = process.env.NODE_ENV === "production";
@@ -99,12 +108,20 @@ router.get("/logout", async (req: Request, res: Response) => {
     const decoded: any = await decodeToken(token);
 
     await userService.updateUser(decoded.userId, {
-      $unset: { sessionToken: "" },
-      $set: { sessionTokenExpiresAt: "" },
+      $unset: {
+        sessionToken: 1,
+        sessionTokenExpiresAt: 1,
+      },
     } as any);
+
+    await Session.updateOne(
+      { sessionId: decoded.sessionId },
+      { isValid: false }
+    );
 
     // Xóa token khỏi cookie
     res.clearCookie("render_id");
+    res.clearCookie("runtime_ctx");
 
     res.status(200).send("Logged out successfully");
   } catch (error) {

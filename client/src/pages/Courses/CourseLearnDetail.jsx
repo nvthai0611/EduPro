@@ -43,7 +43,7 @@ const LessonItem = ({ item, isCurrent, onClick }) => (
         {item.title}
       </span>
       <span className="text-xs text-gray-500">
-        {item.videoDuration ? item?.videoDuration / 60 + " ph" : item?.readingTime + " ph"}
+        {item.videoDuration ? `${(item.videoDuration / 60).toFixed(0)}m` : item.readingTime ? `${item.readingTime}m` : null}
       </span>
     </div>
   </div>

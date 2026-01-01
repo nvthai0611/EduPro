@@ -126,19 +126,6 @@ class SettingService {
     return await settingRepository.createSetting({ ...payload, key });
   }
 
-  // Get full setting by key
-  async getSetting(key: string) {
-    let setting = await settingRepository.getSettingByKey(key);
-    if (!setting) {
-      // Create default setting if it doesn't exist
-      setting = await settingRepository.createSetting({
-        key: key,
-        banners: []
-      });
-    }
-    return setting;
-  }
-
   // Get all settings
   async getAllSettings() {
     return await Setting.find({});
