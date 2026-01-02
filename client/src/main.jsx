@@ -80,11 +80,14 @@ disableConsoleInProduction();
 // preventDevTools();
 
 const queryClient = new QueryClient();
+// Detect dash subdomain to serve admin at root (dash.fuedupro.com)
+const hostname = typeof window !== "undefined" ? window.location.hostname : "";
+const isDashSubdomain = hostname === "dash.fuedupro.com" || hostname.startsWith("dash.");
 ReactDOM.createRoot(document.getElementById("root")).render(
   <Provider store={store}>
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
-          <App />
+          <App isDashHost={isDashSubdomain} />
       </QueryClientProvider>
     </BrowserRouter>
   </Provider>
