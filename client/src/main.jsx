@@ -3,8 +3,6 @@ import './assets/css/style.css'
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import { BrowserRouter } from "react-router-dom";
-import { Provider } from "react-redux";
-import store from "./stores/store";
 import "./lib/i18n"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { disableConsoleInProduction } from "./utils/logger";
@@ -50,12 +48,12 @@ disableConsoleInProduction();
 
 //     // Additional protection - detect if dev tools are open
 //     let devtools = { open: false, orientation: null };
-    
+
 //     setInterval(() => {
 //       const threshold = 160;
 //       const widthThreshold = window.outerWidth - window.innerWidth > threshold;
 //       const heightThreshold = window.outerHeight - window.innerHeight > threshold;
-      
+
 //       if (widthThreshold || heightThreshold) {
 //         if (!devtools.open) {
 //           devtools.open = true;
@@ -81,11 +79,9 @@ disableConsoleInProduction();
 
 const queryClient = new QueryClient();
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <Provider store={store}>
-    <BrowserRouter>
-      <QueryClientProvider client={queryClient}>
-          <App />
-      </QueryClientProvider>
-    </BrowserRouter>
-  </Provider>
+  <BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>
+  </BrowserRouter>
 );

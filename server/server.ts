@@ -69,9 +69,11 @@ app.use((req, res, next) => {
 // ================= CORS =================
 const allowedOrigins = [
   "http://localhost:5173",
+  "http://dash.localhost:5173",
   "http://localhost:3000",
   "http://localhost:9999",
   "https://www.fuedupro.com",
+  "https://dash.fuedupro.com",
   "https://edu-pro-delta.vercel.app",
 ];
 const corsOptions = {

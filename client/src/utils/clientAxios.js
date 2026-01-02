@@ -11,8 +11,7 @@ const client = axios.create({
   withCredentials: true, //quan trọng để gửi cookie cross-origin
 });
 
-const ENCRYPTION_KEY =
-  import.meta.env.VITE_ENCRYPTION_KEY || "your-secret-key-32-bytes-long!!!";
+const ENCRYPTION_KEY = import.meta.env.VITE_ENCRYPTION_KEY;
 const TOKEN_KEY = AUTH_TOKEN.ACCESS_TOKEN;
 
 // --- COOKIE UTILITIES ---
