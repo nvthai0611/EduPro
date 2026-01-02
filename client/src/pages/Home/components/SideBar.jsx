@@ -22,7 +22,7 @@ const SideBar = () => {
     { path: '/about', icon: BookOpen, label: 'Giới thiệu' },
     { path: '/advisory', icon: Route, label: 'Lộ trình' },
     { path: "", icon: HelpCircle, label: 'Help' },
-    isAdmin && { path: "/admin/dashboard", icon: LayoutDashboard, label: 'Dashboard' }
+    isAdmin && { path: `${import.meta.env.VITE_DASH_URL}/dashboard`, icon: LayoutDashboard, label: 'Dashboard' }
   ].filter(Boolean);
 
   return (
@@ -35,8 +35,8 @@ const SideBar = () => {
               key={path}
               to={path}
               className={`flex flex-col items-center justify-center p-3 rounded-xl transition-all hover:scale-110 ${isActive(path)
-                  ? 'bg-grey-500 text-black shadow-lg'
-                  : 'text-gray-600 hover:bg-gray-100'
+                ? 'bg-grey-500 text-black shadow-lg'
+                : 'text-gray-600 hover:bg-gray-100'
                 }`}
               title={label}
             >
@@ -55,8 +55,8 @@ const SideBar = () => {
               key={path}
               to={path}
               className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all min-w-[60px] ${isActive(path)
-                  ? 'bg-blue-50 text-blue-600'
-                  : 'text-gray-600 hover:bg-gray-50'
+                ? 'bg-blue-50 text-blue-600'
+                : 'text-gray-600 hover:bg-gray-50'
                 }`}
             >
               <Icon className="w-5 h-5 mb-1" />

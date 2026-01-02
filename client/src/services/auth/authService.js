@@ -36,7 +36,7 @@ class AuthService {
       path: "/",
     };
 
-    Cookies.set(this.userKey, JSON.stringify(user), cookieOptions);
+    Cookies.set(this.accessTokenKey, user.accessToken, cookieOptions);
 
     if (refreshToken) {
       Cookies.set(this.refreshTokenKey, refreshToken, cookieOptions);
@@ -45,10 +45,7 @@ class AuthService {
 
   clearAuthData() {
     // Domain phải khớp với server cookie domain: .edu-pro-delta.vercel.app
-    const domain =
-      import.meta.env.VITE_PROD === "production"
-        ? ".fuedupro.com"
-        : undefined;
+    const domain = import.meta.env.VITE_PROD === "production" ? ".fuedupro.com" : ".fuedupro.local";
 
     // Xoá với cả domain và không domain để đảm bảo
     [undefined, domain].forEach((d) => {
@@ -129,7 +126,7 @@ class AuthService {
       if (!token) {
         return { success: true, message: "No active session" };
       }
-      const res = await apiClient.get("/auth/logout");
+      const res = await apiClient.get(`/auth/logout?token=${token}`);
 
       if (res) {
         return {
@@ -141,6 +138,7 @@ class AuthService {
     } catch (error) {
       return { success: false, message: error.message || "Đăng xuất thất bại" };
     } finally {
+      // this.clearAllCookies();
       this.clearAuthData(); // Xóa dữ liệu xác thực (token, user, etc.)
     }
   }

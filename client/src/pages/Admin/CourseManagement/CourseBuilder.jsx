@@ -250,7 +250,7 @@ const CourseBuilder = () => {
     onError: () => {
       // console.error('Error fetching course:', error);
       toast.error('Không thể tải dữ liệu khóa học');
-      navigate('/admin/manager-courses');
+      navigate('/manager-courses');
     }
   });
 
@@ -698,7 +698,7 @@ const CourseBuilder = () => {
       <div className="flex flex-col items-center justify-center h-screen gap-3">
         <AlertCircle className="w-12 h-12 text-red-600" />
         <p className="text-gray-600">Không thể tải khóa học</p>
-        <Button onClick={() => navigate('/admin/manager-courses')}>
+        <Button onClick={() => navigate('/manager-courses')}>
           Quay lại
         </Button>
       </div>
@@ -715,7 +715,7 @@ const CourseBuilder = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate('/admin/manager-courses')}
+                onClick={() => navigate('/manager-courses')}
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Quay lại

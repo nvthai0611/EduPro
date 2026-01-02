@@ -4,9 +4,16 @@ import crypto from "crypto";
 
 import { createAccessToken, decodeToken } from "../../../utils/jwt";
 import userService from "../../../modules/user/user.service";
+import authController from "../../../modules/auth/auth.controller";
 import Session from "../../../modules/session/session.model";
 
 const router: Router = Router();
+
+// ===============================
+//     MANAGER/ADMIN LOGIN
+// ===============================
+
+router.post("/login/manager", authController.loginManager);
 
 // ===============================
 //        GOOGLE AUTH
@@ -75,6 +82,7 @@ router.get(
       });
 
       const isProduction = process.env.NODE_ENV === "production";
+      const adminDomain = isProduction ? "https://dash.fuedupro.com" : "http://dash.fuedupro.local:5173";
 
       // Cookie options - domain phải là undefined cho localhost
       const cookieOptions = {
@@ -85,14 +93,20 @@ router.get(
         maxAge: 24 * 60 * 60 * 1000, // 1 day
       };
 
-      // Set cookie với token (backup nếu FE không lưu được)
-      res.cookie("render_id", accessToken, cookieOptions as any);
-      console.log("🍪 Cookie set with options:", cookieOptions);
-
       // Mã hóa token và gửi về FE để FE tự lưu vào cookie
       // Dùng tên ngắn gọn 'auth' thay vì 'token' để không lộ ý định
-      const redirectUrl = `${process.env.FRONTEND_URL}?auth=${accessToken}`;
-      return res.redirect(redirectUrl);
+      res.cookie("render_id", accessToken, cookieOptions as any);
+
+      if (user?.role !== "admin") {
+        // Set cookie với token (backup nếu FE không lưu được)
+        // res.cookie("render_id", accessToken, cookieOptions as any);
+        console.log("🍪 Cookie set with options:", cookieOptions);
+
+        const redirectUrl = `${process.env.FRONTEND_URL}?auth=${accessToken}`;
+        return res.redirect(redirectUrl);
+      } else {
+        res.redirect(`${adminDomain}/auth/callback?auth=${accessToken}`);
+      }
     } catch (error) {
       console.error("Google Callback Error:", error);
       return res.redirect(`${process.env.FRONTEND_URL}?error=Server Error`);
@@ -101,7 +115,9 @@ router.get(
 );
 
 router.get("/logout", async (req: Request, res: Response) => {
-  const token = req.cookies.render_id;
+  const token = req.cookies.render_id || req.query.token;
+  console.log(token);
+
   if (!token) return res.status(400).send("You are not logged in");
 
   try {

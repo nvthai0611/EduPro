@@ -30,13 +30,6 @@ export const apiRouter = (io?: Server) => {
   // Block direct browser access to API
   // router.use(blockDirectAccess);
 
-  router.get("/", (req, res) => {
-    const clientIp = req.ip;
-    console.log("Client IP:", clientIp);
-    res.send("Hello, World!");
-  });
-
-
   // Authentication routes
   router.use("/auth", authRoutes);
 
