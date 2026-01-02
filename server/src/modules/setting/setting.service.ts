@@ -85,19 +85,6 @@ class SettingService {
     return setting.banners;
   }
 
-  // Get Setting by key
-  async getSetting(key: string = "homepage") {
-    let setting = await settingRepository.getSettingByKey(key);
-    if (!setting) {
-      // Create default homepage setting if it doesn't exist
-      setting = await settingRepository.createSetting({
-        key: key,
-        banners: []
-      });
-    }
-    return setting;
-  }
-
   // Reorder banners
   async reorderBanners(key: string, bannerOrders: { id: string; order: number }[]) {
     let setting = await settingRepository.getSettingByKey(key);

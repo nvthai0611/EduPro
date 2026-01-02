@@ -13,6 +13,22 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'react-toastify';
 import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import {
   ArrowLeft,
   Plus,
   ChevronDown,
@@ -51,6 +67,183 @@ import {
   useDeleteArticle
 } from '../../../hooks/useCourseQueries';
 
+// Sortable Section Component
+const SortableSection = ({ section, sectionIndex, expandedSections, toggleSection, openEditSection, openDeleteDialog, openAddLesson, openEditLesson, formatDuration, reorderLessonsMutation, handleMoveLesson }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: section._id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="bg-white">
+      {/* Section Header */}
+      <div className="flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors">
+        <button
+          {...attributes}
+          {...listeners}
+          className="p-1 hover:bg-gray-100 rounded cursor-grab active:cursor-grabbing"
+          title="Kéo để sắp xếp"
+        >
+          <GripVertical className="w-4 h-4 text-gray-400" />
+        </button>
+
+        <button
+          onClick={() => toggleSection(section._id)}
+          className="flex-1 flex items-center gap-3 text-left"
+        >
+          {expandedSections[section._id] ? (
+            <ChevronDown className="w-5 h-5 text-gray-500" />
+          ) : (
+            <ChevronRight className="w-5 h-5 text-gray-500" />
+          )}
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-gray-900">
+                Chương {sectionIndex + 1}: {section.title}
+              </span>
+              {section.isPublished && (
+                <CheckCircle2 className="w-4 h-4 text-green-600" />
+              )}
+            </div>
+            <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
+              <span>{section.lessons?.length || 0} bài học</span>
+              <span>•</span>
+              <span>
+                {formatDuration(
+                  section.lessons?.reduce((sum, l) => sum + (l.videoDuration || 0), 0) || 0
+                )}
+              </span>
+            </div>
+          </div>
+        </button>
+
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => openEditSection(section)}
+          >
+            <Edit className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => openDeleteDialog('section', section._id, section.title)}
+          >
+            <Trash2 className="w-4 h-4 text-red-600" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Lessons List */}
+      {expandedSections[section._id] && (
+        <div className="bg-gray-50 border-t">
+          {section.lessons && section.lessons.length > 0 ? (
+            <div className="divide-y divide-gray-200">
+              {section.lessons.map((lesson, lessonIndex) => (
+                <div
+                  key={lesson._id}
+                  className="flex items-center gap-3 p-4 pl-16 hover:bg-white transition-colors"
+                >
+                  <button className="p-1 hover:bg-gray-100 rounded cursor-move">
+                    <GripVertical className="w-4 h-4 text-gray-400" />
+                  </button>
+
+                  <div className="w-8 h-8 bg-white border rounded flex items-center justify-center">
+                    {lesson.type === 'video' ? (
+                      <Play className="w-4 h-4 text-blue-600" />
+                    ) : (
+                      <FileText className="w-4 h-4 text-gray-600" />
+                    )}
+                  </div>
+
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-gray-900">
+                        {lessonIndex + 1}. {lesson.title}
+                      </span>
+                      {lesson.isFree && (
+                        <Badge variant="secondary" className="text-xs">
+                          Miễn phí
+                        </Badge>
+                      )}
+                      {lesson.isPublished && (
+                        <CheckCircle2 className="w-4 h-4 text-green-600" />
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
+                      <Clock className="w-3 h-3" />
+                      <span>{lesson.videoDuration ? formatDuration(lesson.videoDuration) : lesson.readingTime + "m"}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleMoveLesson(section._id, lesson._id, 'up')}
+                      disabled={lessonIndex === 0 || reorderLessonsMutation.isPending}
+                      title="Di chuyển lên"
+                    >
+                      <ChevronUp className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleMoveLesson(section._id, lesson._id, 'down')}
+                      disabled={lessonIndex === section.lessons.length - 1 || reorderLessonsMutation.isPending}
+                      title="Di chuyển xuống"
+                    >
+                      <ChevronDown className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openEditLesson(lesson, section)}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openDeleteDialog('lesson', lesson._id, lesson.title)}
+                    >
+                      <Trash2 className="w-4 h-4 text-red-600" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+
+          {/* Add Lesson Button */}
+          <div className="p-4 pl-16">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full justify-start"
+              onClick={() => openAddLesson(section)}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Thêm bài học
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const CourseBuilder = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -86,6 +279,18 @@ const CourseBuilder = () => {
 
   const courseId = course?._id;
   const { data: sections = [], isLoading: sectionsLoading } = useAdminSectionsWithLessons(courseId);
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // Mutations
   const createSectionMutation = useCreateSection();
@@ -443,6 +648,31 @@ const CourseBuilder = () => {
   };
 
   // Reorder handlers
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    const oldIndex = sections.findIndex((s) => s._id === active.id);
+    const newIndex = sections.findIndex((s) => s._id === over.id);
+
+    if (oldIndex === -1 || newIndex === -1) {
+      return;
+    }
+
+    // Reorder sections locally for optimistic UI
+    const newSections = arrayMove(sections, oldIndex, newIndex);
+    const sectionIds = newSections.map((s) => s._id);
+
+    // Call mutation to save the new order
+    reorderSectionsMutation.mutate({
+      courseId: courseId,
+      sectionIds: sectionIds,
+    });
+  };
+
   const handleMoveSection = (sectionId, direction) => {
     const currentIndex = sections.findIndex(s => s._id === sectionId);
     if (currentIndex === -1) return;
@@ -624,182 +854,35 @@ const CourseBuilder = () => {
                     </Button>
                   </div>
                 ) : (
-                  <div className="divide-y">
-                    {sections.map((section, sectionIndex) => (
-                      <div key={section._id} className="bg-white">
-                        {/* Section Header */}
-                        <div className="flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors">
-                          <button
-                            className="p-1 hover:bg-gray-100 rounded cursor-move"
-                            title="Kéo để sắp xếp"
-                          >
-                            <GripVertical className="w-4 h-4 text-gray-400" />
-                          </button>
-
-                          <button
-                            onClick={() => toggleSection(section._id)}
-                            className="flex-1 flex items-center gap-3 text-left"
-                          >
-                            {expandedSections[section._id] ? (
-                              <ChevronDown className="w-5 h-5 text-gray-500" />
-                            ) : (
-                              <ChevronRight className="w-5 h-5 text-gray-500" />
-                            )}
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className="font-semibold text-gray-900">
-                                  Chương {sectionIndex + 1}: {section.title}
-                                </span>
-                                {section.isPublished && (
-                                  <CheckCircle2 className="w-4 h-4 text-green-600" />
-                                )}
-                              </div>
-                              <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
-                                <span>{section.lessons?.length || 0} bài học</span>
-                                <span>•</span>
-                                <span>
-                                  {formatDuration(
-                                    section.lessons?.reduce((sum, l) => sum + (l.videoDuration || 0), 0) || 0
-                                  )}
-                                </span>
-                              </div>
-                            </div>
-                          </button>
-
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleMoveSection(section._id, 'up')}
-                              disabled={sectionIndex === 0 || reorderSectionsMutation.isPending}
-                              title="Di chuyển lên"
-                            >
-                              <ChevronUp className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleMoveSection(section._id, 'down')}
-                              disabled={sectionIndex === sections.length - 1 || reorderSectionsMutation.isPending}
-                              title="Di chuyển xuống"
-                            >
-                              <ChevronDown className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => openEditSection(section)}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => openDeleteDialog('section', section._id, section.title)}
-                            >
-                              <Trash2 className="w-4 h-4 text-red-600" />
-                            </Button>
-                          </div>
-                        </div>
-
-                        {/* Lessons List */}
-                        {expandedSections[section._id] && (
-                          <div className="bg-gray-50 border-t">
-                            {section.lessons && section.lessons.length > 0 ? (
-                              <div className="divide-y divide-gray-200">
-                                {section.lessons.map((lesson, lessonIndex) => (
-                                  <div
-                                    key={lesson._id}
-                                    className="flex items-center gap-3 p-4 pl-16 hover:bg-white transition-colors"
-                                  >
-                                    <button className="p-1 hover:bg-gray-100 rounded cursor-move">
-                                      <GripVertical className="w-4 h-4 text-gray-400" />
-                                    </button>
-
-                                    <div className="w-8 h-8 bg-white border rounded flex items-center justify-center">
-                                      {lesson.type === 'video' ? (
-                                        <Play className="w-4 h-4 text-blue-600" />
-                                      ) : (
-                                        <FileText className="w-4 h-4 text-gray-600" />
-                                      )}
-                                    </div>
-
-                                    <div className="flex-1">
-                                      <div className="flex items-center gap-2">
-                                        <span className="font-medium text-gray-900">
-                                          {lessonIndex + 1}. {lesson.title}
-                                        </span>
-                                        {lesson.isFree && (
-                                          <Badge variant="secondary" className="text-xs">
-                                            Miễn phí
-                                          </Badge>
-                                        )}
-                                        {lesson.isPublished && (
-                                          <CheckCircle2 className="w-4 h-4 text-green-600" />
-                                        )}
-                                      </div>
-                                      <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
-                                        <Clock className="w-3 h-3" />
-                                        <span>{lesson.videoDuration ? formatDuration(lesson.videoDuration) : lesson.readingTime + "m"}</span>
-                                      </div>
-                                    </div>
-
-                                    <div className="flex items-center gap-1">
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => handleMoveLesson(section._id, lesson._id, 'up')}
-                                        disabled={lessonIndex === 0 || reorderLessonsMutation.isPending}
-                                        title="Di chuyển lên"
-                                      >
-                                        <ChevronUp className="w-4 h-4" />
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => handleMoveLesson(section._id, lesson._id, 'down')}
-                                        disabled={lessonIndex === section.lessons.length - 1 || reorderLessonsMutation.isPending}
-                                        title="Di chuyển xuống"
-                                      >
-                                        <ChevronDown className="w-4 h-4" />
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => openEditLesson(lesson, section)}
-                                      >
-                                        <Edit className="w-4 h-4" />
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => openDeleteDialog('lesson', lesson._id, lesson.title)}
-                                      >
-                                        <Trash2 className="w-4 h-4 text-red-600" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : null}
-
-                            {/* Add Lesson Button */}
-                            <div className="p-4 pl-16">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="w-full justify-start"
-                                onClick={() => openAddLesson(section)}
-                              >
-                                <Plus className="w-4 h-4 mr-2" />
-                                Thêm bài học
-                              </Button>
-                            </div>
-                          </div>
-                        )}
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext
+                      items={sections.map((s) => s._id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className="divide-y">
+                        {sections.map((section, sectionIndex) => (
+                          <SortableSection
+                            key={section._id}
+                            section={section}
+                            sectionIndex={sectionIndex}
+                            expandedSections={expandedSections}
+                            toggleSection={toggleSection}
+                            openEditSection={openEditSection}
+                            openDeleteDialog={openDeleteDialog}
+                            openAddLesson={openAddLesson}
+                            openEditLesson={openEditLesson}
+                            formatDuration={formatDuration}
+                            reorderLessonsMutation={reorderLessonsMutation}
+                            handleMoveLesson={handleMoveLesson}
+                          />
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </SortableContext>
+                  </DndContext>
                 )}
               </CardContent>
             </Card>
