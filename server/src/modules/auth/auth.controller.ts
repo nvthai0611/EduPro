@@ -73,10 +73,7 @@ class AuthController {
         role: user.role,
         image: user.image,
         sessionId: sessionId,
-      });
-
-      console.log(req.headers["x-desktop-ref"]);
-      
+      });     
 
       await Session.deleteMany({ userId: (user as any)._id });
 
