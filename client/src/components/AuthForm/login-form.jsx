@@ -112,12 +112,15 @@ export default function LoginForm() {
       // --- Đăng nhập thành công ---
       if (response.success) {
         const decoded = jwtDecode(response.data.accessToken);
+        const hostname = typeof window !== "undefined" ? window.location.hostname : "";
+        const isDash = hostname === "dash.fuedupro.com" || hostname.startsWith("dash.");
+
         if (decoded.role === TYPE_AUTH.ADMIN) {
           alert("Đăng nhập thành công với vai trò admin.");
-          window.location.href = "/admin/dashboard";
+          window.location.href = isDash ? "/dashboard" : "/admin/dashboard";
         } else if (decoded.role === TYPE_AUTH.STAFF || decoded.role === TYPE_AUTH.MANAGER) {
           alert("Đăng nhập thành công với vai trò staff/manager.");
-          window.location.href = "/staff";
+          window.location.href = isDash ? "/dashboard" : "/staff";
         } else {
           setGeneralError("Bạn không có quyền truy cập vào hệ thống.");
         }
