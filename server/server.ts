@@ -56,20 +56,21 @@ app.use((req, res, next) => {
   // Remove Server header
   res.removeHeader('Server');
   res.removeHeader('X-Powered-By');
-  
+
   // Add security headers
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-  
+
   next();
 });
 
 // ================= CORS =================
 const allowedOrigins = [
   "http://localhost:5173",
-  "http://dash.localhost:5173",
+  'http://fuedupro.local:5173',
+  'http://dash.fuedupro.local:5173',
   "http://localhost:3000",
   "http://localhost:9999",
   "https://www.fuedupro.com",

@@ -8,10 +8,11 @@ import DefaultLayout from "../layouts/DefaultLayout/DefaultLayout";
 import About from "../pages/About/About";
 
 // Middlewares
-// import RoleRedirectMiddleware from "../middlewares/RoleRedirectMiddleware";
+import RoleRedirectMiddleware from "../middlewares/RoleRedirectMiddleware";
 import CourseList from "../pages/Courses/CourseList";
 import CourseDetail from "../pages/Courses/CourseDetail";
 // import Home from "../pages/Home/Home";
+import LoginPage from "../pages/Auth/Login";
 
 // Learning Platform
 
@@ -19,18 +20,19 @@ import CourseDetail from "../pages/Courses/CourseDetail";
 export const publicRoutes = (
   <>
     {/* Wrapper check role cho toàn bộ public pages */}
-    {/* <Route element={<RoleRedirectMiddleware />}> */}
-    <Route element={<DefaultLayout />}>
-      <Route path="/" element={<CourseList />} />
-      <Route path="/about" element={<About />} />
-      <Route path="/advisory" element={<AdvisoryPage />} />
-      {/* Course Routes */}
-      <Route path="/courses">
-        <Route index element={<CourseList />} />
-        <Route path="category/:categorySlug" element={<CourseList />} />
-        <Route path=":slug" element={<CourseDetail />} />
+    <Route element={<RoleRedirectMiddleware />}>
+      <Route element={<DefaultLayout />}>
+        <Route path="/" element={<CourseList />} />
+        <Route path="/auth/login" element={<LoginPage />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/advisory" element={<AdvisoryPage />} />
+        {/* Course Routes */}
+        <Route path="/courses">
+          <Route index element={<CourseList />} />
+          <Route path="category/:categorySlug" element={<CourseList />} />
+          <Route path=":slug" element={<CourseDetail />} />
+        </Route>
       </Route>
     </Route>
-    {/* </Route> */}
   </>
 );
