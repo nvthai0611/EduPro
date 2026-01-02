@@ -62,9 +62,6 @@ import {
   useDeleteLesson,
   useReorderLessons,
   useAddLessonToSection,
-  useCreateArticle,
-  useUpdateArticle,
-  useDeleteArticle
 } from '../../../hooks/useCourseQueries';
 
 // Sortable Section Component
@@ -302,9 +299,6 @@ const CourseBuilder = () => {
   const deleteLessonMutation = useDeleteLesson();
   const reorderLessonsMutation = useReorderLessons();
   const addLessonToSectionMutation = useAddLessonToSection();
-  const createArticleMutation = useCreateArticle();
-  const updateArticleMutation = useUpdateArticle();
-  const deleteArticleMutation = useDeleteArticle();
 
   // State management
   const [expandedSections, setExpandedSections] = useState({});
@@ -390,164 +384,116 @@ const CourseBuilder = () => {
       return;
     }
 
+    // Validate article content if type is article
     if (lessonForm.type === 'article') {
-      // Validate article content
       if (!lessonForm.content || lessonForm.content.trim().length < 20) {
         toast.error('Nội dung bài viết phải có ít nhất 20 ký tự');
         return;
       }
+    }
 
-      // Prepare article data - only send fields expected by article validator
-      const articleData = {
-        courseId: courseId,
-        sectionId: selectedSection._id,
-        title: lessonForm.title,
-        description: lessonForm.description || '',
-        content: lessonForm.content,
-        readingTime: lessonForm.readingTime || 5,
-        order: (selectedSection.lessons?.length || 0) + 1,
-        isFree: lessonForm.isFree || false,
-        isPublished: false,
-        isPreviewed: false
-      };
-
-      // Save article to Article collection
-      createArticleMutation.mutate(articleData, {
-        onSuccess: () => {
-          setShowAddLessonDialog(false);
-          setLessonForm({
-            title: '',
-            description: '',
-            type: 'video',
-            videoUrl: '',
-            videoDuration: 0,
-            content: '',
-            readingTime: 0,
-            isFree: false,
-            order: 1
-          });
-          toast.success('Thêm bài viết thành công!');
-        }
-      });
-    } else {
-      // Prepare lesson data - only send fields expected by lesson validator
-      const lessonData = {
-        courseId: courseId,
-        sectionId: selectedSection._id,
-        title: lessonForm.title,
-        description: lessonForm.description || '',
-        type: lessonForm.type,
+    // Prepare lesson data - works for both video and article types
+    const lessonData = {
+      courseId: courseId,
+      sectionId: selectedSection._id,
+      title: lessonForm.title,
+      description: lessonForm.description || '',
+      type: lessonForm.type,
+      order: (selectedSection.lessons?.length || 0) + 1,
+      isFree: lessonForm.isFree || false,
+      isPublished: false,
+      // Video specific fields
+      ...(lessonForm.type === 'video' && {
         videoUrl: lessonForm.videoUrl || '',
         videoDuration: lessonForm.videoDuration || 0,
-        order: (selectedSection.lessons?.length || 0) + 1,
-        isFree: lessonForm.isFree || false,
-        isPublished: false
-      };
+      }),
+      // Article specific fields
+      ...(lessonForm.type === 'article' && {
+        content: lessonForm.content,
+        readingTime: lessonForm.readingTime || 5,
+      }),
+    };
 
-      // Save video/quiz to Lesson collection
-      createLessonMutation.mutate(lessonData, {
-        onSuccess: (newLesson) => {
-          // Then add lesson to section
-          addLessonToSectionMutation.mutate(
-            {
-              sectionId: selectedSection._id,
-              lessonId: newLesson._id,
-              courseId: courseId
-            },
-            {
-              onSuccess: () => {
-                setShowAddLessonDialog(false);
-                setLessonForm({
-                  title: '',
-                  description: '',
-                  type: 'video',
-                  videoUrl: '',
-                  videoDuration: 0,
-                  content: '',
-                  readingTime: 0,
-                  isFree: false,
-                  order: 1
-                });
-                toast.success('Thêm bài học thành công!');
-              }
+    // Save to Lesson collection (for both video and article)
+    createLessonMutation.mutate(lessonData, {
+      onSuccess: (newLesson) => {
+        // Then add lesson to section
+        addLessonToSectionMutation.mutate(
+          {
+            sectionId: selectedSection._id,
+            lessonId: newLesson._id,
+            courseId: courseId
+          },
+          {
+            onSuccess: () => {
+              setShowAddLessonDialog(false);
+              setLessonForm({
+                title: '',
+                description: '',
+                type: 'video',
+                videoUrl: '',
+                videoDuration: 0,
+                content: '',
+                readingTime: 0,
+                isFree: false,
+                order: 1
+              });
+              toast.success(lessonForm.type === 'article' ? 'Thêm bài viết thành công!' : 'Thêm bài học thành công!');
             }
-          );
-        }
-      });
-    }
+          }
+        );
+      }
+    });
   };
 
   const handleUpdateLesson = async () => {
-    if (selectedLesson.type === 'article' || lessonForm.type === 'article') {
-      // Validate article content
+    // Validate article content if type is article
+    if (lessonForm.type === 'article') {
       if (lessonForm.content && lessonForm.content.trim().length < 20) {
         toast.error('Nội dung bài viết phải có ít nhất 20 ký tự');
         return;
       }
+    }
 
-      // Prepare article update data - only send fields expected by article validator
-      const articleData = {
-        title: lessonForm.title,
-        description: lessonForm.description || '',
-        content: lessonForm.content,
-        readingTime: lessonForm.readingTime || 5,
-        isFree: lessonForm.isFree || false
-      };
-
-      // Remove undefined/empty fields
-      Object.keys(articleData).forEach(key => {
-        if (articleData[key] === undefined || articleData[key] === '') {
-          delete articleData[key];
-        }
-      });
-
-      // Update article in Article collection
-      updateArticleMutation.mutate(
-        {
-          id: selectedLesson._id,
-          data: articleData
-        },
-        {
-          onSuccess: () => {
-            setShowEditLessonDialog(false);
-            setSelectedLesson(null);
-            toast.success('Cập nhật bài viết thành công!');
-          }
-        }
-      );
-    } else {
-      // Prepare lesson update data - only send fields expected by lesson validator
-      const lessonData = {
-        title: lessonForm.title,
-        description: lessonForm.description || '',
-        type: lessonForm.type,
+    // Prepare lesson update data - works for both video and article types
+    const lessonData = {
+      title: lessonForm.title,
+      description: lessonForm.description || '',
+      type: lessonForm.type,
+      isFree: lessonForm.isFree || false,
+      // Video specific fields
+      ...(lessonForm.type === 'video' && {
         videoUrl: lessonForm.videoUrl || '',
         videoDuration: lessonForm.videoDuration || 0,
-        isFree: lessonForm.isFree || false
-      };
+      }),
+      // Article specific fields
+      ...(lessonForm.type === 'article' && {
+        content: lessonForm.content,
+        readingTime: lessonForm.readingTime || 5,
+      }),
+    };
 
-      // Remove undefined/empty fields
-      Object.keys(lessonData).forEach(key => {
-        if (lessonData[key] === undefined || lessonData[key] === '') {
-          delete lessonData[key];
-        }
-      });
+    // Remove undefined/empty fields
+    Object.keys(lessonData).forEach(key => {
+      if (lessonData[key] === undefined || lessonData[key] === '') {
+        delete lessonData[key];
+      }
+    });
 
-      // Update lesson in Lesson collection
-      updateLessonMutation.mutate(
-        {
-          id: selectedLesson._id,
-          data: lessonData
-        },
-        {
-          onSuccess: () => {
-            setShowEditLessonDialog(false);
-            setSelectedLesson(null);
-            toast.success('Cập nhật bài học thành công!');
-          }
+    // Update lesson in Lesson collection (for both video and article)
+    updateLessonMutation.mutate(
+      {
+        id: selectedLesson._id,
+        data: lessonData
+      },
+      {
+        onSuccess: () => {
+          setShowEditLessonDialog(false);
+          setSelectedLesson(null);
+          toast.success(lessonForm.type === 'article' ? 'Cập nhật bài viết thành công!' : 'Cập nhật bài học thành công!');
         }
-      );
-    }
+      }
+    );
   };
 
   const handleDelete = React.useCallback(() => {
@@ -565,41 +511,28 @@ const CourseBuilder = () => {
         { onSuccess: resetDeleteState }
       );
     } else if (deleteTarget.type === 'lesson') {
-      // Find the lesson and its parent section to check type
+      // Find the lesson's parent section
       let foundSection = null;
-      const lesson = sections
-        .find(section => {
-          const found = (section.lessons || []).find(l => l._id === deleteTarget.id);
-          if (found) {
-            foundSection = section;
-            return true;
-          }
-          return false;
-        })?.lessons.find(l => l._id === deleteTarget.id);
+      sections.find(section => {
+        const found = (section.lessons || []).find(l => l._id === deleteTarget.id);
+        if (found) {
+          foundSection = section;
+          return true;
+        }
+        return false;
+      });
         
-      if (lesson?.type === 'article') {
-        // Delete from Article collection
-        deleteArticleMutation.mutate(
-          {
-            id: deleteTarget.id,
-            courseId: courseId,
-            sectionId: foundSection?._id
-          },
-          { onSuccess: resetDeleteState }
-        );
-      } else {
-        // Delete from Lesson collection
-        deleteLessonMutation.mutate(
-          {
-            id: deleteTarget.id,
-            courseId: courseId,
-            sectionId: foundSection?._id
-          },
-          { onSuccess: resetDeleteState }
-        );
-      }
+      // Delete from Lesson collection (for both video and article types)
+      deleteLessonMutation.mutate(
+        {
+          id: deleteTarget.id,
+          courseId: courseId,
+          sectionId: foundSection?._id
+        },
+        { onSuccess: resetDeleteState }
+      );
     }
-  }, [deleteTarget, courseId, sections, deleteSectionMutation, deleteLessonMutation, deleteArticleMutation]);
+  }, [deleteTarget, courseId, sections, deleteSectionMutation, deleteLessonMutation]);
 
   // Toggle section expand/collapse
   const toggleSection = (sectionId) => {
@@ -1275,9 +1208,9 @@ const CourseBuilder = () => {
             </Button>
             <Button
               onClick={handleAddLesson}
-              disabled={!lessonForm.title || lessonForm.type === 'quiz' || createLessonMutation.isPending || addLessonToSectionMutation.isPending || createArticleMutation.isPending}
+              disabled={!lessonForm.title || lessonForm.type === 'quiz' || createLessonMutation.isPending || addLessonToSectionMutation.isPending}
             >
-              {(createLessonMutation.isPending || addLessonToSectionMutation.isPending || createArticleMutation.isPending) ? (
+              {(createLessonMutation.isPending || addLessonToSectionMutation.isPending) ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Đang thêm...
@@ -1538,9 +1471,9 @@ const CourseBuilder = () => {
             </Button>
             <Button
               onClick={handleUpdateLesson}
-              disabled={!lessonForm.title || lessonForm.type === 'quiz' || updateLessonMutation.isPending || updateArticleMutation.isPending}
+              disabled={!lessonForm.title || lessonForm.type === 'quiz' || updateLessonMutation.isPending}
             >
-              {(updateLessonMutation.isPending || updateArticleMutation.isPending) ? (
+              {updateLessonMutation.isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Đang lưu...
@@ -1575,9 +1508,9 @@ const CourseBuilder = () => {
             <Button
               variant="destructive"
               onClick={handleDelete}
-              disabled={deleteSectionMutation.isPending || deleteLessonMutation.isPending || deleteArticleMutation.isPending}
+              disabled={deleteSectionMutation.isPending || deleteLessonMutation.isPending}
             >
-              {(deleteSectionMutation.isPending || deleteLessonMutation.isPending || deleteArticleMutation.isPending) ? (
+              {(deleteSectionMutation.isPending || deleteLessonMutation.isPending) ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Đang xóa...

@@ -7,13 +7,17 @@ export interface ILesson {
   title: string;
   description?: string;
 
-  type: "video" | "quiz"; // Removed "article" since articles now use separate collection
+  type: "video" | "article" | "quiz"; // Added back "article" support
 
   order: number;
 
   // video specific
   videoUrl?: string;
   videoDuration?: number; // in seconds
+  
+  // article specific
+  content?: string;
+  readingTime?: number; // in minutes
   
   // quiz specific (upcoming)
   // quizId?: mongoose.Types.ObjectId;
@@ -54,11 +58,15 @@ const lessonSchema = new mongoose.Schema<ILessonDocument>(
     videoUrl: { type: String },
     videoDuration: { type: Number, min: 0 },
     
+    // Article fields (only for article type)
+    content: { type: String },
+    readingTime: { type: Number, min: 0 },
+    
     isFree: { type: Boolean, default: false },
 
     type: {
       type: String,
-      enum: ["video", "quiz"], // Removed "article"
+      enum: ["video", "article", "quiz"], // Added back "article"
       required: true,
     },
     isPublished: { type: Boolean, default: false },
