@@ -35,7 +35,7 @@ export const useAdminBanners = (key) => {
     queryKey: bannerKeys.list(key),
     queryFn: async () => {
       const response = await bannersService.getAdminBanners(key ? { key } : {});
-      console.log("admin queryFn response:", response);
+      // console.log("admin queryFn response:", response);
       
       // Transform backend data to frontend format
       if (Array.isArray(response)) {
