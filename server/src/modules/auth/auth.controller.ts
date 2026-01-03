@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import userService from "../user/user.service";
 import { createAccessToken } from "../../utils/jwt";
+import crypto from "crypto";
+import Session from "../session/session.model";
 
 class AuthController {
   /**
@@ -21,7 +23,7 @@ class AuthController {
 
       // Find user by email
       const user = await userService.getUserByEmail(email.trim().toLowerCase());
-      
+
       if (!user) {
         return res.status(401).json({
           success: false,
@@ -55,7 +57,7 @@ class AuthController {
 
       // Verify password
       const isPasswordValid = await (user as any).comparePassword(password);
-      
+
       if (!isPasswordValid) {
         return res.status(401).json({
           success: false,
@@ -63,27 +65,36 @@ class AuthController {
         });
       }
 
+      const sessionId = crypto.randomUUID();
+
       // Create access token
       const accessToken = await createAccessToken({
         userId: (user as any)._id,
         role: user.role,
         image: user.image,
-      });
+        sessionId: sessionId,
+      });     
 
-      // Update session token
-      await userService.updateUser((user as any)._id, {
-        sessionToken: accessToken,
-        sessionTokenExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
+      await Session.deleteMany({ userId: (user as any)._id });
+
+      // Lưu phiên đăng nhập mới
+      await Session.create({
+        userId: (user as any)._id,
+        sessionId,
+        deviceId: req.headers["x-desktop-ref"],
+        userAgent: req.headers["user-agent"],
+        ip: req.ip,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
       });
 
       const isProduction = process.env.NODE_ENV === "production";
 
       // Cookie options
       const cookieOptions = {
-        sameSite: isProduction ? "none" : "strict",
+        sameSite: isProduction ? "none" : "strict", // lax thay vì strict để CORS hoạt động
         secure: isProduction,
         httpOnly: false,
-        domain: isProduction ? "edu-pro-delta.vercel.app" : undefined,
+        domain: isProduction ? ".fuedupro.com" : undefined, // undefined cho localhost
         maxAge: 24 * 60 * 60 * 1000, // 1 day
       };
 
@@ -103,6 +114,7 @@ class AuthController {
             role: user.role,
             image: user.image,
             status: user.status,
+            accessToken: accessToken,
           },
         },
       });

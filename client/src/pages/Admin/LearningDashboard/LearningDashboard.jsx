@@ -1,16 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Users, 
-  BookOpen, 
-  DollarSign, 
+import {
+  Users,
+  BookOpen,
+  DollarSign,
   TrendingUp,
   Award,
   Play,
   Star,
-  Clock,
   Calendar,
   BarChart3,
   PieChart,
@@ -46,7 +44,7 @@ const LearningPlatformDashboard = () => {
         completionRate: 78,
         averageRating: 4.8
       };
-      
+
       const mockRecentOrders = [
         {
           _id: '1',
@@ -119,15 +117,15 @@ const LearningPlatformDashboard = () => {
     }).format(price);
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('vi-VN');
-  };
+  // const formatDate = (dateString) => {
+  //   return new Date(dateString).toLocaleDateString('vi-VN');
+  // };
 
   const getTimeAgo = (dateString) => {
     const now = new Date();
     const date = new Date(dateString);
     const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
-    
+
     if (diffInHours < 1) return 'Vừa xong';
     if (diffInHours < 24) return `${diffInHours} giờ trước`;
     return `${Math.floor(diffInHours / 24)} ngày trước`;
@@ -175,7 +173,7 @@ const LearningPlatformDashboard = () => {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
@@ -188,7 +186,7 @@ const LearningPlatformDashboard = () => {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
@@ -203,7 +201,7 @@ const LearningPlatformDashboard = () => {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
@@ -216,7 +214,7 @@ const LearningPlatformDashboard = () => {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
@@ -229,7 +227,7 @@ const LearningPlatformDashboard = () => {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">

@@ -12,7 +12,7 @@ const courseService = {
       throw error;
     }
   },
-    getAdminCourses: async (params) => {
+  getAdminCourses: async (params) => {
     try {
       // apiClient.get(url, params) - params là tham số thứ 2
       const response = await apiClient.get('/admin/courses', { params });

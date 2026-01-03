@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import { User, Mail, Phone, Save, Camera } from 'lucide-react';
+import { User, Mail, Phone, Save } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,34 +6,19 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '../../hooks/useAuth';
 import { getUserProfile } from '../../services/user/userService';
+import { useQuery } from '@tanstack/react-query';
 
 const Profile = () => {
-  const [infoUser, setInfoUser] = useState({
-    fullName: "",
-    email: "",
-    phone: "",
-    image: "",
-    createdAt: "",
-  });
-
   const { user } = useAuth();
 
-  // Fetch dữ liệu khi load
-  useEffect(() => {
-    fetchProfile();
-  }, [user]);
-
-  const fetchProfile = async () => {
-    try {
-      // Backend sẽ tự động dùng req.user.id nếu không truyền id hoặc id là undefined
-      const response = await getUserProfile(user?.userId || null);
-      if (response.success && response.data) {
-        setInfoUser(response.data);
-      }
-    } catch (err) {
-      console.error("Fetch Error:", err);
-    }
-  };
+  const { data: infoUser } = useQuery({
+    queryKey: ["user-profile", user?.userId],
+    queryFn: async () => {
+      const res = await getUserProfile(user?.userId || null);
+      return res.data;
+    },
+    enabled: !!user,
+  });
 
   // Hàm format ngày
   const formatDate = (dateString) => {
@@ -83,7 +67,7 @@ const Profile = () => {
                 </Label>
                 <Input
                   type="text"
-                  value={infoUser?.fullName}
+                  value={infoUser?.fullName ?? ""}
                   disabled
                   className="border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-200 rounded-lg text-sm"
                   placeholder="Nhập họ và tên"
@@ -98,7 +82,7 @@ const Profile = () => {
                 </Label>
                 <Input
                   type="email"
-                  value={infoUser?.email}
+                  value={infoUser?.email ?? ""}
                   disabled
                   className="border border-gray-200 focus:border-green-500 focus:ring-1 focus:ring-green-200 rounded-lg text-sm"
                   placeholder="user@example.com"
@@ -115,8 +99,9 @@ const Profile = () => {
                 </Label>
                 <Input
                   type="tel"
-                  value={infoUser?.phone ? infoUser?.phone : 'Chưa có số điện thoại'}
+                  value={infoUser?.phone ?? ""}
                   disabled
+                  placeholder="Chưa có số điện thoại"
                   className="border border-gray-200 focus:border-purple-500 focus:ring-1 focus:ring-purple-200 rounded-lg text-sm"
                 />
                 <p className="text-xs text-gray-400 mt-1">

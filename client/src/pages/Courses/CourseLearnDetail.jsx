@@ -3,7 +3,6 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useCourseBySlug, useSectionsWithMinimalLessons, useLesson, useArticle } from "../../hooks/useCourseQueries";
 import * as orderService from "../../services/user/orderService";
-import * as freeCourseService from "../../services/user/freeCourseService";
 import { useAuth } from "../../hooks/useAuth";
 import VideoPlayer from "../../components/Video/VideoPlayer";
 // import AssignmentSubmission from "../../components/Assignment/AssignmentSubmission";
@@ -43,7 +42,7 @@ const LessonItem = ({ item, isCurrent, onClick }) => (
         {item.title}
       </span>
       <span className="text-xs text-gray-500">
-        {item.videoDuration ? item?.videoDuration / 60 + " ph" : item?.readingTime + " ph"}
+        {item.videoDuration ? `${(item.videoDuration / 60).toFixed(0)}m` : item.readingTime ? `${item.readingTime}m` : null}
       </span>
     </div>
   </div>
@@ -309,10 +308,7 @@ export default function CourseLearnDetail() {
           course._id
         );
 
-        // Check if course is free
-        const isFree = freeCourseService.isFreeCourse(course);
-
-        if (!hasPurchased.purchased && !isFree) {
+        if (!hasPurchased.purchased) {
           window.location.href = `/courses/${slug}`;
           return;
         }
