@@ -3,7 +3,6 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useCourseBySlug, useSectionsWithMinimalLessons, useLesson, useArticle } from "../../hooks/useCourseQueries";
 import * as orderService from "../../services/user/orderService";
-import * as freeCourseService from "../../services/user/freeCourseService";
 import { useAuth } from "../../hooks/useAuth";
 import VideoPlayer from "../../components/Video/VideoPlayer";
 // import AssignmentSubmission from "../../components/Assignment/AssignmentSubmission";
@@ -309,10 +308,7 @@ export default function CourseLearnDetail() {
           course._id
         );
 
-        // Check if course is free
-        const isFree = freeCourseService.isFreeCourse(course);
-
-        if (!hasPurchased.purchased && !isFree) {
+        if (!hasPurchased.purchased) {
           window.location.href = `/courses/${slug}`;
           return;
         }

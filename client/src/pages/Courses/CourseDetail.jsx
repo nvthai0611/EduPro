@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +22,6 @@ import {
 import { useAuth } from "../../hooks/useAuth";
 import { useCourseBySlug } from "../../hooks/useCourseQueries";
 import * as orderService from "../../services/user/orderService";
-import * as freeCourseService from "../../services/user/freeCourseService";
 import { useParams } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import { formatPrice, formatDuration } from "../../utils/format";
@@ -30,6 +29,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getUserProfile } from "../../services/user/userService";
+import courseReviewService from "../../services/courseReviewService";
 
 const CourseDetail = () => {
   const { slug } = useParams();
@@ -47,26 +47,6 @@ const CourseDetail = () => {
     isLoading: loading,
   } = useCourseBySlug(slug);
 
-  // Chuyển từ data fix cứng thành state
-  const [reviews, setReview] = useState([
-    {
-      id: 1,
-      userName: "Nguyễn Văn A",
-      avatar: "https://i.pravatar.cc/150?img=1",
-      rating: 5,
-      comment: "Khóa học rất hay, giảng viên giảng rất dễ hiểu",
-      date: "30-11-2025",
-    },
-    {
-      id: 2,
-      userName: "Nguyễn Thị B",
-      avatar: "https://i.pravatar.cc/150?img=2",
-      rating: 4,
-      comment: "Nội dung đầy đủ, nhưng tốc độ còn nhanh",
-      date: "28-11-2025",
-    },
-  ]);
-
   const { data: infoUser } = useQuery({
     queryKey: ["user-profile", user?.userId],
     queryFn: async () => {
@@ -76,10 +56,19 @@ const CourseDetail = () => {
     enabled: !!user,
   });
 
-  const dataReview = reviews.find((r) => r.userName === infoUser?.fullName);
-  console.log(dataReview);
-  
-  
+  const {
+    data: reviews = [],
+    refetch: refetchReviews,
+  } = useQuery({
+    queryKey: ["reviews", slug],
+    queryFn: async () => {
+      return await courseReviewService.getReviewsByCourseSlug(slug);
+    },
+    enabled: !!slug,
+  });
+
+  const dataReview = reviews.find((r) => r.userId._id === infoUser?._id);
+
   // State cho form nhập liệu
   const [comment, setComment] = useState("");
   const [rating, setRating] = useState(0);
@@ -89,48 +78,52 @@ const CourseDetail = () => {
   }, [reviews]);
 
   // Optimized submit function with useCallback
-  const handleSubmit = useCallback(() => {
-    const isReviewed = reviews.some(
-      (r) => r.userName === infoUser?.fullName
-    );
+  const handleSubmit = async () => {
 
-    if (isReviewed) {
-      toast.error("Bạn đã đánh giá khóa học này rồi");
-      return;
+    if (dataReview) {
+      if (!comment || rating === 0) {
+        toast.error("Vui lòng nhập đầy đủ thông tin");
+        return;
+      }
+
+      const finalData = {
+        courseId: course._id,
+        rating,
+        comment,
+      };
+
+      await courseReviewService.updateReview(dataReview._id, finalData);
+    } else {
+      if (!comment || rating === 0) {
+        toast.error("Vui lòng nhập đầy đủ thông tin");
+        return;
+      }
+
+      const finalData = {
+        courseId: course._id,
+        rating,
+        comment,
+      };
+
+      await courseReviewService.createReview(finalData);
     }
 
-
-    if (!comment || rating === 0) {
-      toast.error("Vui lòng nhập đầy đủ thông tin");
-      return;
-    }
-
-    const newReview = {
-      id: Date.now(), // Use timestamp for unique ID
-      userName: infoUser?.fullName || "Người dùng ẩn danh",
-      avatar: infoUser?.image || "https://i.pravatar.cc/150?img=" + Math.floor(Math.random() * 70),
-      rating,
-      comment,
-      date: new Date().toLocaleDateString("vi-VN"),
-    };
-
-    setReview(prev => [...prev, newReview]);
     setComment("");
     setRating(0);
-    toast.success("Đánh giá của bạn đã được gửi!");
-  }, [comment, rating, infoUser, reviews]);
+    toast.success(dataReview ? "Chỉnh sửa đánh giá thành công" : "Đánh giá của bạn đã được gửi!");
+    refetchReviews();
+  };
 
-  const handleDeleteReview = (id) => {
-    setReview((prevReviews) => prevReviews.filter((review) => review.id !== id));
+  const handleDeleteReview = async (id) => {
+    await courseReviewService.deleteReview(id);
+    refetchReviews();
     toast.success("Đánh giá đã được xóa.");
   }
 
-  const handleEditReview = (id) => {
-    const reviewToEdit = reviews.find((review) => review.id === id);
-    if (reviewToEdit) {
-      setComment(reviewToEdit.comment);
-      setRating(reviewToEdit.rating);
-      setReview((prevReviews) => prevReviews.filter((review) => review.id !== id));
+  const handleEditReview = (review) => {
+    if (review) {
+      setComment(review.comment);
+      setRating(review.rating);
     }
   }
 
@@ -252,9 +245,7 @@ const CourseDetail = () => {
                 >
                   <>
                     <Play className="w-5 h-5 mr-2" />
-                    {isPurchased
-                      ? "Bắt đầu học"
-                      : "Mua khóa học"}
+                    {isPurchased ? "Bắt đầu học" : "Mua khóa học"}
                   </>
                 </Button>
 
@@ -441,28 +432,28 @@ const CourseDetail = () => {
                       reviews.map((review) => {
                         return (
                           <div
-                            key={review.id}
+                            key={review._id}
                             className="flex items-start space-x-4 border-b pb-4"
                           >
                             <img
-                              src={review.avatar}
-                              alt={review.userName}
+                              src={review.userId.image}
+                              alt={review.userId.fullName}
                               className="w-12 h-12 rounded-full object-cover"
                             ></img>
                             <div className="flex-1">
                               <div className="flex items-start justify-between gap-4">
                                 <div>
                                   <h4 className="font-semibold text-gray-900 leading-tight">
-                                    {review.userName}
+                                    {review.userId.fullName}
                                   </h4>
                                   <span className="text-xs text-gray-500">
-                                    {review.date}
+                                    {review.createdAt}
                                   </span>
                                 </div>
 
                                 {isAdmin && (
                                   <button
-                                    onClick={() => handleDeleteReview(review.id)}
+                                    onClick={() => handleDeleteReview(review._id)}
                                     className="
                                       flex items-center gap-1
                                       text-red-500 text-xs font-medium
@@ -476,20 +467,36 @@ const CourseDetail = () => {
                                   </button>
                                 )}
 
-                                {!isAdmin && dataReview?.id === review.id && (
-                                  <button
-                                    onClick={() => handleEditReview(review.id)}
-                                    className="
+                                {!isAdmin && dataReview?._id === review._id && (
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => handleEditReview(review)}
+                                      className="
                                       flex items-center gap-1
                                       text-blue-500 text-xs font-medium
                                       px-2 py-1 rounded-md
                                       hover:bg-blue-50 hover:text-blue-600
                                       transition
                                     "
-                                  >
-                                    <Pencil className="w-4 h-4" />
-                                    Sửa
-                                  </button>
+                                    >
+                                      <Pencil className="w-4 h-4" />
+                                      Sửa
+                                    </button>
+
+                                    <button
+                                      onClick={() => handleDeleteReview(review._id)}
+                                      className="
+                                      flex items-center gap-1
+                                      text-red-500 text-xs font-medium
+                                      px-2 py-1 rounded-md
+                                      hover:bg-red-50 hover:text-red-600
+                                      transition
+                                    "
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                      Xóa
+                                    </button>
+                                  </div>
                                 )}
                               </div>
 
@@ -614,10 +621,7 @@ const CourseDetail = () => {
                 >
                   <>
                     <Play className="w-5 h-5 mr-2" />
-                    {freeCourseService.isFreeCourse(course) ||
-                      isPurchased
-                      ? "Bắt đầu học"
-                      : "Mua khóa học"}
+                    {isPurchased ? "Bắt đầu học" : "Mua khóa học"}
                   </>
                 </Button>
 

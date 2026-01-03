@@ -7,7 +7,7 @@ export const sectionService = {
       const response = await apiClient.get(`/sections/course/${courseId}/with-lessons`);
       return response;
     } catch (error) {
-      throw error;
+      console.log(error);
     }
   },
 
@@ -17,7 +17,7 @@ export const sectionService = {
       const response = await apiClient.get(`/sections/course/${courseId}/minimal`);
       return response;
     } catch (error) {
-      throw error;
+      console.log(error);
     }
   },
 
@@ -27,7 +27,7 @@ export const sectionService = {
       const response = await apiClient.get(`/sections/course/${courseId}`);
       return response.data;
     } catch (error) {
-      throw error;
+      console.log(error);
     }
   },
 };

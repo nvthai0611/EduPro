@@ -25,6 +25,7 @@ import { attendanceRoutes } from "./v1/admin/attendance.route";
 import { settingAdminRoutes } from "./v1/admin/setting.routes";
 import { settingRoutes } from "./v1/setting.routes";
 import requireAuth from "../middlewares/auth/requireActiveAuth";
+import { reviewRoutes } from "./v1/reviews.routes";
 
 export const apiRouter = (io?: Server) => {
   // Block direct browser access to API
@@ -50,6 +51,9 @@ export const apiRouter = (io?: Server) => {
 
   // User routes
   router.use("/users", requireAuth, userRoutes);
+
+  // Review routes
+  router.use("/reviews", requireAuth, reviewRoutes);
 
   // Payment routes
   router.use("/payment", requireAuth, paymentRoutes(io));
