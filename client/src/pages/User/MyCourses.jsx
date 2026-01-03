@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +11,6 @@ import {
   Award,
   TrendingUp,
 } from 'lucide-react';
-import { courseService } from '../../services/courseService';
 import { getUserProfile } from '../../services/user/userService';
 import { useAuth } from '../../hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
@@ -36,28 +35,6 @@ const MyCourses = () => {
     },
     enabled: !!user, // chỉ gọi khi đã có user
     staleTime: 1000 * 60 * 5, // cache 5 phút
-  });
-
-  const courseIds = useMemo(
-    () => purchasedCourses.map(c => c.courseId),
-    [purchasedCourses]
-  );
-
-  const {
-    data: learningCourses = [],
-  } = useQuery({
-    queryKey: ['learningCourses', courseIds],
-    queryFn: async () => {
-      const results = await Promise.allSettled(
-        courseIds.map(id => courseService.getCourseById(id))
-      );
-
-      return results
-        .filter(r => r.status === 'fulfilled')
-        .map(r => r.value.data);
-    },
-    enabled: courseIds.length > 0,
-    staleTime: 1000 * 60 * 5,
   });
 
   const handleContinueLearning = (course) => {
@@ -91,23 +68,23 @@ const MyCourses = () => {
     <Card className="group hover:shadow-lg transition-all duration-300">
       <div className="relative">
         <img
-          src={course.thumbnail || 'https://via.placeholder.com/300x200'}
-          alt={course.title}
+          src={course.courseId.thumbnail || 'https://via.placeholder.com/300x200'}
+          alt={course.courseId.title}
           className="w-full h-48 object-cover rounded-t-lg"
         />
         <div className="absolute top-4 right-4">
           <Badge className="bg-blue-600 text-white">
-            {course.progress === 100 ? 'Hoàn thành' : 'Đang học'}
+            Đang học
           </Badge>
         </div>
         <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity rounded-t-lg flex items-center justify-center">
           <Button
             variant="secondary"
             size="lg"
-            onClick={() => handleContinueLearning(course)}
+            onClick={() => handleContinueLearning(course.courseId)}
           >
             <Play className="w-5 h-5 mr-2" />
-            {course.progress === 100 ? 'Xem lại' : 'Tiếp tục học'}
+            Tiếp tục học
           </Button>
         </div>
       </div>
@@ -116,10 +93,10 @@ const MyCourses = () => {
         <div className="space-y-4">
           <div>
             <h3 className="font-semibold text-lg line-clamp-2 mb-2 h-[50px]">
-              {course.title}
+              {course.courseId.title}
             </h3>
             <p className="text-sm text-gray-600 line-clamp-2 h-[60px]">
-              {course.description}
+              {course.courseId.description}
             </p>
           </div>
 
@@ -134,11 +111,11 @@ const MyCourses = () => {
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-1">
                 <Clock className="w-4 h-4" />
-                <span>{formatDuration(course.totalDuration || 0)}</span>
+                <span>{formatDuration(course.courseId.totalDuration || 0)}</span>
               </div>
               <div className="flex items-center space-x-1">
                 <BookOpen className="w-4 h-4" />
-                <span>{course.totalLessons || 0} bài</span>
+                <span>{course.courseId.totalLessons || 0} bài</span>
               </div>
             </div>
             {/* <div className="text-xs text-gray-400">
@@ -149,14 +126,14 @@ const MyCourses = () => {
           <div className="flex space-x-2">
             <Button
               className="flex-1"
-              onClick={() => handleContinueLearning(course)}
+              onClick={() => handleContinueLearning(course.courseId)}
             >
               <Play className="w-4 h-4 mr-2" />
-              {course.progress === 100 ? 'Xem lại' : 'Tiếp tục học'}
+              Tiếp tục học
             </Button>
             <Button
               variant="outline"
-              onClick={() => handleViewCourse(course)}
+              onClick={() => handleViewCourse(course.courseId)}
             >
               Chi tiết
             </Button>
@@ -217,7 +194,7 @@ const MyCourses = () => {
                   <TrendingUp className="w-8 h-8 text-green-600" />
                 </div>
                 <div className="text-2xl font-bold text-gray-900">
-                  {learningCourses.length}
+                  {purchasedCourses.length}
                 </div>
                 <div className="text-sm text-gray-600">Đang học</div>
               </CardContent>
@@ -252,7 +229,7 @@ const MyCourses = () => {
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="learning">
-                Đang học ({learningCourses.length})
+                Đang học ({purchasedCourses.length})
               </TabsTrigger>
               <TabsTrigger value="completed">
                 Đã hoàn thành ({completedCourses.length})
@@ -260,7 +237,7 @@ const MyCourses = () => {
             </TabsList>
 
             <TabsContent value="learning">
-              {learningCourses.length === 0 ? (
+              {purchasedCourses.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="text-gray-400 mb-4">
                     <BookOpen className="w-16 h-16 mx-auto" />
@@ -277,8 +254,8 @@ const MyCourses = () => {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {learningCourses.map(course => (
-                    <CourseCard key={course._id} course={course} />
+                  {purchasedCourses.map(course => (
+                    <CourseCard key={course.courseId._id} course={course} />
                   ))}
                 </div>
               )}

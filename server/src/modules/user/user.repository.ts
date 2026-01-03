@@ -6,7 +6,11 @@ class UserRepository {
   }
 
   async findById(id: string): Promise<IUser | null> {
-    return User.findById(id);
+    return User.findById(id)
+      .populate({
+        path: "purchasedCourses.courseId",
+        select: "title slug description thumbnail totalDuration totalLessons",
+      });
   }
 
   async create(data: Partial<IUser>): Promise<IUser> {

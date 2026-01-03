@@ -127,6 +127,19 @@ const CourseDetail = () => {
     }
   }
 
+  function formatReviewTime(isoString) {
+    if (!isoString) return "";
+
+    const date = new Date(isoString);
+
+    return date.toLocaleString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  }
+
+
   // Check if user has purchased this course
   useEffect(() => {
     const checkPurchaseStatus = async () => {
@@ -447,7 +460,7 @@ const CourseDetail = () => {
                                     {review.userId.fullName}
                                   </h4>
                                   <span className="text-xs text-gray-500">
-                                    {review.createdAt}
+                                    {formatReviewTime(review.createdAt)}
                                   </span>
                                 </div>
 
