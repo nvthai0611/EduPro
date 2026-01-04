@@ -116,7 +116,6 @@ router.get(
 
 router.get("/logout", async (req: Request, res: Response) => {
   const token = req.cookies.render_id || req.query.token;
-  console.log(token);
 
   if (!token) return res.status(400).send("You are not logged in");
 

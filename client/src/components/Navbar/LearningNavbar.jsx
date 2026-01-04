@@ -5,13 +5,15 @@ import LearningPlatformLogo from "../Logo/LearningPlatformLogo";
 import { useAuth } from "../../hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import SearchBar from "./components/SearchBar";
+import { toast, ToastContainer } from "react-toastify";
+import authService from "../../services/auth/authService";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   // const [searchQuery, setSearchQuery] = useState("");
   const userMenuRef = useRef(null);
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
   const userMenuItems = [
     {
@@ -28,12 +30,15 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     try {
-      await logout();
-      localStorage.clear();
-      window.location.href = "/";
-      setIsUserMenuOpen(false);
+      const result = await authService.logout();
+      if (result.success) {
+        toast.success(result.message);
+        setTimeout(() => {
+          window.location.replace(import.meta.env.VITE_CLIENT_URL);
+        }, 500);
+      }
     } catch (error) {
-      // console.error('Logout error:', error);
+      toast.error(error.message);
     }
   };
 
@@ -59,6 +64,8 @@ const Navbar = () => {
           <Link to="/" className="flex-shrink-0">
             <LearningPlatformLogo size="md" />
           </Link>
+
+          <ToastContainer />
 
           {/* Search Bar - Desktop */}
           <div className="hidden md:flex items-center flex-1 max-w-2xl">

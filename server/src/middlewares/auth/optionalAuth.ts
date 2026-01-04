@@ -4,7 +4,7 @@ import { decodeToken } from "../../utils/jwt";
 import { errorResponse } from "../../utils/response";
 import Session from "../../modules/session/session.model";
 
-const requireAuth = async (
+const optionalAuth = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -13,7 +13,7 @@ const requireAuth = async (
     const token = req.cookies?.render_id;
 
     if (!token) {
-      next();
+      return next();
     } else {
       const decoded = await decodeToken(token);
       const user = await UserService.getUserById(decoded.userId);
@@ -32,10 +32,10 @@ const requireAuth = async (
         return errorResponse(res, {}, 401, "Phiên đăng nhập không hợp lệ");
       }
 
-      const currentDeviceId = req.headers['x-desktop-ref'] as string;
-      const currentIp = req.ip;
+      const currentDeviceId = req.cookies.runtime_ctx as string;
+      // const currentIp = req.ip;
 
-      if (session.deviceId !== currentDeviceId || session.ip !== currentIp) {
+      if (session.deviceId !== currentDeviceId) {
         // session.isValid = false;
         // await session.save();
         return errorResponse(res, {}, 401, "Thiết bị không hợp lệ");
@@ -45,7 +45,7 @@ const requireAuth = async (
         return errorResponse(res, {}, 401, "Tài khoản đã bị vô hiệu hóa");
       }
 
-      next();
+      return next();
     }
   } catch (error) {
     console.error("Authentication error:", error);
@@ -53,4 +53,4 @@ const requireAuth = async (
   }
 };
 
-export default requireAuth;
+export default optionalAuth;

@@ -4,11 +4,9 @@ import { ReviewController } from '../../modules/review/review.controller';
 
 const router = Router();
 
-router.use(authenticateToken);
-
-router.post("/", ReviewController.create);
+router.post("/", authenticateToken, ReviewController.create);
 router.get("/course/:slug", ReviewController.getByCourseSlug);
-router.delete("/:reviewId", ReviewController.delete);
-router.patch("/:reviewId", ReviewController.update);
+router.delete("/:reviewId", authenticateToken, ReviewController.delete);
+router.patch("/:reviewId", authenticateToken, ReviewController.update);
 
 export const reviewRoutes = router;
