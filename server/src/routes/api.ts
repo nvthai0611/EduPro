@@ -24,7 +24,6 @@ import { attendanceRoutes } from "./v1/admin/attendance.route";
 // import { bannerRoutes } from "./v1/banner.route";
 import { settingAdminRoutes } from "./v1/admin/setting.routes";
 import { settingRoutes } from "./v1/setting.routes";
-import requireAuth from "../middlewares/auth/requireActiveAuth";
 import { reviewRoutes } from "./v1/reviews.routes";
 
 export const apiRouter = (io?: Server) => {
@@ -35,67 +34,67 @@ export const apiRouter = (io?: Server) => {
   router.use("/auth", authRoutes);
 
   // Category routes
-  router.use("/category", requireAuth, categoryRoutes);
+  router.use("/category", categoryRoutes);
 
   // Course routes (public with optional auth + rate limiting)
-  router.use("/courses", requireAuth, courseRoutes);
+  router.use("/courses", courseRoutes);
 
   // Public sections routes (for learners)
-  router.use("/sections", requireAuth, publicSectionRoutes);
+  router.use("/sections", publicSectionRoutes);
 
   // Public lesson routes (for learners to view lesson content)
-  router.use("/lessons", requireAuth, publicLessonRoutes);
+  router.use("/lessons", publicLessonRoutes);
 
   // Order routes
-  router.use("/orders", requireAuth, orderRoutes);
+  router.use("/orders", orderRoutes);
 
   // User routes
-  router.use("/users", requireAuth, userRoutes);
+  router.use("/users", userRoutes);
 
   // Review routes
-  router.use("/reviews", requireAuth, reviewRoutes);
+  router.use("/reviews", reviewRoutes);
 
   // Payment routes
-  router.use("/payment", requireAuth, paymentRoutes(io));
+  router.use("/payment", paymentRoutes(io));
 
   // Role routes
-  router.use("/admin/role", requireAuth, roleAdminRoutes);
+  router.use("/admin/role", roleAdminRoutes);
 
   // User routes
-  router.use("/admin/user", requireAuth, userAdminRoutes);
+  router.use("/admin/user", userAdminRoutes);
 
   // Course routes
-  router.use("/admin/course", requireAuth, courseAdminRoutes);
+  router.use("/admin/course", courseAdminRoutes);
 
   // Section routes
-  router.use("/admin/sections", requireAuth, sectionRoutes);
+  router.use("/admin/sections", sectionRoutes);
 
   // Lesson routes
-  router.use("/admin/lessons", requireAuth, lessonRoutes);
-  router.use("/admin/articles", requireAuth, articleAdminRoutes);
+  router.use("/admin/lessons", lessonRoutes);
+  router.use("/admin/articles", articleAdminRoutes);
 
   // Article content routes for learners
-  router.use("/articles", requireAuth, articleRoutes);
+  router.use("/articles", articleRoutes);
 
   // Lesson content routes for learners
-  router.use("/lessons", requireAuth, publicLessonRoutes);
+  router.use("/lessons", publicLessonRoutes);
 
   // Lesson comment and submission routes
-  router.use("/lesson-comments", requireAuth, submissionRoutes);
+  router.use("/lesson-comments", submissionRoutes);
 
   // Course routes
-  router.use("/admin/order", requireAuth, orderAdminRoutes);
+  router.use("/admin/order", orderAdminRoutes);
 
   // Course routes
-  router.use("/admin/attendance", requireAuth, attendanceRoutes);
+  router.use("/admin/attendance", attendanceRoutes);
 
   // Admin Banner routes
-  // router.use("/admin/banner", requireAuth, bannerAdminRoutes);
+  // router.use("/admin/banner", bannerAdminRoutes);
 
   //public Banner routes
-  // router.use("/banner", requireAuth, bannerRoutes);
+  // router.use("/banner", bannerRoutes);
   // setting routes
-  router.use("/admin/setting", requireAuth, settingAdminRoutes);
-  router.use("/setting", requireAuth, settingRoutes);
+  router.use("/admin/setting", settingAdminRoutes);
+  router.use("/setting", settingRoutes);
   return router;
 };
