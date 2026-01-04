@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "start": "vite",
+    "dev": "vite --host --port 5173",
+    "start": "vite --host --port 5173",
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview --port 3001"
@@ -84,6 +84,7 @@
     "tailwind-merge": "^3.3.0",
     "tailwindcss-animate": "^1.0.7",
     "three": "^0.152.2",
+    "uuid": "^13.0.0",
     "xlsx": "^0.18.5",
     "zod": "^3.24.4",
     "zustand": "^5.0.5"

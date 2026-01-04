@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,9 +8,7 @@ import {
   Users,
   Clock,
   Play,
-  Lock,
   CheckCircle,
-  Download,
   Heart,
   Share2,
   BookOpen,
@@ -18,23 +16,28 @@ import {
   Target,
   Users2,
   Loader2,
+  Trash2,
+  Pencil,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
-import { useCourseBySlug, useCourses } from "../../hooks/useCourseQueries";
+import { useCourseBySlug } from "../../hooks/useCourseQueries";
 import * as orderService from "../../services/user/orderService";
-import * as freeCourseService from "../../services/user/freeCourseService";
 import { useParams } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import { formatPrice, formatDuration } from "../../utils/format";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { getUserProfile } from "../../services/user/userService";
+import courseReviewService from "../../services/courseReviewService";
 
 const CourseDetail = () => {
   const { slug } = useParams();
   const { user } = useAuth();
   const [isPurchased, setIsPurchased] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
-  const [isEnrolling, setIsEnrolling] = useState(false);
+  const [averageRating, setAverageRating] = useState(null);
+  const isAdmin = user && (user.role === 'admin');
 
   const navigate = useNavigate();
 
@@ -44,104 +47,98 @@ const CourseDetail = () => {
     isLoading: loading,
   } = useCourseBySlug(slug);
 
-  // Fetch related courses
-  const { data: allCourses = [] } = useCourses({ status: "published" });
-
-  // Filter related courses based on category
-  const relatedCourses = React.useMemo(() => {
-    if (!course || !allCourses.length) return [];
-    return allCourses
-      .filter(c => c.slug !== slug && c.category === course.category)
-      .slice(0, 4);
-  }, [course, allCourses, slug]);
-
-  const handleClick = () => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
-  };
-
-  // Chuyển từ data fix cứng thành state
-  const [reviews, setReview] = useState([
-    {
-      id: 1,
-      userName: "Nguyễn Văn A",
-      avatar: "https://i.pravatar.cc/150?img=1",
-      rating: 5,
-      comment: "Khóa học rất hay, giảng viên giảng rất dễ hiểu",
-      date: "30-11-2025",
+  const { data: infoUser } = useQuery({
+    queryKey: ["user-profile", user?.userId],
+    queryFn: async () => {
+      const res = await getUserProfile(user?.userId || null);
+      return res.data;
     },
-    {
-      id: 2,
-      userName: "Nguyễn Thị B",
-      avatar: "https://i.pravatar.cc/150?img=2",
-      rating: 4,
-      comment: "Nội dung đầy đủ, nhưng tốc độ còn nhanh",
-      date: "28-11-2025",
+    enabled: !!user,
+  });
+
+  const {
+    data: reviews = [],
+    refetch: refetchReviews,
+  } = useQuery({
+    queryKey: ["reviews", slug],
+    queryFn: async () => {
+      return await courseReviewService.getReviewsByCourseSlug(slug);
     },
-  ]);
+    enabled: !!slug,
+  });
+
+  const dataReview = reviews.find((r) => r.userId._id === infoUser?._id);
 
   // State cho form nhập liệu
-  const [userName, setUserName] = useState("");
   const [comment, setComment] = useState("");
   const [rating, setRating] = useState(0);
 
-  // State cho video player
-  const [isVideoPlayerOpen, setIsVideoPlayerOpen] = useState(false);
-  const [currentVideoUrl, setCurrentVideoUrl] = useState("");
-  const [currentVideoTitle, setCurrentVideoTitle] = useState("");
-  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  useEffect(() => {
+    setAverageRating(Math.round(reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length * 100) / 100);
+  }, [reviews]);
 
   // Optimized submit function with useCallback
-  const handleSubmit = useCallback(() => {
-    if (!userName || !comment || rating === 0) {
-      toast.error("Vui lòng nhập đầy đủ thông tin");
-      return;
+  const handleSubmit = async () => {
+
+    if (dataReview) {
+      if (!comment || rating === 0) {
+        toast.error("Vui lòng nhập đầy đủ thông tin");
+        return;
+      }
+
+      const finalData = {
+        courseId: course._id,
+        rating,
+        comment,
+      };
+
+      await courseReviewService.updateReview(dataReview._id, finalData);
+    } else {
+      if (!comment || rating === 0) {
+        toast.error("Vui lòng nhập đầy đủ thông tin");
+        return;
+      }
+
+      const finalData = {
+        courseId: course._id,
+        rating,
+        comment,
+      };
+
+      await courseReviewService.createReview(finalData);
     }
 
-    const newReview = {
-      id: Date.now(), // Use timestamp for unique ID
-      userName,
-      avatar: "https://i.pravatar.cc/150?img=" + Math.floor(Math.random() * 70),
-      rating,
-      comment,
-      date: new Date().toLocaleDateString("vi-VN"),
-    };
-
-    setReview(prev => [...prev, newReview]);
-    setUserName("");
     setComment("");
     setRating(0);
-    toast.success("Đánh giá của bạn đã được gửi!");
-  }, [userName, comment, rating]);
+    toast.success(dataReview ? "Chỉnh sửa đánh giá thành công" : "Đánh giá của bạn đã được gửi!");
+    refetchReviews();
+  };
 
-  // Video player functions with speed control
-  const handlePlayVideo = useCallback((videoUrl, title) => {
-    setCurrentVideoUrl(videoUrl);
-    setCurrentVideoTitle(title);
-    setIsVideoPlayerOpen(true);
-    setPlaybackSpeed(1); // Reset speed to normal
-  }, []);
+  const handleDeleteReview = async (id) => {
+    await courseReviewService.deleteReview(id);
+    refetchReviews();
+    toast.success("Đánh giá đã được xóa.");
+  }
 
-  const handleCloseVideoPlayer = useCallback(() => {
-    setIsVideoPlayerOpen(false);
-    setCurrentVideoUrl("");
-    setCurrentVideoTitle("");
-    setPlaybackSpeed(1);
-  }, []);
-
-  const handleSpeedChange = useCallback((speed) => {
-    setPlaybackSpeed(speed);
-    const video = document.querySelector('.video-player video');
-    if (video) {
-      video.playbackRate = speed;
+  const handleEditReview = (review) => {
+    if (review) {
+      setComment(review.comment);
+      setRating(review.rating);
     }
-  }, []);
+  }
 
-  const handleSkip = useCallback((seconds) => {
-    const video = document.querySelector('.video-player video');
-    if (video) {
-      video.currentTime += seconds;
-    }
-  }, []);
+  function formatReviewTime(isoString) {
+    if (!isoString) return "";
+
+    const date = new Date(isoString);
+
+    return date.toLocaleString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  }
+
 
   // Check if user has purchased this course
   useEffect(() => {
@@ -169,46 +166,8 @@ const CourseDetail = () => {
       return;
     }
 
-    // Check if course is free
-    if (freeCourseService.isFreeCourse(course)) {
-      handleEnrollFreeCourse();
-      return;
-    }
-
     // Redirect to checkout for paid courses
     navigate(`/checkout?course=${course._id}`);
-  };
-
-  const handleEnrollFreeCourse = async () => {
-    if (!user || !course) return;
-
-    setIsEnrolling(true);
-    try {
-      const response = await freeCourseService.enrollFreeCourse(
-        user.userId,
-        course._id,
-        course.title
-      );
-
-      if (response.success) {
-        toast.success("Đăng ký khóa học thành công!");
-        setIsPurchased(true);
-
-        // Redirect to learning page after 1.5 seconds
-        setTimeout(() => {
-          navigate(`/learn/${course.slug}`);
-        }, 1500);
-      } else {
-        toast.error(response.message || "Đăng ký khóa học thất bại");
-      }
-    } catch (error) {
-      console.error("Error enrolling free course:", error);
-      toast.error(
-        error?.response?.data?.message || "Đã xảy ra lỗi khi đăng ký khóa học"
-      );
-    } finally {
-      setIsEnrolling(false);
-    }
   };
 
   const handleStartLearning = () => {
@@ -217,24 +176,6 @@ const CourseDetail = () => {
     } else {
       handlePurchase();
     }
-  };
-
-  // Utility functions moved to utils/format.js to avoid duplication
-  const getTotalLessons = () => {
-    return (
-      course?.modules?.reduce(
-        (total, module) => total + module.lessons.length,
-        0
-      ) || 0
-    );
-  };
-
-  const getPreviewLessons = () => {
-    return (
-      course?.modules?.flatMap((module) =>
-        module.lessons.filter((lesson) => lesson.isFree)
-      ) || []
-    );
   };
 
   if (loading) {
@@ -262,95 +203,6 @@ const CourseDetail = () => {
     <div className="min-h-screen bg-gray-50 mt-[70px]">
       <ToastContainer position="top-right" autoClose={3000} />
 
-      {/* Video Player Modal */}
-      {isVideoPlayerOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4"
-          onClick={handleCloseVideoPlayer}
-        >
-          <div
-            className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between p-4 border-b">
-              <h3 className="text-lg font-semibold">{currentVideoTitle}</h3>
-              <button
-                onClick={handleCloseVideoPlayer}
-                className="text-gray-500 hover:text-gray-700"
-                aria-label="Đóng video"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="p-4">
-              <div className="video-player relative bg-black rounded-lg overflow-hidden">
-                <video
-                  className="w-full h-auto max-h-96"
-                  controls
-                  autoPlay
-                  src={currentVideoUrl}
-                  onLoadedData={(e) => {
-                    e.target.playbackRate = playbackSpeed;
-                  }}
-                >
-                  <source src={currentVideoUrl} type="video/mp4" />
-                  Trình duyệt của bạn không hỗ trợ phát video.
-                </video>
-              </div>
-
-              {/* Video Controls */}
-              <div className="mt-4 flex items-center justify-between">
-                {/* Speed Control */}
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-600">Tốc độ:</span>
-                  <div className="flex space-x-1">
-                    {[0.5, 0.75, 1, 1.25, 1.5, 2].map(speed => (
-                      <button
-                        key={speed}
-                        onClick={() => handleSpeedChange(speed)}
-                        className={`px-2 py-1 text-xs rounded ${playbackSpeed === speed
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                          }`}
-                      >
-                        {speed}x
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Skip Controls */}
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => handleSkip(-10)}
-                    className="flex items-center space-x-1 px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm"
-                    aria-label="Tua lùi 10 giây"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0019 16V8a1 1 0 00-1.6-.8l-5.334 4zM4.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0011 16V8a1 1 0 00-1.6-.8l-5.334 4z" />
-                    </svg>
-                    <span>-10s</span>
-                  </button>
-
-                  <button
-                    onClick={() => handleSkip(10)}
-                    className="flex items-center space-x-1 px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm"
-                    aria-label="Tua tới 10 giây"
-                  >
-                    <span>+10s</span>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.933 12.8a1 1 0 000-1.6L6.6 7.2A1 1 0 005 8v8a1 1 0 001.6.8l5.333-4zM19.933 12.8a1 1 0 000-1.6l-5.333-4A1 1 0 0013 8v8a1 1 0 001.6.8l5.333-4z" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -377,10 +229,10 @@ const CourseDetail = () => {
                 <div className="flex items-center space-x-2">
                   <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                   <span className="text-lg font-semibold">
-                    {course.rating?.toFixed(1) || "5.0"}
+                    {averageRating || "5.0"}
                   </span>
                   <span className="text-blue-200">
-                    ({course.reviewCount || 0} đánh giá)
+                    ({reviews.length || 0} đánh giá)
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -402,22 +254,12 @@ const CourseDetail = () => {
                   size="lg"
                   className="bg-white text-blue-600 hover:bg-gray-100"
                   onClick={handleStartLearning}
-                  disabled={isEnrolling}
-                  aria-label={freeCourseService.isFreeCourse(course) || isPurchased ? "Bắt đầu học khóa học" : "Mua khóa học"}
+                  aria-label={isPurchased ? "Bắt đầu học khóa học" : "Mua khóa học"}
                 >
-                  {isEnrolling ? (
-                    <>
-                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      Đang xử lý...
-                    </>
-                  ) : (
-                    <>
-                      <Play className="w-5 h-5 mr-2" />
-                      {freeCourseService.isFreeCourse(course) || isPurchased
-                        ? "Bắt đầu học"
-                        : "Mua khóa học"}
-                    </>
-                  )}
+                  <>
+                    <Play className="w-5 h-5 mr-2" />
+                    {isPurchased ? "Bắt đầu học" : "Mua khóa học"}
+                  </>
                 </Button>
 
                 <Button
@@ -568,69 +410,6 @@ const CourseDetail = () => {
                     {formatDuration(course.totalDuration || 0)}
                   </p>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {course.modules?.map((module, moduleIndex) => (
-                      <div key={module._id} className="border rounded-lg">
-                        <div className="p-4 bg-gray-50 border-b">
-                          <h4 className="font-semibold text-gray-900">
-                            {module.title}
-                          </h4>
-                          <p className="text-sm text-gray-600 mt-1">
-                            {module.lessons.length} bài học
-                          </p>
-                        </div>
-                        <div className="p-4 space-y-2">
-                          {module.lessons.map((lesson, lessonIndex) => (
-                            <div
-                              key={lesson._id}
-                              className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg cursor-pointer"
-                              onClick={() => {
-                                if (lesson.isFree || isPurchased) {
-                                  // Mock video URL - trong thực tế sẽ lấy từ lesson.videoUrl
-                                  const videoUrl = lesson.videoUrl || `https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4`;
-                                  handlePlayVideo(videoUrl, lesson.title);
-                                } else {
-                                  toast.info("Vui lòng mua khóa học để xem bài học này");
-                                }
-                              }}
-                            >
-                              <div className="flex items-center space-x-3">
-                                {lesson.isFree ? (
-                                  <Play className="w-4 h-4 text-green-600" />
-                                ) : isPurchased ? (
-                                  <Play className="w-4 h-4 text-blue-600" />
-                                ) : (
-                                  <Lock className="w-4 h-4 text-gray-400" />
-                                )}
-                                <span className="text-gray-900">
-                                  {lesson.title}
-                                </span>
-                                {lesson.isFree && (
-                                  <Badge
-                                    variant="secondary"
-                                    className="text-xs"
-                                  >
-                                    Miễn phí
-                                  </Badge>
-                                )}
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <span className="text-sm text-gray-500">
-                                  {formatDuration(lesson.videoDuration || 0, 'time')}
-                                </span>
-                                {lesson.resources &&
-                                  lesson.resources.length > 0 && (
-                                    <Download className="w-4 h-4 text-gray-400" />
-                                  )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
               </Card>
             )}
 
@@ -645,11 +424,11 @@ const CourseDetail = () => {
                     <div className="flex items-center space-x-1">
                       <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                       <span className="text-2xl font-bold">
-                        {course.rating?.toFixed(1) || "5.0"}
+                        {averageRating || "5.0"}
                       </span>
                     </div>
                     <span className="text-gray-600">
-                      ({course.reviewCount || 0} đánh giá)
+                      ({reviews.length || 0} đánh giá)
                     </span>
                   </div>
                 </CardHeader>
@@ -666,25 +445,74 @@ const CourseDetail = () => {
                       reviews.map((review) => {
                         return (
                           <div
-                            key={review.id}
+                            key={review._id}
                             className="flex items-start space-x-4 border-b pb-4"
                           >
                             <img
-                              src={review.avatar}
-                              alt={review.userName}
+                              src={review.userId.image}
+                              alt={review.userId.fullName}
                               className="w-12 h-12 rounded-full object-cover"
                             ></img>
                             <div className="flex-1">
-                              <div className="flex items-center justify-between">
-                                <h4 className="font-semibold">
-                                  {" "}
-                                  {review.userName}
-                                </h4>
-                                <span className="text-sm text-gray-500">
-                                  {" "}
-                                  {review.date}
-                                </span>
+                              <div className="flex items-start justify-between gap-4">
+                                <div>
+                                  <h4 className="font-semibold text-gray-900 leading-tight">
+                                    {review.userId.fullName}
+                                  </h4>
+                                  <span className="text-xs text-gray-500">
+                                    {formatReviewTime(review.createdAt)}
+                                  </span>
+                                </div>
+
+                                {isAdmin && (
+                                  <button
+                                    onClick={() => handleDeleteReview(review._id)}
+                                    className="
+                                      flex items-center gap-1
+                                      text-red-500 text-xs font-medium
+                                      px-2 py-1 rounded-md
+                                      hover:bg-red-50 hover:text-red-600
+                                      transition
+                                    "
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                    Xóa
+                                  </button>
+                                )}
+
+                                {!isAdmin && dataReview?._id === review._id && (
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => handleEditReview(review)}
+                                      className="
+                                      flex items-center gap-1
+                                      text-blue-500 text-xs font-medium
+                                      px-2 py-1 rounded-md
+                                      hover:bg-blue-50 hover:text-blue-600
+                                      transition
+                                    "
+                                    >
+                                      <Pencil className="w-4 h-4" />
+                                      Sửa
+                                    </button>
+
+                                    <button
+                                      onClick={() => handleDeleteReview(review._id)}
+                                      className="
+                                      flex items-center gap-1
+                                      text-red-500 text-xs font-medium
+                                      px-2 py-1 rounded-md
+                                      hover:bg-red-50 hover:text-red-600
+                                      transition
+                                    "
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                      Xóa
+                                    </button>
+                                  </div>
+                                )}
                               </div>
+
                               <div className="flex items-center mt-1">
                                 {[...Array(5)].map((_, index) => {
                                   return (
@@ -711,52 +539,47 @@ const CourseDetail = () => {
                   </div>
                 </CardContent>
 
-                {/* UI người dùng nhập đánh giá */}
-                <CardContent>
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-semibold"> Đánh giá khóa học</h3>
+                {isPurchased && (
+                  <>
+                    {/* UI người dùng nhập đánh giá */}
+                    <CardContent>
+                      <div className="space-y-6">
+                        <h3 className="text-lg font-semibold"> Đánh giá khóa học</h3>
 
-                    {/* Input tên */}
-                    <input
-                      type="text"
-                      placeholder="Tên của bạn"
-                      className="w-full border p-3 rounded-lg"
-                      value={userName}
-                      onChange={(e) => setUserName(e.target.value)}
-                    />
+                        {/* Input comment */}
+                        <textarea
+                          placeholder="Nhập đánh giá của bạn..."
+                          className="w-full border p-3 rounded-lg transition hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
+                          value={comment}
+                          onChange={(e) => setComment(e.target.value)}
+                        />
 
-                    {/* Input comment */}
-                    <textarea
-                      placeholder="Nhập đánh giá của bạn..."
-                      className="w-full border p-3 rounded-lg"
-                      value={comment}
-                      onChange={(e) => setComment(e.target.value)}
-                    />
+                        {/* Rating */}
+                        <div className="flex space-x-2">
+                          {[...Array(5)].map((_, index) => {
+                            return (
+                              <Star
+                                key={index}
+                                className={
+                                  index < rating ? "w-5 h-5 cursor-pointer text-yellow-400 fill-yellow-400" : "w-5 h-5 cursor-pointer text-gray-300"
+                                }
+                                onClick={() => setRating(index + 1)}
+                              />
+                            );
+                          })}
+                        </div>
 
-                    {/* Rating */}
-                    <div className="flex space-x-2">
-                      {[...Array(5)].map((_, index) => {
-                        return (
-                          <Star
-                            key={index}
-                            className={
-                              index < rating ? "w-5 h-5 cursor-pointer text-yellow-400 fill-yellow-400" : "w-5 h-5 cursor-pointer text-gray-300"
-                            }
-                            onClick={() => setRating(index + 1)}
-                          />
-                        );
-                      })}
-                    </div>
+                        <button
+                          onClick={handleSubmit}
+                          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                        >
+                          Gửi đánh giá
+                        </button>
 
-                    <button
-                      onClick={handleSubmit}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                    >
-                      Gửi đánh giá
-                    </button>
-
-                  </div>
-                </CardContent>
+                      </div>
+                    </CardContent>
+                  </>
+                )}
               </Card>
             )}
           </div>
@@ -789,7 +612,7 @@ const CourseDetail = () => {
                           <div className="text-lg text-gray-500 line-through">
                             {formatPrice(course.price)}
                           </div>
-                          <Badge className="bg-red-100 text-red-800">
+                          <Badge className="bg-red-100 text-red-800 hover:bg-red-100">
                             Tiết kiệm{" "}
                             {Math.round(
                               ((course.price - course.salePrice) /
@@ -808,22 +631,11 @@ const CourseDetail = () => {
                   className="w-full mb-4"
                   size="lg"
                   onClick={handleStartLearning}
-                  disabled={isEnrolling}
                 >
-                  {isEnrolling ? (
-                    <>
-                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      Đang xử lý...
-                    </>
-                  ) : (
-                    <>
-                      <Play className="w-5 h-5 mr-2" />
-                      {freeCourseService.isFreeCourse(course) ||
-                        isPurchased
-                        ? "Bắt đầu học"
-                        : "Mua khóa học"}
-                    </>
-                  )}
+                  <>
+                    <Play className="w-5 h-5 mr-2" />
+                    {isPurchased ? "Bắt đầu học" : "Mua khóa học"}
+                  </>
                 </Button>
 
                 {!isPurchased && (
@@ -899,13 +711,6 @@ const CourseDetail = () => {
             </Card>
           </div>
         </div>
-
-        {/* <h1 className="w-full text-center text-[30px] font-bold text-gray-900 py-8">Khóa học liên quan</h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {relatedCourses.map((course) => (
-            <CourseCard key={course._id} course={course} />
-          ))}
-        </div> */}
       </div>
     </div>
   );

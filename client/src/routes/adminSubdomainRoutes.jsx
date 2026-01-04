@@ -20,6 +20,7 @@ import PagePromotionManagement from "../pages/Admin/Promotion/Page";
 import CustomerCare from "../pages/Admin/CustomerCare/Page";
 import SettingPage from "../pages/Admin/Setting/SettingsManagement";
 import BannerManagement from "../pages/Admin/Banner/BannerManagement";
+import AuthCallback from "../pages/Auth/AuthCallback";
 
 // Routes specifically for admin subdomain (serve admin at root)
 export const adminSubdomainRoutes = (
@@ -27,6 +28,7 @@ export const adminSubdomainRoutes = (
     {/* Login for admin subdomain */}
     <Route path="/login" element={<LoginPage />} />
     <Route path="/auth/login" element={<LoginPage />} />
+    <Route path="/auth/callback" element={<AuthCallback />} />
     <Route
       path="/"
       element={

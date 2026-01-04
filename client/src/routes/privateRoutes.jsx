@@ -33,7 +33,7 @@ export const privateRoutes = (
     {/* User */}
     <Route
       element={
-        <AuthMiddleware allowedRoles={[TYPE_AUTH.CUSTOMER, TYPE_AUTH.USER]}>
+        <AuthMiddleware allowedRoles={[TYPE_AUTH.ADMIN, TYPE_AUTH.CUSTOMER, TYPE_AUTH.USER]}>
           <DefaultLayout />
         </AuthMiddleware>
       }

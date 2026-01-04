@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { BookOpen, User, Menu, X, ChevronDown, LogOut } from "lucide-react";
 import LearningPlatformLogo from "../Logo/LearningPlatformLogo";
 import { useAuth } from "../../hooks/useAuth";
@@ -12,7 +12,6 @@ const Navbar = () => {
   // const [searchQuery, setSearchQuery] = useState("");
   const userMenuRef = useRef(null);
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
 
   const userMenuItems = [
     {
@@ -30,7 +29,8 @@ const Navbar = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate("/courses");
+      localStorage.clear();
+      window.location.href = "/";
       setIsUserMenuOpen(false);
     } catch (error) {
       // console.error('Logout error:', error);
@@ -56,7 +56,7 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 gap-4">
           {/* Logo */}
-          <Link to="/courses" className="flex-shrink-0">
+          <Link to="/" className="flex-shrink-0">
             <LearningPlatformLogo size="md" />
           </Link>
 

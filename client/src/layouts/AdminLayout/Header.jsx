@@ -1,8 +1,7 @@
 "use client";
 
-import { Bell, Moon, Search, Sun, User } from "lucide-react";
+import { Bell, Moon, Sun, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
@@ -87,7 +86,7 @@ export default function DashboardHeader() {
       if (result.success) {
         toast.success(result.message);
         setTimeout(() => {
-          window.location.replace("/");
+          window.location.replace(import.meta.env.VITE_CLIENT_URL);
         }, 500);
       }
     } catch (error) {

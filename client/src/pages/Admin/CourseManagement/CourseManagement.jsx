@@ -36,7 +36,6 @@ import {
 import { 
   useCreateCourse, 
   useUpdateCourse, 
-  useDeleteCourse,
   useSubmitCourseForReview, 
   useAdminCourses
 } from '../../../hooks/useCourseQueries';
@@ -434,7 +433,7 @@ const CourseManagement = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => navigate(`/admin/courses/${course?.slug}/builder`)}
+                            onClick={() => navigate(`/courses/${course?.slug}/builder`)}
                             className="text-green-600 hover:text-green-700 hover:bg-green-50"
                             title="Xây dựng nội dung"
                           >
@@ -444,7 +443,8 @@ const CourseManagement = () => {
                             variant="ghost"
                             size="sm"
                             title="Xem khóa học như học viên"
-                            onClick={() => window.open(`/learn/${course?.slug}`, '_blank')}
+                            // onClick={() => window.open(`${import.meta.env.VITE_CLIENT_URL}/courses/${course?.slug}`, '_blank')}
+                            onClick={() => window.open(`${import.meta.env.VITE_CLIENT_URL}/learn/${course?.slug}`, '_blank')}
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
