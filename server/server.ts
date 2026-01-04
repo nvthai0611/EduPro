@@ -24,7 +24,7 @@ import passport from "passport";
 import "./src/passports/passport.google";
 import { apiRouter } from "./src/routes/api";
 import { limitRequestsMiddleware } from "./src/middlewares/auth/limitRequest.middleware";
-import requireAuth from "./src/middlewares/auth/requireActiveAuth";
+import requireAuth from "./src/middlewares/auth/optionalAuth";
 // const User = require("./src/models/user.model");
 
 // // Cron
