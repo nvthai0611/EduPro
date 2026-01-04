@@ -4,7 +4,7 @@ import { ReviewController } from '../../modules/review/review.controller';
 
 const router = Router();
 
-router.use(authenticateToken);
+// router.use(authenticateToken);
 
 router.post("/", ReviewController.create);
 router.get("/course/:slug", ReviewController.getByCourseSlug);
