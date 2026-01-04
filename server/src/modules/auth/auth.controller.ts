@@ -81,7 +81,7 @@ class AuthController {
       await Session.create({
         userId: (user as any)._id,
         sessionId,
-        deviceId: req.headers["x-desktop-ref"],
+        // deviceId: req.headers["x-desktop-ref"],
         userAgent: req.headers["user-agent"],
         ip: req.ip,
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
