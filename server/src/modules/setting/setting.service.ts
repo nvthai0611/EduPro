@@ -51,7 +51,7 @@ class SettingService {
             category: data.category || 'general',
             enabled: data.enabled !== undefined ? data.enabled : true,
             isDeleted: false,
-            banners: data.banners || []
+            banners: data.banners
         };
 
         return await settingRepository.createSetting(settingData);

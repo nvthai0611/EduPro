@@ -1,0 +1,8 @@
+[2026-01-07T17:10:34.358Z] ::1 (Localhost) userId=guest email=guest "GET /api/v1/setting/homepage/slides" 304 - 49.159 ms
+[2026-01-07T17:10:53.068Z] ::1 (Localhost) userId=guest email=guest "GET /api/v1/auth/google" 302 - 1.797 ms
+[2026-01-07T17:10:56.303Z] ::1 (Localhost) userId=6936def2eb2ceca472fd3912 email=thuannqhe191057@gmail.com "GET /api/v1/auth/google/callback?code=4%2F0ATX87lPhO9DBjASZGyYpCaQaQsde7bO2ysHgrAU0bhMCelO8pwBTZOBO-vrlARdbnAYuSg&scope=email+profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+openid&authuser=1&prompt=none" 302 - 726.817 ms
+[2026-01-07T17:10:57.622Z] ::1 (Localhost) userId=6936def2eb2ceca472fd3912 email=thuannqhe191057@gmail.com "GET /api/v1/courses?params[status]=published" - - - ms
+[2026-01-07T17:10:57.631Z] unknown (Unknown) userId=6936def2eb2ceca472fd3912 email=thuannqhe191057@gmail.com "GET /api/v1/setting/homepage/slides" - - - ms
+[2026-01-07T17:10:58.604Z] ::1 (Localhost) userId=6936def2eb2ceca472fd3912 email=thuannqhe191057@gmail.com "GET /api/v1/courses?params[status]=published" 200 - 192.455 ms
+[2026-01-07T17:10:58.613Z] ::1 (Localhost) userId=6936def2eb2ceca472fd3912 email=thuannqhe191057@gmail.com "GET /api/v1/setting/homepage/slides" 200 - 193.709 ms
+[2026-01-07T17:11:01.175Z] ::1 (Localhost) userId=6936def2eb2ceca472fd3912 email=thuannqhe191057@gmail.com "GET /api/v1/users/user-profile/6936def2eb2ceca472fd3912" 200 - 369.153 ms

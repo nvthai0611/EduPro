@@ -2,7 +2,6 @@ import axios from "axios";
 import { AUTH_TOKEN } from "../constains/auth";
 import CryptoJS from "crypto-js";
 import { logger } from "./logger";
-import { getDeviceId } from "./device";
 
 // Khởi tạo axios instance
 const client = axios.create({
@@ -166,8 +165,6 @@ client.interceptors.request.use((config) => {
     config.data = encryptData(config.data);
     config.headers["X-Encrypted"] = "true";
   }
-
-  config.headers["x-desktop-ref"] = getDeviceId();
 
   return config;
 });
