@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { ValidationError } from "yup";
+import { encryptData } from "../../utils/encryption";
 import ArticleService from "./article.service";
 import {
   createArticleLessonSchema,
@@ -151,9 +152,11 @@ export const getArticleContent = async (req: Request, res: Response) => {
 
     const article = await ArticleService.getPublishedArticleContent(articleId, context);
 
+    // Mã hóa data trước khi trả về
+    res.setHeader("x-encrypted", "true");
     return res.status(200).json({
       success: true,
-      data: article,
+      encryptedData: encryptData(article),
     });
   } catch (error: any) {
     const statusCode = error?.message?.includes("Yêu cầu xác thực") ? 401 :

@@ -527,9 +527,10 @@ export const useLesson = (lessonId, options = {}) => {
       }
     },
     enabled: !!lessonId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10, // 10 minutes cache
+    staleTime: 1000 * 60 * 15, 
+    gcTime: 1000 * 60 * 30, 
     refetchOnWindowFocus: false,
+    refetchOnMount: false, 
     retry: (failureCount, error) => {
       // Don't retry 404 errors
       if (error?.response?.status === 404) return false;
@@ -698,9 +699,10 @@ export const useArticle = (articleId, options = {}) => {
       return response?.data || response;
     },
     enabled: !!articleId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10, // 10 minutes cache
+    staleTime: 1000 * 60 * 15, // 15 minutes - article content ít thay đổi
+    gcTime: 1000 * 60 * 30, // 30 minutes cache - giữ lâu hơn cho smooth navigation
     refetchOnWindowFocus: false,
+    refetchOnMount: false, // Không refetch khi component mount lại
     retry: (failureCount, error) => {
       // Don't retry 404 errors - content doesn't exist
       if (error?.response?.status === 404) return false;

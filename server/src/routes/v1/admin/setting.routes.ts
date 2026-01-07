@@ -9,40 +9,22 @@ router.get('/health', (req, res) => {
     res.send('Setting Admin API is working');
 });
 
-/**
- * ==================== SETTING CRUD ROUTES ====================
- */
-
-// Get all settings (with optional filters: category, enabled)
 router.get('/', authenticateToken, authorizeRoles(['admin']), settingController.getAllSettings);
 
-// Get settings by category
 router.get('/category/:category', authenticateToken, authorizeRoles(['admin']), settingController.getSettingsByCategory);
 
-// Get setting by ID (must be before /:key to avoid conflict)
 router.get('/id/:id', authenticateToken, authorizeRoles(['admin']), settingController.getSettingById);
 
-// Update setting by ID
 router.put('/id/:id', authenticateToken, authorizeRoles(['admin']), settingController.updateSettingById);
 
-// Delete setting by ID (soft delete)
 router.delete('/id/:id', authenticateToken, authorizeRoles(['admin']), settingController.deleteSetting);
 
-// Toggle setting status
 router.patch('/id/:id/toggle', authenticateToken, authorizeRoles(['admin']), settingController.toggleSettingStatus);
 
-// Create new setting
 router.post('/', authenticateToken, authorizeRoles(['admin']), settingController.createSetting);
 
-/**
- * ==================== BANNER ROUTES (scoped by key) ====================
- * IMPORTANT: These must come BEFORE the generic /:key routes to avoid conflicts
- */
-
-// Add banner to setting
 router.post('/:key/slides', authenticateToken, authorizeRoles(['admin']), settingController.addBanner);
 
-// Get all banners for admin (including inactive)
 router.get('/:key/slides', authenticateToken, authorizeRoles(['admin']), settingController.getAdminBanners);
 
 // Update banner
