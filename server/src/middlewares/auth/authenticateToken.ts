@@ -50,37 +50,6 @@ const authenticateToken = async (
       return errorResponse(res, {}, 401, "Tài khoản chưa được kích hoạt");
     }
 
-    // Kiểm tra session token có match không
-    if (user.sessionToken === undefined || user.sessionToken !== accessToken) {
-      return errorResponse(
-        res,
-        {},
-        401,
-        "Phiên đăng nhập của bạn đã hết hạn. Bạn đã đăng nhập ở thiết bị khác."
-      );
-    }
-
-    // CHECK SESSION EXPIRATION
-    if (
-      user.sessionTokenExpiresAt === null ||
-      user.sessionTokenExpiresAt < new Date()
-    ) {
-      return errorResponse(
-        res,
-        {},
-        401,
-        "Token đã hết hạn, vui lòng đăng nhập lại"
-      );
-    }
-
-    // Refresh session expiration (tự động extend 24h)
-    const newExpiresAt = new Date();
-    newExpiresAt.setHours(newExpiresAt.getHours() + 24);
-    
-    await UserService.updateUser(decode.userId, {
-      sessionTokenExpiresAt: newExpiresAt,
-    });
-
     // Attach user to request
     req.user = {
       id: user["_id"],

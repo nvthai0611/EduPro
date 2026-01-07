@@ -12,6 +12,7 @@ import RoleRedirectMiddleware from "../middlewares/RoleRedirectMiddleware";
 import CourseList from "../pages/Courses/CourseList";
 import CourseDetail from "../pages/Courses/CourseDetail";
 // import Home from "../pages/Home/Home";
+import LoginPage from "../pages/Auth/Login";
 
 // Learning Platform
 
@@ -22,6 +23,7 @@ export const publicRoutes = (
     <Route element={<RoleRedirectMiddleware />}>
       <Route element={<DefaultLayout />}>
         <Route path="/" element={<CourseList />} />
+        <Route path="/auth/login" element={<LoginPage />} />
         <Route path="/about" element={<About />} />
         <Route path="/advisory" element={<AdvisoryPage />} />
         {/* Course Routes */}

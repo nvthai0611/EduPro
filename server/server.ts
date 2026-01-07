@@ -13,7 +13,6 @@ import session from "express-session";
 import connectFlash from "connect-flash";
 import cors from "cors";
 import connectDB from "./src/config/db";
-import "./src/utils/cron/clearExpiredSessions";
 
 // //Test bull
 // const { ExpressAdapter } = require('@bull-board/express');
@@ -25,6 +24,7 @@ import passport from "passport";
 import "./src/passports/passport.google";
 import { apiRouter } from "./src/routes/api";
 import { limitRequestsMiddleware } from "./src/middlewares/auth/limitRequest.middleware";
+import requireAuth from "./src/middlewares/auth/requireActiveAuth";
 // const User = require("./src/models/user.model");
 
 // // Cron
@@ -49,27 +49,32 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }, // Allow CORS
 }));
 
+app.set('trust proxy', true); // Cấu hình express tin tưởng proxy
+
 // Add custom security headers
 app.use((req, res, next) => {
   // Remove Server header
   res.removeHeader('Server');
   res.removeHeader('X-Powered-By');
-  
+
   // Add security headers
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-  
+
   next();
 });
 
 // ================= CORS =================
 const allowedOrigins = [
   "http://localhost:5173",
+  'http://fuedupro.local:5173',
+  'http://dash.fuedupro.local:5173',
   "http://localhost:3000",
   "http://localhost:9999",
   "https://www.fuedupro.com",
+  "https://dash.fuedupro.com",
   "https://edu-pro-delta.vercel.app",
 ];
 const corsOptions = {
@@ -82,7 +87,7 @@ const corsOptions = {
   },
   methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
   credentials: true,
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "x-desktop-ref"],
   exposedHeaders: ["x-encrypted"],
 };
 app.use(cors(corsOptions));

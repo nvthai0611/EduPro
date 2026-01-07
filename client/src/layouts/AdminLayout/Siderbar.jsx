@@ -7,12 +7,8 @@ import {
   LayoutDashboard,
   LogOut,
   HelpCircle,
-  Scissors,
-  HousePlus,
   Ticket,
   Package,
-  Warehouse,
-  Percent,
   UserCheck,
   ClipboardCheck,
   Unlock,
@@ -64,25 +60,12 @@ export default function DashboardSidebar() {
                   isActive={activeMenu == "dashboard"}
                   onClick={() => setActiveMenu("dashboard")}
                 >
-                  <Link to={"/admin/dashboard"}>
+                  <Link to={"/dashboard"}>
                     <LayoutDashboard />
                     <span>Dashboard</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              {/* <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  tooltip="order"
-                  isActive={activeMenu == "order"}
-                  onClick={() => setActiveMenu("order")}
-                >
-                  <Link to={"/admin/dashboard-orders"}>
-                    <ShoppingBasket />
-                    <span>Quản lý đơn hàng</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem> */}
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
@@ -90,7 +73,7 @@ export default function DashboardSidebar() {
                   isActive={activeMenu == "courses"}
                   onClick={() => setActiveMenu("courses")}
                 >
-                  <Link to={"/admin/manager-courses"}>
+                  <Link to={"/manager-courses"}>
                     <Package />
                     <span>Quản lý Khóa học</span>
                   </Link>
@@ -103,7 +86,7 @@ export default function DashboardSidebar() {
                   isActive={activeMenu == "approve-courses"}
                   onClick={() => setActiveMenu("approve-courses")}
                 >
-                  <Link to={"/admin/approve-courses"}>
+                  <Link to={"/approve-courses"}>
                     <ClipboardCheck />
                     <span>Xét Duyệt Khóa học</span>
                   </Link>
@@ -116,7 +99,7 @@ export default function DashboardSidebar() {
                   isActive={activeMenu == "users"}
                   onClick={() => setActiveMenu("users")}
                 >
-                  <Link to={"/admin/manager-user"}>
+                  <Link to={"/manager-user"}>
                     <Users />
                     <span>Quản lý người dùng</span>
                   </Link>
@@ -129,7 +112,7 @@ export default function DashboardSidebar() {
                   isActive={activeMenu == "assign-course"}
                   onClick={() => setActiveMenu("assign-course")}
                 >
-                  <Link to={"/admin/assign-course"}>
+                  <Link to={"/assign-course"}>
                     <Unlock />
                     <span>Cấp Khóa Học</span>
                   </Link>
@@ -142,7 +125,7 @@ export default function DashboardSidebar() {
                   isActive={activeMenu == "attendance"}
                   onClick={() => setActiveMenu("attendance")}
                 >
-                  <Link to={"/admin/attendance"}>
+                  <Link to={"/attendance"}>
                     <UserCheck />
                     <span>Điểm danh</span>
                   </Link>
@@ -155,48 +138,9 @@ export default function DashboardSidebar() {
                   isActive={activeMenu == "customer-care"}
                   onClick={() => setActiveMenu("customer-care")}
                 >
-                  <Link to={"/admin/student-question"}>
+                  <Link to={"/student-question"}>
                     <HelpCircleIcon />
                     <span>Câu hỏi học viên</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  tooltip="Banner"
-                  isActive={activeMenu == "banner"}
-                  onClick={() => setActiveMenu("banner")}
-                >
-                  <Link to={"/admin/banner"}>
-                    <HelpCircleIcon />
-                    <span>Quản lí banner</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  tooltip="Services"
-                  isActive={activeMenu == "services"}
-                  onClick={() => setActiveMenu("services")}
-                >
-                  <Link to={"/admin/manager-service"}>
-                    <Scissors />
-                    <span>Quản lý dịch vụ</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  tooltip="Products"
-                  isActive={activeMenu == "room"}
-                  onClick={() => setActiveMenu("room")}
-                >
-                  <Link to={"/admin/manager-room"}>
-                    <HousePlus />
-                    <span>Quản lý phòng</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -207,7 +151,7 @@ export default function DashboardSidebar() {
                   isActive={activeMenu == "coupons"}
                   onClick={() => setActiveMenu("coupons")}
                 >
-                  <Link to={"/admin/manager-coupons"}>
+                  <Link to={"/manager-coupons"}>
                     <Ticket />
                     <span>Quản lý Coupon</span>
                   </Link>
@@ -216,58 +160,11 @@ export default function DashboardSidebar() {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
-                  tooltip="Promotions"
-                  isActive={activeMenu == "promotions"}
-                  onClick={() => setActiveMenu("promotions")}
-                >
-                  <Link to={"/admin/manager-promotion"}>
-                    <Percent />
-                    <span>Quản lý Promotion</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  tooltip="Branch Management"
-                  isActive={activeMenu == "branch"}
-                  onClick={() => setActiveMenu("branch")}
-                >
-                  <Link to={"/admin/manager-branch"}>
-                    <Warehouse />
-                    <span>Quản lý chi nhánh</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              {/* <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  tooltip="Product Management"
-                  isActive={activeMenu == "product"}
-                  onClick={() => setActiveMenu("product")}
-                >
-                  <Link to={"/admin/manager-product"}>
-                    <Package />
-                    <span>Quản lý sản phẩm</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem> */}
-              {/* <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Analytics">
-                  <a href="#">
-                    <BarChart3 />
-                    <span>Thống kê</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem> */}
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
                   tooltip="Messages"
                   isActive={activeMenu == "review"}
                   onClick={() => setActiveMenu("review")}
                 >
-                  <Link to={"/admin/manager-review"}>
+                  <Link to={"/manager-review"}>
                     <MessageSquare />
                     <span>Quản lý đánh giá</span>
                   </Link>
@@ -290,7 +187,7 @@ export default function DashboardSidebar() {
                   isActive={activeMenu == "settings"}
                   onClick={() => setActiveMenu("settings")}
                 >
-                  <Link to={"/admin/setting"}>
+                  <Link to={"/setting"}>
                     <Settings />
                     <span>Cài đặt</span>
                   </Link>
@@ -319,7 +216,7 @@ export default function DashboardSidebar() {
                     if (result.success) {
                       toast.success(result.message);
                       setTimeout(() => {
-                        window.location.replace("/courses");
+                        window.location.replace(import.meta.env.VITE_CLIENT_URL);
                       }, 500);
                     }
                   } catch (error) {

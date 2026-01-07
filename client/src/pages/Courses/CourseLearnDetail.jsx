@@ -1,9 +1,11 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 // import { createPortal } from "react-dom";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useCourseBySlug, useSectionsWithMinimalLessons, useLesson, useArticle } from "../../hooks/useCourseQueries";
+import { useQueryClient } from '@tanstack/react-query';
+import { useCourseBySlug, useSectionsWithMinimalLessons, useLesson, useArticle, lessonKeys, articleKeys } from "../../hooks/useCourseQueries";
+import lessonService from "../../services/lessonService";
+import { articleService } from "../../services/articleService";
 import * as orderService from "../../services/user/orderService";
-import * as freeCourseService from "../../services/user/freeCourseService";
 import { useAuth } from "../../hooks/useAuth";
 import VideoPlayer from "../../components/Video/VideoPlayer";
 // import AssignmentSubmission from "../../components/Assignment/AssignmentSubmission";
@@ -43,7 +45,7 @@ const LessonItem = ({ item, isCurrent, onClick }) => (
         {item.title}
       </span>
       <span className="text-xs text-gray-500">
-        {item.videoDuration ? item?.videoDuration / 60 + " ph" : item?.readingTime + " ph"}
+        {item.videoDuration ? `${(item.videoDuration / 60).toFixed(0)}m` : item.readingTime ? `${item.readingTime}m` : null}
       </span>
     </div>
   </div>
@@ -105,6 +107,7 @@ export default function CourseLearnDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   // TanStack Query hooks - giống CourseBuilder
   const { data: course, isLoading: courseLoading, error: courseError } = useCourseBySlug(slug, {
@@ -145,6 +148,63 @@ export default function CourseLearnDetail() {
     currentPlayingVideo?.type === 'article' ? currentLessonId : null,
     { enabled: !!currentLessonId && currentPlayingVideo?.type === 'article' }
   );
+
+  // Helper function để tìm bài học kế tiếp
+  const getNextLesson = useCallback(() => {
+    if (!currentPlayingVideo || !sections || sections.length === 0) return null;
+
+    let foundCurrent = false;
+    for (const section of sections) {
+      if (!section.lessons || section.lessons.length === 0) continue;
+      
+      for (let i = 0; i < section.lessons.length; i++) {
+        const lesson = section.lessons[i];
+        
+        if (foundCurrent) {
+          // Trả về bài học đầu tiên sau bài hiện tại
+          return lesson;
+        }
+        
+        if (lesson._id === currentPlayingVideo._id) {
+          foundCurrent = true;
+          // Nếu không phải bài cuối trong section, trả về bài kế tiếp
+          if (i < section.lessons.length - 1) {
+            return section.lessons[i + 1];
+          }
+          // Nếu là bài cuối, tiếp tục tìm trong section kế tiếp
+        }
+      }
+    }
+    
+    return null;
+  }, [currentPlayingVideo, sections]);
+
+  // Prefetch bài học kế tiếp để giảm lag
+  useEffect(() => {
+    const nextLesson = getNextLesson();
+    if (!nextLesson) return;
+
+    // Prefetch dựa trên type của bài học kế tiếp
+    if (nextLesson.type === 'video') {
+      queryClient.prefetchQuery({
+        queryKey: lessonKeys.detail(nextLesson._id),
+        queryFn: async () => {
+          const response = await lessonService.getLessonById(nextLesson._id);
+          return response?.data || response;
+        },
+        staleTime: 1000 * 60 * 15, // Giống với useLesson hook
+      });
+    } else if (nextLesson.type === 'article') {
+      queryClient.prefetchQuery({
+        queryKey: articleKeys.detail(nextLesson._id),
+        queryFn: async () => {
+          const response = await articleService.getArticleContent(nextLesson._id);
+          return response?.data || response;
+        },
+        staleTime: 1000 * 60 * 15, // Giống với useArticle hook
+      });
+    }
+  }, [currentPlayingVideo, sections, queryClient, getNextLesson]);
 
   // Debug logging
   // useEffect(() => {
@@ -309,10 +369,7 @@ export default function CourseLearnDetail() {
           course._id
         );
 
-        // Check if course is free
-        const isFree = freeCourseService.isFreeCourse(course);
-
-        if (!hasPurchased.purchased && !isFree) {
+        if (!hasPurchased.purchased) {
           window.location.href = `/courses/${slug}`;
           return;
         }

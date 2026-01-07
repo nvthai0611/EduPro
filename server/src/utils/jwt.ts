@@ -1,10 +1,11 @@
-const { JWT_SECRET, JWT_EXPIRES ,JWT_EXPIRE_REFRESH} = process.env
+const { JWT_SECRET, JWT_EXPIRES, JWT_EXPIRE_REFRESH } = process.env
 import { sign, verify, decode } from 'jsonwebtoken';
 
 interface AccessTokenPayload {
-  userId: string;
-  role: string;
-  image?: string;
+    userId: string;
+    role: string;
+    image?: string;
+    sessionId?: string;
 }
 
 export async function createAccessToken(data: AccessTokenPayload) {
