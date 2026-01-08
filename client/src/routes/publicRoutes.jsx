@@ -13,6 +13,7 @@ import CourseList from "../pages/Courses/CourseList";
 import CourseDetail from "../pages/Courses/CourseDetail";
 // import Home from "../pages/Home/Home";
 import LoginPage from "../pages/Auth/Login";
+import ForumHome from "../pages/Forum/ForumHome";
 
 // Learning Platform
 
@@ -31,7 +32,9 @@ export const publicRoutes = (
           <Route index element={<CourseList />} />
           <Route path="category/:categorySlug" element={<CourseList />} />
           <Route path=":slug" element={<CourseDetail />} />
+          
         </Route>
+        <Route path="/forum" element={<ForumHome />} />
       </Route>
     </Route>
   </>
