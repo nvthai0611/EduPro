@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { Loader2 } from "lucide-react";
-import HeroSection from "./components/HeroSection";
-import TabSwitcher from "./components/TabSwitcher";
+// import HeroSection from "./components/HeroSection";
+// import TabSwitcher from "./components/TabSwitcher";
 import PostCard from "./components/PostCard";
 import Sidebar from "./components/Sidebar";
 import WritePostButton from "./components/WritePostButton";
+import SideBar from "../Home/components/SideBar";
 
 const ForumHome = () => {
   const [activeTab, setActiveTab] = useState("latest");
@@ -123,30 +124,22 @@ const ForumHome = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex">
       {/* Header Spacer */}
-      <div className="h-[70px]" />
+      <div className="h-[4rem] mt-4" />
+      <div className="hidden lg:block lg:w-30 flex-shrink-0 p-4">
+        <SideBar />
+      </div>
 
-      {/* Tab Switcher - Sticky */}
-      <TabSwitcher activeTab={activeTab} onTabChange={handleTabChange} />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-[4rem] w-full">
 
-      {/* Main Container */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Hero Section - Bento Grid */}
-        <HeroSection featuredPosts={featuredPosts} />
-
-        {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Posts Grid - 8 columns */}
           <main className="lg:col-span-8">
-            {/* Posts Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {posts.map((post) => (
                 <PostCard key={post._id} post={post} />
               ))}
             </div>
-
-            {/* Loading Indicator */}
             {loading && (
               <div className="flex justify-center items-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
@@ -154,7 +147,6 @@ const ForumHome = () => {
               </div>
             )}
 
-            {/* End of Content */}
             {!loading && !hasMore && posts.length > 0 && (
               <div className="text-center py-12">
                 <p className="text-gray-500 text-sm">
@@ -163,12 +155,9 @@ const ForumHome = () => {
               </div>
             )}
 
-            {/* Empty State */}
+
             {!loading && posts.length === 0 && (
               <div className="text-center py-20">
-                <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl">📝</span>
-                </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
                   Chưa có bài viết nào
                 </h3>
@@ -178,18 +167,13 @@ const ForumHome = () => {
               </div>
             )}
           </main>
-
-          {/* Sidebar - 4 columns, Sticky */}
           <aside className="lg:col-span-4">
             <Sidebar trendingPosts={trendingPosts} categories={categories} />
           </aside>
         </div>
       </div>
-
-      {/* Write Post Button - Floating */}
       <WritePostButton />
     </div>
   );
 };
-
 export default ForumHome;

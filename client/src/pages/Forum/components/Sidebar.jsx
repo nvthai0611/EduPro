@@ -15,7 +15,7 @@ const Sidebar = ({ trendingPosts = [], categories = [] }) => {
   return (
     <aside className="space-y-6">
       {/* Search Box */}
-      <div className="bg-white rounded-xl p-4 border border-gray-100 sticky top-4">
+      <div className="bg-white rounded-xl p-4 border border-gray-100 sticky top-[140px]">
         <form onSubmit={handleSearch} className="relative">
           <input
             type="text"
@@ -29,7 +29,7 @@ const Sidebar = ({ trendingPosts = [], categories = [] }) => {
       </div>
 
       {/* Trending Posts */}
-      <div className="bg-white rounded-xl p-5 border border-gray-100 sticky top-24">
+      <div className="bg-white rounded-xl p-5 border border-gray-100 sticky top-[220px]">
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="w-5 h-5 text-blue-600" />
           <h3 className="text-lg font-bold text-gray-900">Đang thịnh hành</h3>
@@ -48,7 +48,7 @@ const Sidebar = ({ trendingPosts = [], categories = [] }) => {
       </div>
 
       {/* Categories */}
-      <div className="bg-white rounded-xl p-5 border border-gray-100 sticky top-[420px]">
+      <div className="bg-white rounded-xl p-5 border border-gray-100 sticky top-[520px]">
         <div className="flex items-center gap-2 mb-4">
           <Users className="w-5 h-5 text-blue-600" />
           <h3 className="text-lg font-bold text-gray-900">Chủ đề</h3>
@@ -93,7 +93,7 @@ const Sidebar = ({ trendingPosts = [], categories = [] }) => {
       </div>
 
       {/* Newsletter/CTA */}
-      <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-6 text-white sticky top-[720px]">
+      <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-6 text-white sticky top-[820px]">
         <Calendar className="w-8 h-8 mb-3" />
         <h3 className="text-lg font-bold mb-2">Nhận tin mới nhất</h3>
         <p className="text-sm text-blue-100 mb-4">
