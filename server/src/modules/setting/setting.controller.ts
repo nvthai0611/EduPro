@@ -2,9 +2,6 @@ import { Request, Response } from "express";
 import settingService from "./setting.service";
 
 class SettingController {
-    /**
-     * ==================== SETTING CRUD CONTROLLERS ====================
-     */
 
     // Get all settings
     async getAllSettings(req: Request, res: Response) {
