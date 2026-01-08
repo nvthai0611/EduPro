@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import  {  useState } from 'react'
+import  { useEffect, useState } from 'react'
 import { courseService } from '../../../services/admin/courseService';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Eye, XCircle } from 'lucide-react';
@@ -17,17 +17,17 @@ const CourseApprover = () => {
       const [showRejectModal, setShowRejectModal] = useState(false);
       const [selectedCourse, setSelectedCourse] = useState(null);
     
-      // useEffect(() => {
-      //   fetchCourses();
-      // }, [searchTerm, statusFilter, levelFilter]);
+      useEffect(() => {
+        fetchCourses();
+      }, []);
     
       const fetchCourses = async () => {
         try {
           setLoading(true);
     
-          const response = await courseService.getCourses({
+          const response = await courseService.getAdminCourses({
             // search: searchTerm,
-            // status: "pending",
+            status: "pending",
             // level: levelFilter === 'all' ? '' : levelFilter,
           });
     
