@@ -84,7 +84,9 @@ router.get(
       });
 
       const isProduction = process.env.NODE_ENV === "production";
-      const adminDomain = isProduction ? "https://dash.fuedupro.com" : "http://dash.fuedupro.local:5173";
+      const adminDomain = isProduction
+        ? "https://dash.fuedupro.com"
+        : "http://dash.fuedupro.local:5173";
 
       // Cookie options - domain phải là undefined cho localhost
       const cookieOptions = {
