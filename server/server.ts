@@ -12,6 +12,7 @@ import cookieParser from "cookie-parser";
 import session from "express-session";
 import connectFlash from "connect-flash";
 import cors from "cors";
+
 import connectDB from "./src/config/db";
 
 // //Test bull
@@ -24,8 +25,8 @@ import passport from "passport";
 import "./src/passports/passport.google";
 import { apiRouter } from "./src/routes/api";
 import { limitRequestsMiddleware } from "./src/middlewares/auth/limitRequest.middleware";
-import requireAuth from "./src/middlewares/auth/optionalAuth";
-// const User = require("./src/models/user.model");
+import { morganLogger } from "./src/middlewares/servers/morganLogger";
+import { attachUser } from "./src/middlewares/servers/attachUser";
 
 // // Cron
 // require("./src/utils/cron/cronUser");
@@ -103,9 +104,13 @@ app.options("*", cors(corsOptions));
 
 // app.use('/admin/queues', serverAdapter.getRouter());
 // ================= Middleware =================
-app.use(morgan("dev"));
-app.use("/uploads", express.static("uploads"));
 app.use(cookieParser());
+
+app.use(attachUser); 
+app.use(morgan("dev"));
+app.use(morganLogger);
+
+app.use("/uploads", express.static("uploads"));
 app.use(
   session({
     secret: "setting express01",
