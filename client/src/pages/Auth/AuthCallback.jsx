@@ -1,32 +1,27 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import Cookies from "js-cookie";
-import { AUTH_TOKEN } from "../../constains/auth";
+import { useSearchParams } from "react-router-dom";
+import { useOptimizedAuth } from "../../hooks/useOptimizedAuth";
 
 export default function AuthCallback() {
-  const navigate = useNavigate();
-
+  // Optimized OAuth redirect handling with immediate redirect
+  const [searchParams] = useSearchParams();
+  const { handleOAuthSuccess, handleOAuthError } = useOptimizedAuth();
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get("auth");
+    const encodedAuth = searchParams.get("auth");
+    let encodedDevice = searchParams.get("deviceId");
+    const error = searchParams.get("error");
 
-    if (!token) {
-      navigate("/login", { replace: true });
+    if (error) {
+      handleOAuthError(error);
       return;
     }
 
-    const isProd = import.meta.env.MODE === "production";
-
-    const cookieOptions = {
-      path: "/",
-      sameSite: "lax",
-      ...(isProd && { domain: ".fuedupro.com" }),
-    };
-
-    Cookies.set(AUTH_TOKEN.ACCESS_TOKEN, token, cookieOptions);
-
-    navigate("/dashboard", { replace: true });
-  }, [navigate]);
+    // Xử lý auth param từ URL với tối ưu hóa
+    if (encodedAuth && encodedDevice) {
+      handleOAuthSuccess(encodedAuth, "render_id");
+      handleOAuthSuccess(encodedDevice, "runtime_ctx");
+    }
+  }, [searchParams, handleOAuthSuccess, handleOAuthError]);
 
   return null;
 }
