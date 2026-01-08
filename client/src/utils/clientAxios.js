@@ -179,7 +179,7 @@ client.interceptors.request.use((config) => {
   if (deviceId) {
     config.headers["X-Device-Id"] = deviceId;
   }
-  
+
   // Mã hóa dữ liệu nếu cần
   if (
     config.encrypt &&
@@ -220,7 +220,7 @@ client.interceptors.response.use(
       localStorage.clear();
 
       // Redirect về login
-      window.location.href = "/"; // hoặc route login đầy đủ
+      window.location.href = `${import.meta.env.VITE_CLIENT_URL}`;
       return Promise.reject({
         status: 401,
         message: "Token hết hạn hoặc không hợp lệ",
