@@ -106,8 +106,15 @@ router.get(
         // res.cookie("render_id", accessToken, cookieOptions as any);
         console.log("🍪 Cookie set with options:", cookieOptions);
 
-        const redirectUrl = `${process.env.FRONTEND_URL}?auth=${accessToken}&deviceId=${deviceId}`;
-        return res.redirect(redirectUrl);
+        try {
+          const redirectUrlObj = new URL(process.env.FRONTEND_URL!);
+          redirectUrlObj.searchParams.set("auth", accessToken);
+          redirectUrlObj.searchParams.set("deviceId", deviceId);
+          return res.redirect(redirectUrlObj.toString());
+        } catch (e) {
+          const redirectUrl = `${process.env.FRONTEND_URL}?auth=${accessToken}&deviceId=${deviceId}`;
+          return res.redirect(redirectUrl);
+        }
       } else {
         res.redirect(`${adminDomain}/auth/callback?auth=${accessToken}`);
       }
