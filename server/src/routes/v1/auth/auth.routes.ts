@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import passport from "passport";
 import crypto from "crypto";
+import requestIp from "request-ip";
 
 import { createAccessToken, decodeToken } from "../../../utils/jwt";
 import userService from "../../../modules/user/user.service";
@@ -53,6 +54,7 @@ router.get(
       console.log("✅ User authenticated:", user.email || user._id);
 
       const sessionId = crypto.randomUUID();
+      const deviceId = crypto.randomUUID();
 
       // Luôn tạo JWT mới mỗi lần đăng nhập Google
       // Cho phép user đăng nhập từ nhiều thiết bị
@@ -75,9 +77,9 @@ router.get(
       await Session.create({
         userId: user._id,
         sessionId,
-        // deviceId: req.cookies.runtime_ctx,
+        deviceId,
         userAgent: req.headers["user-agent"],
-        ip: req.ip,
+        ip: requestIp.getClientIp(req),
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
       });
 
@@ -104,7 +106,7 @@ router.get(
         // res.cookie("render_id", accessToken, cookieOptions as any);
         console.log("🍪 Cookie set with options:", cookieOptions);
 
-        const redirectUrl = `${process.env.FRONTEND_URL}?auth=${accessToken}`;
+        const redirectUrl = `${process.env.FRONTEND_URL}?auth=${accessToken}&deviceId=${deviceId}`;
         return res.redirect(redirectUrl);
       } else {
         res.redirect(`${adminDomain}/auth/callback?auth=${accessToken}`);

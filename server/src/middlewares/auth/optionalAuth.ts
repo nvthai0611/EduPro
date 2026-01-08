@@ -1,5 +1,6 @@
 import UserService from "../../modules/user/user.service";
 import { Request, Response, NextFunction } from "express";
+import requestIp from "request-ip";
 import { decodeToken } from "../../utils/jwt";
 import { errorResponse } from "../../utils/response";
 import Session from "../../modules/session/session.model";
@@ -32,14 +33,13 @@ const optionalAuth = async (
         return errorResponse(res, {}, 401, "Phiên đăng nhập không hợp lệ");
       }
 
-      // const currentDeviceId = req.cookies.runtime_ctx as string;
-      // // const currentIp = req.ip;
+      const currentDeviceId = req.cookies.runtime_ctx as string;
 
-      // if (session.deviceId !== currentDeviceId) {
-      //   // session.isValid = false;
-      //   // await session.save();
-      //   return errorResponse(res, {}, 401, "Thiết bị không hợp lệ");
-      // }
+      if (session.deviceId !== currentDeviceId) {
+        session.isValid = false;
+        await session.save();
+        return errorResponse(res, {}, 401, "Thiết bị không hợp lệ");
+      }
 
       if (user.status === false) {
         return errorResponse(res, {}, 401, "Tài khoản đã bị vô hiệu hóa");

@@ -9,14 +9,14 @@ import { toast } from 'react-toastify';
 export const useOptimizedAuth = () => {
   const navigate = useNavigate();
 
-  const handleOAuthSuccess = useCallback((encodedAuth) => {
+  const handleOAuthSuccess = useCallback((encodedAuth, key) => {
     try {
       // Lưu cookie ngay lập tức
       const isProduction = import.meta.env.VITE_PROD === "production";
       const cookieOptions = `path=/; max-age=86400; ${
         isProduction ? "secure; samesite=none" : "samesite=lax"
       }`;
-      document.cookie = `render_id=${encodedAuth}; ${cookieOptions}`;
+      document.cookie = `${key}=${encodedAuth}; ${cookieOptions}`;
       
       // Log thành công
       // console.log("🍪 Cookie saved successfully");
