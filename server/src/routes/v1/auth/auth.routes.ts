@@ -75,7 +75,7 @@ router.get(
       await Session.create({
         userId: user._id,
         sessionId,
-        deviceId: req.cookies.runtime_ctx,
+        // deviceId: req.cookies.runtime_ctx,
         userAgent: req.headers["user-agent"],
         ip: req.ip,
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
@@ -116,7 +116,6 @@ router.get(
 
 router.get("/logout", async (req: Request, res: Response) => {
   const token = req.cookies.render_id || req.query.token;
-  console.log(token);
 
   if (!token) return res.status(400).send("You are not logged in");
 

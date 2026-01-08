@@ -3,7 +3,7 @@ import mongoose, { Schema, Document, Types } from "mongoose";
 export interface ISession extends Document {
   userId: Types.ObjectId;
   sessionId: string;
-  deviceId: string;
+  deviceId?: string;
   refreshTokenHash?: string;
   userAgent?: string;
   ip?: string;
@@ -30,7 +30,6 @@ const sessionSchema = new Schema<ISession>(
 
     deviceId: {
       type: String,
-      required: true,
     },
 
     refreshTokenHash: String,

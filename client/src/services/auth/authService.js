@@ -138,7 +138,6 @@ class AuthService {
     } catch (error) {
       return { success: false, message: error.message || "Đăng xuất thất bại" };
     } finally {
-      // this.clearAllCookies();
       this.clearAuthData(); // Xóa dữ liệu xác thực (token, user, etc.)
     }
   }
