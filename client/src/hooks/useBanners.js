@@ -77,14 +77,18 @@ export const useUpdateBanner = () => {
   // Placeholder for future update banner hook
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, bannerData }) =>
-      bannersService.updateBanner(id, bannerData),
-    onSuccess: () => {
+    mutationFn: ({ id, bannerData }) => {
+      console.log('[useUpdateBanner] Mutation called with:', { id, bannerData })
+      return bannersService.updateBanner(id, bannerData)
+    },
+    onSuccess: (data) => {
+      console.log('[useUpdateBanner] Success:', data)
       queryClient.invalidateQueries({ queryKey: bannerKeys.all });
-      // toast.success('Banner updated successfully');
+      toast.success('Banner đã được cập nhật!');
     },
     onError: (error) => {
-      toast.error(`Error updating banner: ${error.message}`);
+      console.error('[useUpdateBanner] Error:', error)
+      toast.error(`Lỗi cập nhật banner: ${error.message}`);
     },
   });
 };
