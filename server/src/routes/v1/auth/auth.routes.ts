@@ -7,6 +7,7 @@ import { createAccessToken, decodeToken } from "../../../utils/jwt";
 import userService from "../../../modules/user/user.service";
 import authController from "../../../modules/auth/auth.controller";
 import Session from "../../../modules/session/session.model";
+import { addTokenToBlacklist } from "../../../modules/blacklist/blacklist.service";
 
 const router: Router = Router();
 
@@ -84,7 +85,9 @@ router.get(
       });
 
       const isProduction = process.env.NODE_ENV === "production";
-      const adminDomain = isProduction ? "https://dash.fuedupro.com" : "http://dash.fuedupro.local:5173";
+      const adminDomain = isProduction
+        ? "https://dash.fuedupro.com"
+        : "http://dash.fuedupro.local:5173";
 
       // Cookie options - domain phải là undefined cho localhost
       const cookieOptions = {
@@ -104,10 +107,17 @@ router.get(
         // res.cookie("render_id", accessToken, cookieOptions as any);
         console.log("🍪 Cookie set with options:", cookieOptions);
 
-        const redirectUrl = `${process.env.FRONTEND_URL}?auth=${accessToken}&deviceId=${deviceId}`;
-        return res.redirect(redirectUrl);
+        try {
+          const redirectUrlObj = new URL(process.env.FRONTEND_URL!);
+          redirectUrlObj.searchParams.set("auth", accessToken);
+          redirectUrlObj.searchParams.set("deviceId", deviceId);
+          return res.redirect(redirectUrlObj.toString());
+        } catch (e) {
+          const redirectUrl = `${process.env.FRONTEND_URL}?auth=${accessToken}&deviceId=${deviceId}`;
+          return res.redirect(redirectUrl);
+        }
       } else {
-        res.redirect(`${adminDomain}/auth/callback?auth=${accessToken}`);
+        res.redirect(`${adminDomain}/auth/callback?auth=${accessToken}&deviceId=${deviceId}`);
       }
     } catch (error) {
       console.error("Google Callback Error:", error);
@@ -122,7 +132,10 @@ router.get("/logout", async (req: Request, res: Response) => {
   if (!token) return res.status(400).send("You are not logged in");
 
   try {
+    // lưu token vào blacklist
     const decoded: any = await decodeToken(token);
+
+    await addTokenToBlacklist(token);
 
     await userService.updateUser(decoded.userId, {
       $unset: {

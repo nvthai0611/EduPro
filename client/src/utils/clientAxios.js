@@ -12,6 +12,7 @@ const client = axios.create({
 
 const ENCRYPTION_KEY = import.meta.env.VITE_ENCRYPTION_KEY;
 const TOKEN_KEY = AUTH_TOKEN.ACCESS_TOKEN;
+const DEVICE_KEY = AUTH_TOKEN.DEVICE_ID;
 
 // --- COOKIE UTILITIES ---
 const setCookie = (name, value, days = 7, options = {}) => {
@@ -99,6 +100,23 @@ const getToken = () => {
   return null;
 };
 
+const getDeviceId = () => {
+  // Ưu tiên cookie trước
+  const deviceId = getCookie(DEVICE_KEY);
+  if (deviceId) {
+    return deviceId;
+  }
+  // Fallback to localStorage
+  const localToken = localStorage.getItem(DEVICE_KEY);
+  if (localToken) {
+    // Sync cookie với localStorage
+    setCookie(DEVICE_KEY, localToken, 7);
+    return localToken;
+  }
+
+  return null;
+};
+
 export const getTokenFromCookie = () => {
   return getCookie(TOKEN_KEY);
 };
@@ -156,10 +174,20 @@ client.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+<<<<<<< HEAD
   
   const isFormData = config.data instanceof FormData;
   
   // Mã hóa dữ liệu nếu cần (KHÔNG áp dụng cho FormData)
+=======
+
+  const deviceId = getDeviceId();
+  if (deviceId) {
+    config.headers["X-Device-Id"] = deviceId;
+  }
+
+  // Mã hóa dữ liệu nếu cần
+>>>>>>> 2c98a784a0295db02e5a391a510b42a2d37a3844
   if (
     !isFormData &&
     config.encrypt &&
@@ -206,7 +234,7 @@ client.interceptors.response.use(
       localStorage.clear();
 
       // Redirect về login
-      window.location.href = "/"; // hoặc route login đầy đủ
+      window.location.href = `${import.meta.env.VITE_CLIENT_URL}`;
       return Promise.reject({
         status: 401,
         message: "Token hết hạn hoặc không hợp lệ",

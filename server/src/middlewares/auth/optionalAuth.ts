@@ -1,6 +1,5 @@
 import UserService from "../../modules/user/user.service";
 import { Request, Response, NextFunction } from "express";
-import requestIp from "request-ip";
 import { decodeToken } from "../../utils/jwt";
 import { errorResponse } from "../../utils/response";
 import Session from "../../modules/session/session.model";
@@ -11,42 +10,45 @@ const optionalAuth = async (
   next: NextFunction
 ) => {
   try {
-    const token = req.cookies?.render_id;
+    const authHeader = req.headers.authorization;
 
-    if (!token) {
-      return next();
-    } else {
-      const decoded = await decodeToken(token);
-      const user = await UserService.getUserById(decoded.userId);
-
-      if (!user) {
-        return errorResponse(res, {}, 401, "Người dùng không tồn tại");
-      }
-      const session = await Session.findOne({
-        userId: decoded.userId,
-        sessionId: decoded.sessionId,
-        isValid: true,
-        expiresAt: { $gt: new Date() },
-      });
-
-      if (!session) {
-        return errorResponse(res, {}, 401, "Phiên đăng nhập không hợp lệ");
-      }
-
-      const currentDeviceId = req.cookies.runtime_ctx as string;
-
-      if (session.deviceId !== currentDeviceId) {
-        session.isValid = false;
-        await session.save();
-        return errorResponse(res, {}, 401, "Thiết bị không hợp lệ");
-      }
-
-      if (user.status === false) {
-        return errorResponse(res, {}, 401, "Tài khoản đã bị vô hiệu hóa");
-      }
-
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return next();
     }
+
+    const token = authHeader.split(" ")[1];
+    const currentDeviceId = req.headers["x-device-id"];
+
+    const decoded = await decodeToken(token);
+    const user = await UserService.getUserById(decoded.userId);
+
+    if (!user) {
+      return errorResponse(res, {}, 401, "Người dùng không tồn tại");
+    }
+    const session = await Session.findOne({
+      userId: decoded.userId,
+      sessionId: decoded.sessionId,
+      isValid: true,
+      expiresAt: { $gt: new Date() },
+    });
+
+    if (!session) {
+      return errorResponse(res, {}, 401, "Phiên đăng nhập không hợp lệ");
+    }
+
+    if (session.deviceId !== currentDeviceId && user.role !== "admin") {
+      session.isValid = false;
+      await session.save();
+
+      await UserService.updateUser(decoded.userId, {status: false});
+      return errorResponse(res, {}, 401, "Thiết bị không hợp lệ");
+    }
+
+    if (user.status === false) {
+      return errorResponse(res, {}, 401, "Tài khoản đã bị vô hiệu hóa");
+    }
+
+    next();
   } catch (error) {
     console.error("Authentication error:", error);
     return errorResponse(res, {}, 401, "Lỗi xác thực");

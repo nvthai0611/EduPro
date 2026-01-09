@@ -141,15 +141,6 @@ class SectionService {
                         // Nếu có, đây là data bị sai trong DB - force về 'video'
                         const lessonType = lesson.type === 'article' ? 'video' : (lesson.type || 'video');
                         
-                        if (lesson.type === 'article') {
-                            console.warn('⚠️ BAD DATA: Lesson has type="article" in lessons collection:', {
-                                lessonId: lesson._id,
-                                title: lesson.title,
-                                originalType: lesson.type,
-                                correctedType: lessonType
-                            });
-                        }
-                        
                         return {
                             _id: lesson._id,
                             title: lesson.title,

@@ -2,6 +2,7 @@ import UserService from "../../modules/user/user.service";
 import { Request, Response, NextFunction } from "express";
 import { decodeToken } from "../../utils/jwt";
 import { errorResponse } from "../../utils/response";
+import { isTokenBlacklisted } from "../../modules/blacklist/blacklist.service";
 
 const authenticateToken = async (
   req: Request,
@@ -11,7 +12,7 @@ const authenticateToken = async (
   try {
     // Ưu tiên cookie trước, fallback sang Authorization header
     let accessToken = req.cookies?.render_id;
-    
+
     // Nếu không có cookie, thử lấy từ Authorization header
     if (!accessToken && req.headers.authorization) {
       const authHeader = req.headers.authorization;
@@ -31,6 +32,13 @@ const authenticateToken = async (
         401,
         "Token không hợp lệ hoặc không được cung cấp"
       );
+    }
+
+    const blacklisted = await isTokenBlacklisted(accessToken);
+    if (blacklisted) {
+      return res.status(401).json({
+        message: "Token không hợp lệ",
+      });
     }
 
     // Verify token

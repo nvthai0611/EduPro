@@ -59,15 +59,15 @@ function Home() {
   useEffect(() => {
     const encodedAuth = searchParams.get("auth");
     const error = searchParams.get("error");
-
+    let encodedDevice = searchParams.get("deviceId");  
     if (error) {
       handleOAuthError(error);
       return;
     }
 
-    // Xử lý auth param từ URL với tối ưu hóa
-    if (encodedAuth) {
-      handleOAuthSuccess(encodedAuth);
+    if (encodedAuth && encodedDevice) {
+      handleOAuthSuccess(encodedAuth, "render_id");
+      handleOAuthSuccess(encodedDevice, "runtime_ctx");
     }
   }, [searchParams, handleOAuthSuccess, handleOAuthError]);
 
