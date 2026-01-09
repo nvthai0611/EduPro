@@ -173,7 +173,6 @@ class SettingService {
             let setting = await settingRepository.getSettingByKey(key);
         
             if (!setting) {
-                // Create default setting if it doesn't exist
                 setting = await settingRepository.createSetting({
                     key: key,
                     name: key.charAt(0).toUpperCase() + key.slice(1),
@@ -184,7 +183,6 @@ class SettingService {
             }
             
             if (!setting.banners || !Array.isArray(setting.banners)) {
-                console.log('[Service] getAdminBanners - no banners array, returning empty');
                 return [];
             }
             
@@ -202,7 +200,6 @@ class SettingService {
             throw new Error(`Setting ${key} not found`);
         }
         
-        // Ensure setting has required fields for validation (for old documents)
         if (!setting.name) {
             setting.name = key.charAt(0).toUpperCase() + key.slice(1);
         }
@@ -220,7 +217,7 @@ class SettingService {
             try {
                 await cloudinary.uploader.destroy(banner.publicId);
             } catch (err) {
-                                console.error('Error deleting image from Cloudinary:', err);
+                console.error('Error deleting image from Cloudinary:', err);
             }
         }
         
@@ -232,16 +229,11 @@ class SettingService {
     // Update banner
     async updateBanner(key: string, bannerId: string, data: Partial<any>) {
         try {
-            console.log('[Service] updateBanner - key:', key, 'bannerId:', bannerId);
-            console.log('[Service] updateBanner - data received:', JSON.stringify(data));
-            
             let setting = await settingRepository.getSettingByKey(key);
             if (!setting) {
                 throw new Error(`Setting ${key} not found`);
             }
-            console.log('[Service] updateBanner - setting found, banners count:', setting.banners?.length);
             
-            // Ensure setting has required fields for validation (for old documents)
             if (!setting.name) {
                 setting.name = key.charAt(0).toUpperCase() + key.slice(1);
             }
@@ -253,21 +245,13 @@ class SettingService {
             if (!banner) {
                 throw new Error("Banner not found");
             }
-            console.log('[Service] updateBanner - banner before update:', JSON.stringify(banner));
             
             // Update banner fields
             Object.assign(banner, data);
             
-            console.log('[Service] updateBanner - banner after update:', JSON.stringify(banner));
-            console.log('[Service] updateBanner - Calling setting.save()...');
-            
             const savedSetting = await setting.save();
             
-            console.log('[Service] updateBanner - Setting saved successfully');
-            
             const result = savedSetting.banners.filter((b) => !b.isDeleted).sort((a, b) => a.order - b.order);
-            console.log('[Service] updateBanner - success, returning', result.length, 'banners');
-            console.log('[Service] updateBanner - Updated banner in result:', JSON.stringify(result.find(b => b._id.toString() === bannerId)));
             
             return result;
         } catch (error) {
@@ -284,7 +268,6 @@ class SettingService {
             throw new Error(`Setting ${key} not found`);
         }
 
-        // Ensure setting has required fields for validation (for old documents)
         if (!setting.name) {
             setting.name = key.charAt(0).toUpperCase() + key.slice(1);
         }

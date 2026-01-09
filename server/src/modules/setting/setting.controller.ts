@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import settingService from "./setting.service";
 import cloudinary from "../../config/cloundinary";
+import { encryptData } from "../../utils/encryption";
 
 class SettingController {
 
@@ -37,7 +38,8 @@ class SettingController {
             if (enabled !== undefined) filter.enabled = enabled === 'true';
 
             const settings = await settingService.getAllSettings(filter);
-            res.status(200).json({ success: true, data: settings });
+            res.setHeader("x-encrypted", "true");
+            res.status(200).json({ success: true, encryptedData: encryptData(settings) });
         } catch (error: any) {
             res.status(500).json({ success: false, error: error.message });
         }
@@ -48,7 +50,8 @@ class SettingController {
         try {
             const { key } = req.params;
             const setting = await settingService.getSetting(key);
-            res.status(200).json({ success: true, data: setting });
+            res.setHeader("x-encrypted", "true");
+            res.status(200).json({ success: true, encryptedData: encryptData(setting) });
         } catch (error: any) {
             res.status(500).json({ success: false, error: error.message });
         }
@@ -59,7 +62,8 @@ class SettingController {
         try {
             const { id } = req.params;
             const setting = await settingService.getSettingById(id);
-            res.status(200).json({ success: true, data: setting });
+            res.setHeader("x-encrypted", "true");
+            res.status(200).json({ success: true, encryptedData: encryptData(setting) });
         } catch (error: any) {
             res.status(404).json({ success: false, error: error.message });
         }
@@ -116,7 +120,8 @@ class SettingController {
         try {
             const { category } = req.params;
             const settings = await settingService.getSettingsByCategory(category);
-            res.status(200).json({ success: true, data: settings });
+            res.setHeader("x-encrypted", "true");
+            res.status(200).json({ success: true, encryptedData: encryptData(settings) });
         } catch (error: any) {
             res.status(500).json({ success: false, error: error.message });
         }
@@ -153,7 +158,8 @@ class SettingController {
         try {
             const { key } = req.params;
             const banners = await settingService.getBanners(key);
-            res.status(200).json({ success: true, data: banners });
+            res.setHeader("x-encrypted", "true");
+            res.status(200).json({ success: true, encryptedData: encryptData(banners) });
         } catch (error: any) {
             res.status(500).json({ success: false, error: error.message });
         }
@@ -164,7 +170,8 @@ class SettingController {
         try {
             const { key } = req.params;
             const banners = await settingService.getAdminBanners(key);
-            res.status(200).json({ success: true, data: banners });
+            res.setHeader("x-encrypted", "true");
+            res.status(200).json({ success: true, encryptedData: encryptData(banners) });
         } catch (error: any) {
             res.status(500).json({ success: false, error: error.message });
         }

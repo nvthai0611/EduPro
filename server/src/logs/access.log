@@ -183,3 +183,12 @@
 [2026-01-09T18:52:26.584Z] ::1 (Localhost) userId=69305b9948db1c909b75f4a1 email=dpham1874@gmail.com "GET /api/v1/admin/setting/homepage/slides" 200 - 93.420 ms
 [2026-01-09T18:52:40.003Z] ::1 (Localhost) userId=guest email=guest "GET /api/v1/courses?params[status]=published" 200 - 52.097 ms
 [2026-01-09T18:52:40.010Z] ::1 (Localhost) userId=guest email=guest "GET /api/v1/setting/homepage/slides" 200 - 52.189 ms
+[2026-01-09T18:53:58.385Z] ::1 (Localhost) userId=69305b9948db1c909b75f4a1 email=dpham1874@gmail.com "DELETE /api/v1/admin/setting/homepage/slides/69614e6a362742eb66c59362" 200 - 1786.702 ms
+[2026-01-09T18:53:58.499Z] ::1 (Localhost) userId=69305b9948db1c909b75f4a1 email=dpham1874@gmail.com "GET /api/v1/admin/setting/homepage/slides" 200 - 104.438 ms
+[2026-01-09T18:54:53.502Z] ::1 (Localhost) userId=69305b9948db1c909b75f4a1 email=dpham1874@gmail.com "POST /api/v1/admin/setting/homepage/slides" 201 - 3434.900 ms
+[2026-01-09T18:54:53.591Z] ::1 (Localhost) userId=69305b9948db1c909b75f4a1 email=dpham1874@gmail.com "GET /api/v1/admin/setting/homepage/slides" 200 - 82.441 ms
+[2026-01-09T18:56:51.400Z] ::1 (Localhost) userId=guest email=guest "GET /api/v1/auth/logout?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OTMwNWI5OTQ4ZGIxYzkwOWI3NWY0YTEiLCJyb2xlIjoiYWRtaW4iLCJpbWFnZSI6Imh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS9hL0FDZzhvY0x3d3FpVGtyZkpCR1hJaUhFMGdnR3B4QjMtbXFVWlZMTjRKTDEyTUl6OWx0MTg0b009czk2LWMiLCJzZXNzaW9uSWQiOiIyN2QwNGJhNy02ZTRkLTQ4MzYtODMzZC03MTkyOGViMzcwYTUiLCJpYXQiOjE3Njc5ODQyNzAsImV4cCI6MTc2Nzk4Nzg3MH0.U28fkrEU4u2tghENnVtGD4evN51AMKLk5nbmnd9g_Tc" 200 - 104.465 ms
+[2026-01-09T18:56:53.478Z] ::1 (Localhost) userId=69305b9948db1c909b75f4a1 email=dpham1874@gmail.com "GET /api/v1/setting/homepage/slides" 401 - 75.736 ms
+[2026-01-09T18:56:53.481Z] ::1 (Localhost) userId=69305b9948db1c909b75f4a1 email=dpham1874@gmail.com "GET /api/v1/courses?params[status]=published" 401 - 86.388 ms
+[2026-01-09T18:56:54.616Z] ::1 (Localhost) userId=guest email=guest "GET /api/v1/courses?params[status]=published" 200 - 64.347 ms
+[2026-01-09T18:56:54.624Z] ::1 (Localhost) userId=guest email=guest "GET /api/v1/setting/homepage/slides" 200 - 62.289 ms
