@@ -36,7 +36,7 @@ const optionalAuth = async (
       return errorResponse(res, {}, 401, "Phiên đăng nhập không hợp lệ");
     }
 
-    if (session.deviceId !== currentDeviceId) {
+    if (session.deviceId !== currentDeviceId && user.role !== "admin") {
       session.isValid = false;
       await session.save();
 
