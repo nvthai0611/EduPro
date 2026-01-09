@@ -11,7 +11,7 @@ const authenticateToken = async (
   try {
     // Ưu tiên cookie trước, fallback sang Authorization header
     let accessToken = req.cookies?.render_id;
-    
+
     // Nếu không có cookie, thử lấy từ Authorization header
     if (!accessToken && req.headers.authorization) {
       const authHeader = req.headers.authorization;
