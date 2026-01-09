@@ -2,6 +2,7 @@ export const AUTH_TOKEN = {
   ACCESS_TOKEN: "render_id",
   REFRESH_TOKEN: "viewport_sig",
   USER_DATA: "layout_snapshot",
+  DEVICE_ID: "runtime_ctx",
 };
 
 export const TYPE_AUTH = {

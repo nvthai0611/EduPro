@@ -7,6 +7,7 @@ import { createAccessToken, decodeToken } from "../../../utils/jwt";
 import userService from "../../../modules/user/user.service";
 import authController from "../../../modules/auth/auth.controller";
 import Session from "../../../modules/session/session.model";
+import { addTokenToBlacklist } from "../../../modules/blacklist/blacklist.service";
 
 const router: Router = Router();
 
@@ -116,7 +117,7 @@ router.get(
           return res.redirect(redirectUrl);
         }
       } else {
-        res.redirect(`${adminDomain}/auth/callback?auth=${accessToken}`);
+        res.redirect(`${adminDomain}/auth/callback?auth=${accessToken}&deviceId=${deviceId}`);
       }
     } catch (error) {
       console.error("Google Callback Error:", error);
@@ -132,6 +133,8 @@ router.get("/logout", async (req: Request, res: Response) => {
 
   try {
     const decoded: any = await decodeToken(token);
+
+    await addTokenToBlacklist(token);
 
     await userService.updateUser(decoded.userId, {
       $unset: {
