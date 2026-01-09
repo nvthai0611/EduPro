@@ -192,3 +192,9 @@
 [2026-01-09T18:56:53.481Z] ::1 (Localhost) userId=69305b9948db1c909b75f4a1 email=dpham1874@gmail.com "GET /api/v1/courses?params[status]=published" 401 - 86.388 ms
 [2026-01-09T18:56:54.616Z] ::1 (Localhost) userId=guest email=guest "GET /api/v1/courses?params[status]=published" 200 - 64.347 ms
 [2026-01-09T18:56:54.624Z] ::1 (Localhost) userId=guest email=guest "GET /api/v1/setting/homepage/slides" 200 - 62.289 ms
+[2026-01-09T19:01:43.004Z] ::1 (Localhost) userId=guest email=guest "GET /api/v1/courses?params[status]=published" 200 - 96.116 ms
+[2026-01-09T19:01:43.033Z] ::1 (Localhost) userId=guest email=guest "GET /api/v1/setting/homepage/slides" 200 - 97.001 ms
+[2026-01-09T19:01:52.896Z] ::1 (Localhost) userId=guest email=guest "GET /api/v1/auth/google" 302 - 3.699 ms
+[2026-01-09T19:01:56.157Z] ::1 (Localhost) userId=69305b9948db1c909b75f4a1 email=dpham1874@gmail.com "GET /api/v1/auth/google/callback?code=4%2F0ASc3gC3NwpCkS7Cyw1fQbjKcE-CbRX9AUiNE-FzeIDTj2ADvM7gI_G1uAF_MMAtwnXzd3A&scope=email+profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+openid&authuser=0&prompt=none" 302 - 526.819 ms
+[2026-01-09T19:01:58.630Z] ::1 (Localhost) userId=69305b9948db1c909b75f4a1 email=dpham1874@gmail.com "GET /api/v1/admin/setting/homepage/slides" 200 - 106.667 ms
+[2026-01-09T19:01:58.651Z] ::1 (Localhost) userId=69305b9948db1c909b75f4a1 email=dpham1874@gmail.com "GET /api/v1/admin/setting" 200 - 118.918 ms

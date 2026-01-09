@@ -157,7 +157,6 @@ client.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
   
-  // QUAN TRỌNG: KHÔNG mã hóa FormData (để upload file)
   const isFormData = config.data instanceof FormData;
   
   // Mã hóa dữ liệu nếu cần (KHÔNG áp dụng cho FormData)
