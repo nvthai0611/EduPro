@@ -75,3 +75,11 @@
 [2026-01-08T10:16:41.613Z] ::1 (Localhost) userId=69305b9948db1c909b75f4a1 email=dpham1874@gmail.com "PATCH /api/v1/admin/sections/course/692beab86b40d644bf04cbb0/reorder" 200 - 251.424 ms
 [2026-01-08T10:16:41.902Z] ::1 (Localhost) userId=69305b9948db1c909b75f4a1 email=dpham1874@gmail.com "GET /api/v1/admin/sections/course/692beab86b40d644bf04cbb0/with-lessons" 200 - 280.573 ms
 [2026-01-08T10:16:42.189Z] ::1 (Localhost) userId=69305b9948db1c909b75f4a1 email=dpham1874@gmail.com "GET /api/v1/admin/sections/course/692beab86b40d644bf04cbb0/with-lessons" 200 - 282.903 ms
+[2026-01-08T14:56:52.177Z] ::1 (Localhost) userId=guest email=guest "GET /api/v1/courses?params[status]=published" 401 - 230.256 ms
+[2026-01-08T14:56:52.769Z] ::1 (Localhost) userId=guest email=guest "GET /api/v1/courses?params[status]=published" 200 - 70.381 ms
+[2026-01-08T14:56:52.780Z] ::1 (Localhost) userId=guest email=guest "GET /api/v1/setting/homepage/slides" 304 - 69.536 ms
+[2026-01-08T14:56:58.718Z] ::1 (Localhost) userId=guest email=guest "GET /api/v1/courses?params[status]=published" 200 - 56.599 ms
+[2026-01-08T15:02:53.360Z] ::1 (Localhost) userId=guest email=guest "GET /api/v1/courses?params[status]=published" 200 - 43.420 ms
+[2026-01-08T15:02:53.368Z] ::1 (Localhost) userId=guest email=guest "GET /api/v1/setting/homepage/slides" 304 - 57.543 ms
+[2026-01-08T15:03:17.937Z] ::1 (Localhost) userId=guest email=guest "GET /api/v1/courses?params[status]=published" 200 - 54.632 ms
+[2026-01-08T15:23:48.344Z] ::1 (Localhost) userId=guest email=guest "GET /api/v1/courses?params[status]=published" 200 - 68.471 ms

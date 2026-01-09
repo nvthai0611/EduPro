@@ -10,7 +10,6 @@ import SideBar from "../Home/components/SideBar";
 const ForumHome = () => {
   const [activeTab, setActiveTab] = useState("latest");
   const [posts, setPosts] = useState([]);
-  const [featuredPosts, setFeaturedPosts] = useState([]);
   const [trendingPosts, setTrendingPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -64,16 +63,11 @@ const ForumHome = () => {
         setLoading(false);
       }
     },
-    [activeTab]
+    []
   );
 
   // Fetch featured posts for hero section
   useEffect(() => {
-    const featured = Array.from({ length: 4 }, (_, i) =>
-      generateMockPost(i + 100)
-    );
-    setFeaturedPosts(featured);
-
     const trending = Array.from({ length: 5 }, (_, i) =>
       generateMockPost(i + 200)
     );
