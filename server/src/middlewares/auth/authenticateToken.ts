@@ -2,6 +2,7 @@ import UserService from "../../modules/user/user.service";
 import { Request, Response, NextFunction } from "express";
 import { decodeToken } from "../../utils/jwt";
 import { errorResponse } from "../../utils/response";
+import { isTokenBlacklisted } from "../../modules/blacklist/blacklist.service";
 
 const authenticateToken = async (
   req: Request,
@@ -31,6 +32,13 @@ const authenticateToken = async (
         401,
         "Token không hợp lệ hoặc không được cung cấp"
       );
+    }
+
+    const blacklisted = await isTokenBlacklisted(accessToken);
+    if (blacklisted) {
+      return res.status(401).json({
+        message: "Token không hợp lệ",
+      });
     }
 
     // Verify token
