@@ -30,6 +30,24 @@ export const bannersService = {
       console.log('Original bannerData:', bannerData);
       const key = bannerData.key || 'homepage';
       
+      // Nếu có file, tạo FormData để upload
+      if (bannerData.image instanceof File) {
+        const formData = new FormData()
+        formData.append('image', bannerData.image)
+        formData.append('title', bannerData.title)
+        formData.append('description', bannerData.description || '')
+        formData.append('linkUrl', bannerData.linkUrl)
+        formData.append('isActive', bannerData.isActive)
+        
+        const response = await apiClient.post(`/admin/setting/${key}/slides`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
+        return response.data
+      }
+      
+      // Nếu không có file, gửi data thông thường
       const response = await apiClient.post(`/admin/setting/${key}/slides`, bannerData);
         return response.data;
     } catch (error) {
@@ -40,11 +58,43 @@ export const bannersService = {
     // Cập nhật banner
     updateBanner: async (id, bannerData) => {
     try {
+      console.log('[bannersService] updateBanner called with id:', id, 'bannerData:', bannerData)
+      console.log('[bannersService] bannerData.image instanceof File?', bannerData.image instanceof File)
       const key = bannerData.key || 'homepage';
+      
+      // CHỈ tạo FormData NẾU có file mới được chọn
+      if (bannerData.image && bannerData.image instanceof File) {
+        console.log('[bannersService] Creating FormData with NEW image file')
+        const formData = new FormData()
+        formData.append('image', bannerData.image)
+        formData.append('title', bannerData.title)
+        formData.append('description', bannerData.description || '')
+        formData.append('linkUrl', bannerData.linkUrl)
+        formData.append('isActive', String(bannerData.isActive))
+        
+        // Gửi publicId cũ để xóa ảnh cũ
+        if (bannerData.oldPublicId) {
+          console.log('[bannersService] Adding oldPublicId:', bannerData.oldPublicId)
+          formData.append('oldPublicId', bannerData.oldPublicId)
+        }
+        
+        console.log('[bannersService] Sending PUT request with FormData to:', `/admin/setting/${key}/slides/${id}`)
+        const response = await apiClient.put(`/admin/setting/${key}/slides/${id}`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
+        console.log('[bannersService] Response:', response)
+        return response.data
+      }
+      
+      // Nếu KHÔNG có file mới, gửi JSON data thông thường (giữ nguyên imageUrl)
+      console.log('[bannersService] Sending PUT request with JSON data (no new image)')
       const response = await apiClient.put(`/admin/setting/${key}/slides/${id}`, bannerData);   
+      console.log('[bannersService] Response:', response)
         return response.data;
     } catch (error) {
-      console.error('Error updating banner:', error);
+      console.error('[bannersService] Error updating banner:', error);
       throw error;
     }
     },

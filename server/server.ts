@@ -138,6 +138,8 @@ passport.deserializeUser(async (id: any, done: any) => {
   }
 });
 // ================= Body Parser =================
+// QUAN TRỌNG: Chỉ parse JSON và urlencoded, KHÔNG parse multipart/form-data
+// Để multer xử lý multipart/form-data cho file upload
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 

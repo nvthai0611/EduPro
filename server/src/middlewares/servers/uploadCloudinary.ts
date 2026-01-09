@@ -1,14 +1,40 @@
 import multer from "multer";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
-import cloudinary from "../../config/cloundinary.js";
+import cloudinary from "../../config/cloundinary";
 
 const storage = new CloudinaryStorage({
   cloudinary,
-  params: async () => ({
-    folder: "products",
-    allowed_formats: ["jpg", "jpeg", "png", "webp"],
-  }),
+  params: async (req, file) => {
+    // console.log('[CloudinaryStorage] Processing file:', file.originalname);
+    return {
+      folder: "banners",
+      allowed_formats: ["jpg", "jpeg", "png", "webp", "gif"],
+     transformation: [
+      { width: 1200, height: 1200, crop: "limit" },
+      { quality: "auto", fetch_format: "auto" },
+    ],
+    };
+  },
 });
 
-export const uploadSingle = multer({ storage }).single("image");
-export const uploadMultiple = multer({ storage }).array("images", 5);
+const upload = multer({ 
+  storage,
+  limits: {
+    fileSize: 3 * 1024 * 1024 // 3MB
+  }
+});
+
+// Wrapper function với error handling
+export const uploadSingle = (req: any, res: any, next: any) => {
+  const multerSingle = upload.single("image");
+  
+  multerSingle(req, res, (err: any) => {
+    if (err) {
+      console.error('[uploadSingle] ERROR:', err.message);
+      return res.status(400).json({ success: false, error: err.message });
+    }
+    next();
+  });
+};
+
+export const uploadMultiple = upload.array("images", 5);
