@@ -132,6 +132,7 @@ router.get("/logout", async (req: Request, res: Response) => {
   if (!token) return res.status(400).send("You are not logged in");
 
   try {
+    // lưu token vào blacklist
     const decoded: any = await decodeToken(token);
 
     await addTokenToBlacklist(token);
