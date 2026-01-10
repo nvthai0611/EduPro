@@ -22,3 +22,11 @@
 [2026-01-10T02:33:59.447Z] ::1 (Localhost) userId=69305b9948db1c909b75f4a1 email=dpham1874@gmail.com "GET /api/v1/admin/setting/homepage/slides" 200 - 277.456 ms
 [2026-01-10T02:35:41.497Z] ::1 (Localhost) userId=69305b9948db1c909b75f4a1 email=dpham1874@gmail.com "PUT /api/v1/admin/setting/homepage/slides/6952c1df932fd646f31e081e" 200 - 4259.372 ms
 [2026-01-10T02:35:41.803Z] ::1 (Localhost) userId=69305b9948db1c909b75f4a1 email=dpham1874@gmail.com "GET /api/v1/admin/setting/homepage/slides" 200 - 266.413 ms
+[2026-01-10T02:39:29.705Z] ::1 (Localhost) userId=69305b9948db1c909b75f4a1 email=dpham1874@gmail.com "GET /api/v1/admin/setting/homepage/slides" 200 - 261.393 ms
+[2026-01-10T02:39:29.720Z] ::1 (Localhost) userId=69305b9948db1c909b75f4a1 email=dpham1874@gmail.com "GET /api/v1/admin/setting" 200 - 259.527 ms
+[2026-01-10T02:39:40.340Z] ::1 (Localhost) userId=69305b9948db1c909b75f4a1 email=dpham1874@gmail.com "PUT /api/v1/admin/setting/homepage/slides/6952c1df932fd646f31e081e" 200 - 4216.682 ms
+[2026-01-10T02:39:40.635Z] ::1 (Localhost) userId=69305b9948db1c909b75f4a1 email=dpham1874@gmail.com "GET /api/v1/admin/setting/homepage/slides" 200 - 267.265 ms
+[2026-01-10T02:52:49.077Z] ::1 (Localhost) userId=69305b9948db1c909b75f4a1 email=dpham1874@gmail.com "GET /api/v1/admin/setting" 200 - 938.906 ms
+[2026-01-10T02:52:49.126Z] ::1 (Localhost) userId=69305b9948db1c909b75f4a1 email=dpham1874@gmail.com "GET /api/v1/admin/setting/homepage/slides" 200 - 1003.433 ms
+[2026-01-10T02:53:30.700Z] ::1 (Localhost) userId=69305b9948db1c909b75f4a1 email=dpham1874@gmail.com "GET /api/v1/admin/setting" 200 - 203.079 ms
+[2026-01-10T02:53:30.762Z] ::1 (Localhost) userId=69305b9948db1c909b75f4a1 email=dpham1874@gmail.com "GET /api/v1/admin/setting/homepage/slides" 200 - 272.407 ms
