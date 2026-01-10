@@ -1,6 +1,6 @@
 import settingRepository from "./setting.repository";
 import Setting, { ISetting } from "./setting.model";
-import cloudinary from "../../config/cloundinary";
+import cloudinary from "../../config/cloudinary";
 
 class SettingService {
     /**
