@@ -25,7 +25,7 @@ export const bannersService = {
     }
     },
     // Tạo banner mới
-    createBanner: async (bannerData) => {
+    createBanner: async (bannerData, onUploadProgress) => {
     try {
       console.log('Original bannerData:', bannerData);
       const key = bannerData.key || 'homepage';
@@ -42,6 +42,12 @@ export const bannersService = {
         const response = await apiClient.post(`/admin/setting/${key}/slides`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
+          },
+          onUploadProgress: (progressEvent) => {
+            if (onUploadProgress && progressEvent.total) {
+              const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+              onUploadProgress(percentCompleted);
+            }
           }
         })
         return response.data
@@ -56,7 +62,7 @@ export const bannersService = {
     }
     },
     // Cập nhật banner
-    updateBanner: async (id, bannerData) => {
+    updateBanner: async (id, bannerData, onUploadProgress) => {
     try {
       console.log('[bannersService] updateBanner called with id:', id, 'bannerData:', bannerData)
       console.log('[bannersService] bannerData.image instanceof File?', bannerData.image instanceof File)
@@ -74,27 +80,33 @@ export const bannersService = {
         
         // Gửi publicId cũ để xóa ảnh cũ
         if (bannerData.oldPublicId) {
-          console.log('[bannersService] Adding oldPublicId:', bannerData.oldPublicId)
+          // console.log('[bannersService] Adding oldPublicId:', bannerData.oldPublicId)
           formData.append('oldPublicId', bannerData.oldPublicId)
         }
         
-        console.log('[bannersService] Sending PUT request with FormData to:', `/admin/setting/${key}/slides/${id}`)
+        // console.log('[bannersService] Sending PUT request with FormData to:', `/admin/setting/${key}/slides/${id}`)
         const response = await apiClient.put(`/admin/setting/${key}/slides/${id}`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
+          },
+          onUploadProgress: (progressEvent) => {
+            if (onUploadProgress && progressEvent.total) {
+              const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+              onUploadProgress(percentCompleted);
+            }
           }
         })
-        console.log('[bannersService] Response:', response)
+        // console.log('[bannersService] Response:', response)
         return response.data
       }
       
       // Nếu KHÔNG có file mới, gửi JSON data thông thường (giữ nguyên imageUrl)
-      console.log('[bannersService] Sending PUT request with JSON data (no new image)')
+      // console.log('[bannersService] Sending PUT request with JSON data (no new image)')
       const response = await apiClient.put(`/admin/setting/${key}/slides/${id}`, bannerData);   
-      console.log('[bannersService] Response:', response)
+      // console.log('[bannersService] Response:', response)
         return response.data;
     } catch (error) {
-      console.error('[bannersService] Error updating banner:', error);
+      console.error('Error updating banner:');
       throw error;
     }
     },
@@ -106,7 +118,7 @@ export const bannersService = {
       const response = await apiClient.delete(`/admin/setting/${key}/slides/${id}`);  
         return response.data;
     } catch (error) {
-      console.error('Error deleting banner:', error);
+      console.error('Error deleting banner:');
       throw error;
     }
     },

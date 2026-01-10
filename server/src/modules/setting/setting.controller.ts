@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import settingService from "./setting.service";
-import cloudinary from "../../config/cloundinary";
+import cloudinary from "../../config/cloudinary";
 import { encryptData } from "../../utils/encryption";
 
 class SettingController {

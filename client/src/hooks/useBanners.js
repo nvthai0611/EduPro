@@ -81,8 +81,8 @@ export const useUpdateBanner = () => {
       console.log('[useUpdateBanner] Mutation called with:', { id, bannerData })
       return bannersService.updateBanner(id, bannerData)
     },
-    onSuccess: (data) => {
-      console.log('[useUpdateBanner] Success:', data)
+    onSuccess: () => {
+      // console.log('[useUpdateBanner] Success:', data)
       queryClient.invalidateQueries({ queryKey: bannerKeys.all });
       toast.success('Banner đã được cập nhật!');
     },

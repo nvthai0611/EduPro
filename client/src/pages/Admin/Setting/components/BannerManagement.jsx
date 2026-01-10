@@ -144,13 +144,6 @@ export default function BannerManagement() {
     }
 
     const handleEditBanner = async () => {
-        console.log('=== handleEditBanner started ===')
-        console.log('bannerFormData:', bannerFormData)
-        console.log('imageFile:', imageFile)
-        console.log('imageFile is File?', imageFile instanceof File)
-        console.log('imagePreview:', imagePreview)
-        console.log('selectedBanner:', selectedBanner)
-        
         if (!bannerFormData.title.trim()) {
             toast.error("Vui lòng nhập tiêu đề banner")
             return
@@ -178,16 +171,16 @@ export default function BannerManagement() {
         
         // CHỈ thêm image file mới NẾU thực sự có file được chọn
         if (imageFile && imageFile instanceof File) {
-            console.log('Adding NEW image file to transformedData:', imageFile.name, imageFile.size, 'bytes')
+            // console.log('Adding NEW image file to transformedData:', imageFile.name, imageFile.size, 'bytes')
             transformedData.image = imageFile
             // Gửi publicId cũ để xóa ảnh cũ trên Cloudinary
             if (selectedBanner?.publicId) {
-                console.log('Adding oldPublicId:', selectedBanner.publicId)
+                // console.log('Adding oldPublicId:', selectedBanner.publicId)
                 transformedData.oldPublicId = selectedBanner.publicId
             }
         } else if (bannerFormData.imageUrl) {
             // Nếu không có file mới, GIỮ NGUYÊN imageUrl cũ
-            console.log('Keeping existing imageUrl:', bannerFormData.imageUrl)
+            // console.log('Keeping existing imageUrl:', bannerFormData.imageUrl)
             transformedData.imageUrl = bannerFormData.imageUrl
             // Nếu có publicId cũ, giữ lại
             if (selectedBanner?.publicId) {
@@ -195,17 +188,13 @@ export default function BannerManagement() {
             }
         }
         
-        console.log('Final transformedData:', transformedData)
-        console.log('Has image file?', 'image' in transformedData && transformedData.image instanceof File)
-        console.log('selectedBanner._id:', selectedBanner._id)
+     
         
         try {
-            console.log('Calling updateBannerMutation...')
-            const result = await updateBannerMutation.mutateAsync({ 
+          await updateBannerMutation.mutateAsync({ 
                 id: selectedBanner._id, 
                 bannerData: transformedData 
             })
-            console.log('Update result:', result)
             toast.success("Cập nhật banner thành công!")
             setIsBannerDialogOpen(false)
             setSelectedBanner(null)

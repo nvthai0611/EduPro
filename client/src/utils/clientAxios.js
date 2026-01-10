@@ -174,12 +174,10 @@ client.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-<<<<<<< HEAD
   
   const isFormData = config.data instanceof FormData;
   
   // Mã hóa dữ liệu nếu cần (KHÔNG áp dụng cho FormData)
-=======
 
   const deviceId = getDeviceId();
   if (deviceId) {
@@ -187,7 +185,6 @@ client.interceptors.request.use((config) => {
   }
 
   // Mã hóa dữ liệu nếu cần
->>>>>>> 2c98a784a0295db02e5a391a510b42a2d37a3844
   if (
     !isFormData &&
     config.encrypt &&
