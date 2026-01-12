@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
 import morgan from "morgan";
 import fs from "fs";
 import path from "path";
@@ -18,10 +18,9 @@ if (!fs.existsSync(logDir)) {
 }
 
 /* Stream ghi file */
-const logStream = fs.createWriteStream(
-  path.join(logDir, "access.log"),
-  { flags: "a" }
-);
+const logStream = fs.createWriteStream(path.join(logDir, "access.log"), {
+  flags: "a",
+});
 
 /* Custom token IP */
 morgan.token("ip", (req: Request) => {
