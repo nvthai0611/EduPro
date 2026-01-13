@@ -14,6 +14,8 @@ import CourseDetail from "../pages/Courses/CourseDetail";
 // import Home from "../pages/Home/Home";
 import LoginPage from "../pages/Auth/Login";
 import ForumHome from "../pages/Forum/ForumHome";
+import PostDetail from "../pages/Forum/PostDetail";
+import CreateForumPost from "../pages/Forum/CreateForumPost";
 
 // Learning Platform
 
@@ -35,6 +37,8 @@ export const publicRoutes = (
           
         </Route>
         <Route path="/forum" element={<ForumHome />} />
+        <Route path="/forum/create" element={<CreateForumPost />} />
+        <Route path="/posts/:slug" element={<PostDetail />} />
       </Route>
     </Route>
   </>

@@ -17,13 +17,14 @@ const PostCard = ({ post, variant = "default" }) => {
   };
 
   if (variant === "compact") {
+    const postPath = post.slug || post._id;
     return (
       <Link
-        to={`/forum/${post.slug}`}
+        to={`/posts/${postPath}`}
         className="group flex gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors"
       >
         <img
-          src={post.thumbnail || "https://via.placeholder.com/120x80"}
+          src={post.coverImageUrl || "https://via.placeholder.com/120x80"}
           alt={post.title}
           className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
         />
@@ -32,7 +33,7 @@ const PostCard = ({ post, variant = "default" }) => {
             {post.title}
           </h4>
           <div className="flex items-center gap-2 text-xs text-gray-500">
-            <span>{post.author?.name || "Anonymous"}</span>
+            <span>{post.authorName || "Anonymous"}</span>
             <span>•</span>
             <span>{post.readTime || "5"} phút</span>
           </div>
@@ -43,11 +44,11 @@ const PostCard = ({ post, variant = "default" }) => {
 
   return (
     <article className="group bg-white rounded-xl overflow-hidden hover:shadow-md transition-all duration-300 border border-gray-100">
-      <Link to={`/forum/${post.slug}`} className="block">
+      <Link to={`/posts/${post.slug || post._id}`} className="block">
         {/* Thumbnail */}
         <div className="relative overflow-hidden aspect-[16/9] bg-gray-200">
           <img
-            src={post.thumbnail || "https://via.placeholder.com/800x450"}
+            src={post.contentImageUrls && post.contentImageUrls.length > 0 ? post.contentImageUrls[0] : "https://via.placeholder.com/800x450"}
             alt={post.title}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
@@ -92,12 +93,12 @@ const PostCard = ({ post, variant = "default" }) => {
             <div className="flex items-center gap-3">
               <img
                 src={post.author?.avatar || "https://i.pravatar.cc/40"}
-                alt={post.author?.name}
+                alt={post.authorName}
                 className="w-8 h-8 rounded-full"
               />
               <div>
                 <p className="text-sm font-medium text-gray-900">
-                  {post.author?.name || "Anonymous"}
+                  {post.authorName || "Anonymous"}
                 </p>
                 <div className="flex items-center gap-2 text-xs text-gray-500">
                   <span>{post.createdAt || "1 ngày trước"}</span>

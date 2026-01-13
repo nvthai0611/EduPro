@@ -48,7 +48,7 @@ const Sidebar = ({ trendingPosts = [], categories = [] }) => {
       </div>
 
       {/* Categories */}
-      <div className="bg-white rounded-xl p-5 border border-gray-100 sticky top-[520px]">
+      {/* <div className="bg-white rounded-xl p-5 border border-gray-100 sticky top-[520px]">
         <div className="flex items-center gap-2 mb-4">
           <Users className="w-5 h-5 text-blue-600" />
           <h3 className="text-lg font-bold text-gray-900">Chủ đề</h3>
@@ -90,7 +90,7 @@ const Sidebar = ({ trendingPosts = [], categories = [] }) => {
             </div>
           )}
         </div>
-      </div>
+      </div> */}
 
       {/* Newsletter/CTA */}
       <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-6 text-white sticky top-[820px]">

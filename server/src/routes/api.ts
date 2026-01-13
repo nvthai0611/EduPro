@@ -26,6 +26,8 @@ import { settingAdminRoutes } from "./v1/admin/setting.routes";
 import { settingRoutes } from "./v1/setting.routes";
 import optionalAuth from "../middlewares/auth/optionalAuth";
 import { reviewRoutes } from "./v1/reviews.routes";
+import { adminForumRoutes } from "./v1/admin/forum.routes";
+import { forumRoutes } from "./v1/forum.routes";
 
 export const apiRouter = (io?: Server) => {
   // Block direct browser access to API
@@ -97,5 +99,8 @@ export const apiRouter = (io?: Server) => {
   // setting routes
   router.use("/admin/setting", optionalAuth, settingAdminRoutes);
   router.use("/setting", optionalAuth, settingRoutes);
+
+  router.use("/admin/forum", adminForumRoutes);
+  router.use("/forum", forumRoutes);
   return router;
 };

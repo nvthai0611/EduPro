@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { BookOpen, User, Menu, X, ChevronDown, LogOut } from "lucide-react";
+import { BookOpen, User, Menu, X, ChevronDown, LogOut, Bell  } from "lucide-react";
 import LearningPlatformLogo from "../Logo/LearningPlatformLogo";
 import { useAuth } from "../../hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -87,13 +87,23 @@ const Navbar = () => {
           {/* Desktop User Menu */}
           <div className="hidden md:flex items-center space-x-4">
             {user ? (
-              <div className="relative" ref={userMenuRef}>
+              <div className="flex items-center space-x-4 justify-center" ref={userMenuRef}>
+                {/* // Notification Bell Icon */}
+             <div className="relative">
+                  <button className="text-gray-700 hover:text-blue-600 p-2 rounded-md transition-colors">
+                    <Bell className="w-6 h-6" />
+                  </button>
+                  <span className="absolute top-2 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full transform translate-x-1/2 -translate-y-1/2">
+                   0
+                  </span>
+                </div>
+                <div className="relative">
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
                 >
                   <img
-                    src={user.image || "https://via.placeholder.com/32x32"}
+                    src={user.image || "https://static.vecteezy.com/system/resources/previews/024/766/958/non_2x/default-male-avatar-profile-icon-social-media-user-free-vector.jpg"}
                     alt={user.fullName}
                     className="w-8 h-8 rounded-full object-cover"
                   />
@@ -124,6 +134,7 @@ const Navbar = () => {
                     </button>
                   </div>
                 )}
+              </div>
               </div>
             ) : (
               <div className="flex items-center space-x-3">
