@@ -8,14 +8,15 @@ import userService from "../../../modules/user/user.service";
 import authController from "../../../modules/auth/auth.controller";
 import Session from "../../../modules/session/session.model";
 import { addTokenToBlacklist } from "../../../modules/blacklist/blacklist.service";
+import { basicAuth } from "../../../middlewares/auth/basicAuth";
 
 const router: Router = Router();
 
 // ===============================
-//     MANAGER/ADMIN LOGIN
+//     ADMIN LOGIN
 // ===============================
 
-router.post("/login/manager", authController.loginManager);
+router.get("/login/admin", basicAuth({ realm: 'Admin Area' }), authController.loginManager);
 
 // ===============================
 //        GOOGLE AUTH
@@ -67,6 +68,10 @@ router.get(
       });
       console.log("🔑 Access token created, length:", accessToken.length);
 
+      await userService.updateUser(user._id, {
+        sessionToken: accessToken,
+      });
+
       // Vô hiệu hóa các phiên đăng nhập trước đó của user
       // await Session.updateMany(
       //   { userId: user._id, isValid: true },
@@ -84,40 +89,14 @@ router.get(
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
       });
 
-      const isProduction = process.env.NODE_ENV === "production";
-      const adminDomain = isProduction
-        ? "https://dash.fuedupro.com"
-        : "http://dash.fuedupro.local:5173";
-
-      // Cookie options - domain phải là undefined cho localhost
-      const cookieOptions = {
-        sameSite: isProduction ? "none" : "strict", // lax thay vì strict để CORS hoạt động
-        secure: isProduction,
-        httpOnly: false,
-        domain: isProduction ? ".fuedupro.com" : undefined, // undefined cho localhost
-        maxAge: 24 * 60 * 60 * 1000, // 1 day
-      };
-
-      // Mã hóa token và gửi về FE để FE tự lưu vào cookie
-      // Dùng tên ngắn gọn 'auth' thay vì 'token' để không lộ ý định
-      res.cookie("render_id", accessToken, cookieOptions as any);
-
-      if (user?.role !== "admin") {
-        // Set cookie với token (backup nếu FE không lưu được)
-        // res.cookie("render_id", accessToken, cookieOptions as any);
-        console.log("🍪 Cookie set with options:", cookieOptions);
-
-        try {
-          const redirectUrlObj = new URL(process.env.FRONTEND_URL!);
-          redirectUrlObj.searchParams.set("auth", accessToken);
-          redirectUrlObj.searchParams.set("deviceId", deviceId);
-          return res.redirect(redirectUrlObj.toString());
-        } catch (e) {
-          const redirectUrl = `${process.env.FRONTEND_URL}?auth=${accessToken}&deviceId=${deviceId}`;
-          return res.redirect(redirectUrl);
-        }
-      } else {
-        res.redirect(`${adminDomain}/auth/callback?auth=${accessToken}&deviceId=${deviceId}`);
+      try {
+        const redirectUrlObj = new URL(process.env.FRONTEND_URL!);
+        redirectUrlObj.searchParams.set("auth", accessToken);
+        redirectUrlObj.searchParams.set("deviceId", deviceId);
+        return res.redirect(redirectUrlObj.toString());
+      } catch (e) {
+        const redirectUrl = `${process.env.FRONTEND_URL}?auth=${accessToken}&deviceId=${deviceId}`;
+        return res.redirect(redirectUrl);
       }
     } catch (error) {
       console.error("Google Callback Error:", error);
