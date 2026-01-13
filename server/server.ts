@@ -6,7 +6,6 @@ import { Server } from "socket.io";
 import SocketService from "./src/utils/socket/socket";
 import PayOS from "@payos/node";
 import axios from "axios";
-import fs from "fs";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import session from "express-session";
@@ -25,8 +24,8 @@ import passport from "passport";
 import "./src/passports/passport.google";
 import { apiRouter } from "./src/routes/api";
 import { limitRequestsMiddleware } from "./src/middlewares/auth/limitRequest.middleware";
-import { morganLogger } from "./src/middlewares/servers/morganLogger";
 import { attachUser } from "./src/middlewares/servers/attachUser";
+import { dbLogger } from "./src/middlewares/servers/db-logger.middleware";
 
 // // Cron
 // require("./src/utils/cron/cronUser");
@@ -89,7 +88,7 @@ const corsOptions = {
   methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "X-Device-Id"],
-  exposedHeaders: ["x-encrypted"],
+  exposedHeaders: ["x-encrypted", "WWW-Authenticate"],
 };
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
@@ -108,7 +107,7 @@ app.use(cookieParser());
 
 app.use(attachUser); 
 app.use(morgan("dev"));
-app.use(morganLogger);
+app.use(dbLogger); 
 
 app.use("/uploads", express.static("uploads"));
 app.use(
