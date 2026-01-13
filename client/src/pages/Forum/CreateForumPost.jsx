@@ -1,6 +1,7 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import MDEditor, { commands } from "@uiw/react-md-editor";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 import { Card } from "../../shadcn-ui/components/ui/card";
 import { Input } from "../../shadcn-ui/components/ui/input";
 import { Button } from "../../shadcn-ui/components/ui/button";
@@ -25,14 +26,10 @@ const CreateForumPost = () => {
   // Image state
   const [coverImage, setCoverImage] = useState(null);
   const [coverImagePreview, setCoverImagePreview] = useState(null);
-  const [contentImages, setContentImages] = useState([]); // For batch upload button
-  const [editorImages, setEditorImages] = useState(new Map()); // Map: blobUrl -> File
   const [isUploadingCover, setIsUploadingCover] = useState(false);
-  const [isUploadingContent, setIsUploadingContent] = useState(false);
   
   const coverInputRef = useRef(null);
-  const contentInputRef = useRef(null);
-  const editorImageInputRef = useRef(null);
+  const quillRef = useRef(null);
 
   // Validation errors
   const [errors, setErrors] = useState({});
@@ -61,16 +58,17 @@ const CreateForumPost = () => {
     reader.readAsDataURL(file);
   };
 
-  // Handle content image selection
-  const handleContentImageChange = (e) => {
-    const files = Array.from(e.target.files);
-    
-    if (contentImages.length + files.length > 5) {
-      showErrorDialog("Chỉ được tải lên tối đa 5 ảnh trong nội dung");
-      return;
-    }
+  // Image handler for Quill editor - use useCallback to keep it stable
+  const imageHandler = useCallback(() => {
+    const input = document.createElement("input");
+    input.setAttribute("type", "file");
+    input.setAttribute("accept", "image/*");
+    input.click();
 
-    files.forEach(file => {
+    input.onchange = async () => {
+      const file = input.files[0];
+      if (!file) return;
+
       if (!file.type.startsWith("image/")) {
         showErrorDialog("Vui lòng chọn file ảnh hợp lệ");
         return;
@@ -80,101 +78,57 @@ const CreateForumPost = () => {
         showErrorDialog("Kích thước ảnh không được vượt quá 3MB");
         return;
       }
-    });
 
-    setContentImages(prev => [...prev, ...files]);
-  };
-
-  // Handle image selection from editor toolbar
-  const handleEditorImageChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      showErrorDialog("Vui lòng chọn file ảnh hợp lệ");
-      return;
-    }
-
-    if (file.size > 3 * 1024 * 1024) {
-      showErrorDialog("Kích thước ảnh không được vượt quá 3MB");
-      return;
-    }
-
-    // Check total images limit (editor images + batch images)
-    if (editorImages.size + contentImages.length >= 5) {
-      showErrorDialog("Chỉ được tải lên tối đa 5 ảnh trong nội dung");
-      return;
-    }
-
-    // Create blob URL for preview
-    const blobUrl = URL.createObjectURL(file);
-    
-    // Save file reference
-    setEditorImages(prev => new Map(prev).set(blobUrl, file));
-    
-    // Insert markdown with blob URL
-    const imageMarkdown = `![${file.name}](${blobUrl})`;
-    setContent(prev => prev + `\n\n${imageMarkdown}\n\n`);
-    
-    // Reset input
-    if (editorImageInputRef.current) {
-      editorImageInputRef.current.value = "";
-    }
-  };
-
-  // Upload content images to get URLs (for batch upload button)
-  const uploadContentImages = async () => {
-    if (contentImages.length === 0) return [];
-
-    const uploadedUrls = [];
-
-    try {
-      for (const image of contentImages) {
-        // Create blob URL for preview
-        const blobUrl = URL.createObjectURL(image);
-        uploadedUrls.push(blobUrl);
-        
-        // Save file reference
-        setEditorImages(prev => new Map(prev).set(blobUrl, image));
+      // Create blob URL for preview
+      const blobUrl = URL.createObjectURL(file);
+      
+      // Store file for later upload
+      if (!window.quillImages) {
+        window.quillImages = new Map();
       }
-      return uploadedUrls;
-    } catch (error) {
-      console.error("Error preparing content images:", error);
-      throw new Error("Không thể chuẩn bị ảnh nội dung");
-    }
-  };
-
-  // Insert image URL into markdown editor
-  const insertImageIntoContent = async () => {
-    if (contentImages.length === 0) {
-      showErrorDialog("Vui lòng chọn ảnh để chèn");
-      return;
-    }
-
-    // Check total limit
-    if (editorImages.size + contentImages.length > 5) {
-      showErrorDialog("Chỉ được tải lên tối đa 5 ảnh trong nội dung");
-      return;
-    }
-
-    setIsUploadingContent(true);
-    try {
-      const urls = await uploadContentImages();
+      window.quillImages.set(blobUrl, file);
       
-      let imageMarkdown = "\n\n";
-      urls.forEach((url, index) => {
-        const fileName = contentImages[index]?.name || `Image ${index + 1}`;
-        imageMarkdown += `![${fileName}](${url})\n\n`;
-      });
-      
-      setContent(prev => prev + imageMarkdown);
-      setContentImages([]);
-    } catch (error) {
-      showErrorDialog(error.message);
-    } finally {
-      setIsUploadingContent(false);
-    }
-  };
+      // Insert image into editor
+      const quill = quillRef.current?.getEditor();
+      if (quill) {
+        const range = quill.getSelection(true);
+        const index = range ? range.index : quill.getLength();
+        quill.insertEmbed(index, "image", blobUrl);
+        quill.setSelection(index + 1);
+      }
+    };
+  }, []);
+
+  // Quill modules configuration - use useMemo to prevent recreation
+  const modules = useMemo(() => ({
+    toolbar: {
+      container: [
+        [{ header: [1, 2, 3, false] }],
+        ["bold", "italic", "underline", "strike"],
+        [{ list: "ordered" }, { list: "bullet" }],
+        [{ color: [] }, { background: [] }],
+        ["link", "image"],
+        ["clean"],
+      ],
+      handlers: {
+        image: imageHandler,
+      },
+    },
+  }), [imageHandler]);
+
+  const formats = [
+    "header",
+    "bold",
+    "italic",
+    "underline",
+    "strike",
+    "list",
+    "bullet",
+    "color",
+    "background",
+    "link",
+    "image",
+  ];
 
   // Handle tag input
   const handleTagKeyDown = (e) => {
@@ -244,29 +198,8 @@ const CreateForumPost = () => {
       newErrors.coverImage = "Vui lòng chọn ảnh bìa";
     }
 
-    // Check total content images (editor + batch)
-    const totalContentImages = editorImages.size + contentImages.length;
-    if (totalContentImages > 5) {
-      newErrors.contentImages = `Chỉ được tải tối đa 5 ảnh trong nội dung (hiện tại: ${totalContentImages})`;
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
-
-  // Custom image command for MDEditor toolbar
-  const customImageCommand = {
-    name: "image",
-    keyCommand: "image",
-    buttonProps: { "aria-label": "Thêm ảnh" },
-    icon: (
-      <svg width="12" height="12" viewBox="0 0 20 20">
-        <path fill="currentColor" d="M15 9c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm4-7H1c-.55 0-1 .45-1 1v14c0 .55.45 1 1 1h18c.55 0 1-.45 1-1V3c0-.55-.45-1-1-1zm-1 13l-6-5-2 2-4-5-4 8V4h16v11z"/>
-      </svg>
-    ),
-    execute: () => {
-      editorImageInputRef.current?.click();
-    }
   };
 
   // Submit form
@@ -289,29 +222,29 @@ const CreateForumPost = () => {
       }
 
       // Extract blob URLs from content and collect corresponding files
-      const blobUrlPattern = /!\[([^\]]*)\]\((blob:[^\)]+)\)/g;
-      let match;
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = content;
+      const images = tempDiv.getElementsByTagName("img");
       const blobUrls = [];
       
-      while ((match = blobUrlPattern.exec(content)) !== null) {
-        blobUrls.push(match[2]);
+      for (let img of images) {
+        if (img.src.startsWith("blob:")) {
+          blobUrls.push(img.src);
+        }
       }
 
-      // Add all content images (from editor and batch upload)
+      // Add all content images (from editor blob URLs)
       const allContentImages = [];
       
-      // Add images from editor (blob URLs)
-      blobUrls.forEach(blobUrl => {
-        const file = editorImages.get(blobUrl);
-        if (file) {
-          allContentImages.push(file);
-        }
-      });
-      
-      // Add images from batch upload
-      contentImages.forEach(image => {
-        allContentImages.push(image);
-      });
+      // Get files from window.quillImages Map
+      if (window.quillImages) {
+        blobUrls.forEach(blobUrl => {
+          const file = window.quillImages.get(blobUrl);
+          if (file) {
+            allContentImages.push(file);
+          }
+        });
+      }
 
       // Add content images to form data
       allContentImages.forEach((image) => {
@@ -329,9 +262,12 @@ const CreateForumPost = () => {
 
       if (response.data.success) {
         // Cleanup blob URLs
-        editorImages.forEach((file, blobUrl) => {
-          URL.revokeObjectURL(blobUrl);
-        });
+        if (window.quillImages) {
+          window.quillImages.forEach((file, blobUrl) => {
+            URL.revokeObjectURL(blobUrl);
+          });
+          window.quillImages.clear();
+        }
         
         showSuccessDialog("Tạo bài viết thành công!");
         setTimeout(() => {
@@ -442,104 +378,26 @@ const CreateForumPost = () => {
 
           {/* Content Section */}
           <Card className="p-6">
-            <div className="flex justify-between items-center mb-3">
-              <label className="block text-lg font-semibold text-gray-900">
-                Nội dung
-                <span className="text-red-500 ml-1">*</span>
-              </label>
-              
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => contentInputRef.current?.click()}
-                  disabled={editorImages.size + contentImages.length >= 5}
-                >
-                  <ImagePlus className="w-4 h-4 mr-2" />
-                  Chọn ảnh ({editorImages.size + contentImages.length}/5)
-                </Button>
-                
-                {contentImages.length > 0 && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={insertImageIntoContent}
-                    disabled={isUploadingContent}
-                  >
-                    {isUploadingContent ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Đang tải...
-                      </>
-                    ) : (
-                      "Chèn ảnh"
-                    )}
-                  </Button>
-                )}
-              </div>
-            </div>
+            <label className="block text-lg font-semibold text-gray-900 mb-3">
+              Nội dung
+              <span className="text-red-500 ml-1">*</span>
+            </label>
 
-            <input
-              ref={contentInputRef}
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleContentImageChange}
-              className="hidden"
+            <ReactQuill
+              ref={quillRef}
+              theme="snow"
+              value={content}
+              onChange={setContent}
+              modules={modules}
+              formats={formats}
+              placeholder="Viết nội dung bài viết của bạn..."
+              className="bg-white"
+              style={{ height: "400px", marginBottom: "50px" }}
             />
-
-            {/* Hidden input for editor toolbar image upload */}
-            <input
-              ref={editorImageInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleEditorImageChange}
-              className="hidden"
-            />
-
-            <div data-color-mode="light" className="relative">
-              {isUploadingContent && (
-                <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10 rounded-lg">
-                  <div className="flex items-center gap-2 text-blue-600">
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span className="font-medium">Đang tải ảnh lên...</span>
-                  </div>
-                </div>
-              )}
-              <MDEditor
-                value={content}
-                onChange={setContent}
-                height={400}
-                preview="edit"
-                hideToolbar={false}
-                enableScroll={true}
-                commands={[
-                  commands.bold,
-                  commands.italic,
-                  commands.strikethrough,
-                  commands.hr,
-                  commands.title,
-                  commands.divider,
-                  commands.link,
-                  customImageCommand,
-                  commands.code,
-                  commands.codeBlock,
-                  commands.divider,
-                  commands.quote,
-                  commands.unorderedListCommand,
-                  commands.orderedListCommand,
-                  commands.checkedListCommand,
-                ]}
-                textareaProps={{
-                  placeholder: "Viết nội dung bài viết của bạn (hỗ trợ Markdown)...\n\nBạn có thể:\n- Định dạng văn bản\n- Thêm code blocks\n- Tạo danh sách\n- Chèn ảnh từ toolbar"
-                }}
-              />
-            </div>
 
             <div className="mt-2 flex justify-between items-center">
               <span className="text-xs text-gray-500">
-                {content.trim().length} ký tự (tối thiểu 30)
+                {content.replace(/<[^>]*>/g, "").trim().length} ký tự (tối thiểu 30)
               </span>
               {errors.content && (
                 <p className="text-sm text-red-600 flex items-center gap-1">
@@ -548,13 +406,6 @@ const CreateForumPost = () => {
                 </p>
               )}
             </div>
-            
-            {errors.contentImages && (
-              <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-                <AlertCircle className="w-4 h-4" />
-                {errors.contentImages}
-              </p>
-            )}
           </Card>
 
           {/* Tags Section */}

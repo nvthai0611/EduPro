@@ -73,16 +73,16 @@ class forumController {
           const contentImageUrls = files.contentImages.map((file: any) => file.path);
           forumData.contentImageUrls = contentImageUrls;
           
-          // Replace blob URLs in content with actual Cloudinary URLs
+          // Replace blob URLs in HTML content with actual Cloudinary URLs
           let content = forumData.content || "";
-          const blobUrlPattern = /!\[([^\]]*)\]\((blob:[^\)]+)\)/g;
+          const blobUrlPattern = /<img[^>]+src="(blob:[^"]+)"[^>]*>/g;
           let imageIndex = 0;
           
-          content = content.replace(blobUrlPattern, (match: string, altText: string) => {
+          content = content.replace(blobUrlPattern, (match: string, blobUrl: string) => {
             if (imageIndex < contentImageUrls.length) {
               const cloudinaryUrl = contentImageUrls[imageIndex];
               imageIndex++;
-              return `![${altText}](${cloudinaryUrl})`;
+              return match.replace(blobUrl, cloudinaryUrl);
             }
             return match;
           });
