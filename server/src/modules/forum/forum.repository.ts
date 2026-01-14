@@ -10,6 +10,14 @@ class forumRepository {
     if (options.select) {
       queryBuilder.select(options.select);
     }
+    
+    // Apply populate if provided
+    if (options.populate) {
+      queryBuilder.populate(options.populate);
+      // Don't use lean() when populating
+      return queryBuilder.sort({ createdAt: -1 });
+    }
+    
     return queryBuilder.sort({ createdAt: -1 }).lean();
   }
   async findForumById(id: string) {

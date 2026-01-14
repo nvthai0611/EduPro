@@ -58,7 +58,7 @@ const CreateForumPost = () => {
     reader.readAsDataURL(file);
   };
 
-  // Image handler for Quill editor - use useCallback to keep it stable
+  // Image handler for Quill editor - upload immediately to Cloudinary
   const imageHandler = useCallback(() => {
     const input = document.createElement("input");
     input.setAttribute("type", "file");
@@ -79,22 +79,80 @@ const CreateForumPost = () => {
         return;
       }
 
-      // Create blob URL for preview
-      const blobUrl = URL.createObjectURL(file);
-      
-      // Store file for later upload
-      if (!window.quillImages) {
-        window.quillImages = new Map();
-      }
-      window.quillImages.set(blobUrl, file);
-      
-      // Insert image into editor
+      // Get editor instance
       const quill = quillRef.current?.getEditor();
-      if (quill) {
-        const range = quill.getSelection(true);
-        const index = range ? range.index : quill.getLength();
-        quill.insertEmbed(index, "image", blobUrl);
-        quill.setSelection(index + 1);
+      if (!quill) return;
+
+      // Save cursor position
+      const range = quill.getSelection(true);
+      const cursorPosition = range ? range.index : quill.getLength();
+
+      try {
+        // Show loading placeholder
+        quill.insertEmbed(cursorPosition, "image", "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23f0f0f0'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='12' fill='%23999'%3EUploading...%3C/text%3E%3C/svg%3E");
+        quill.setSelection(cursorPosition + 1);
+
+        // Upload to Cloudinary via backend
+        const formData = new FormData();
+        formData.append("image", file);
+
+        console.log("📤 Uploading image to /admin/forum/upload-image");
+        const response = await apiClient.post("/admin/forum/upload-image", formData, {
+          headers: { "Content-Type": "multipart/form-data" }
+        });
+        console.log("✅ Full response object:", response);
+        console.log("Response data:", response.data);
+        console.log("Response status:", response.status);
+        console.log("Response headers:", response.headers);
+
+        const imageUrl = response.data?.url || response.url || response.data?.data?.url;
+        console.log("Extracted URL:", imageUrl);
+
+        if (imageUrl) {
+          console.log("🖼️ Inserting image at position:", cursorPosition);
+          console.log("Image URL:", imageUrl);
+          
+          // Remove loading placeholder
+          quill.deleteText(cursorPosition, 1);
+          
+          // Try multiple methods to insert image
+          try {
+            // Method 1: insertEmbed
+            quill.insertEmbed(cursorPosition, "image", imageUrl);
+            console.log("✅ Image inserted via insertEmbed");
+          } catch (embedError) {
+            console.error("insertEmbed failed:", embedError);
+            
+            // Method 2: clipboard API
+            try {
+              const delta = quill.clipboard.convert(`<img src="${imageUrl}" />`);
+              quill.setContents(quill.getContents().concat(delta));
+              console.log("✅ Image inserted via clipboard");
+            } catch (clipboardError) {
+              console.error("clipboard failed:", clipboardError);
+            }
+          }
+          
+          quill.setSelection(cursorPosition + 1);
+          console.log("✅ Image insertion completed");
+        } else {
+          console.log("❌ No URL in response");
+          // Remove placeholder on error
+          quill.deleteText(cursorPosition, 1);
+          showErrorDialog("Upload ảnh thất bại");
+        }
+      } catch (error) {
+        console.error("❌ Error uploading image:", error);
+        console.error("Error response:", error.response?.data);
+        console.error("Error status:", error.response?.status);
+        // Remove placeholder on error
+        const quill = quillRef.current?.getEditor();
+        if (quill) {
+          quill.deleteText(cursorPosition, 1);
+        }
+        showErrorDialog(
+          error.response?.data?.message || error.response?.data?.error || "Có lỗi xảy ra khi upload ảnh"
+        );
       }
     };
   }, []);
@@ -221,37 +279,7 @@ const CreateForumPost = () => {
         formData.append("coverImage", coverImage);
       }
 
-      // Extract blob URLs from content and collect corresponding files
-      const tempDiv = document.createElement("div");
-      tempDiv.innerHTML = content;
-      const images = tempDiv.getElementsByTagName("img");
-      const blobUrls = [];
-      
-      for (let img of images) {
-        if (img.src.startsWith("blob:")) {
-          blobUrls.push(img.src);
-        }
-      }
-
-      // Add all content images (from editor blob URLs)
-      const allContentImages = [];
-      
-      // Get files from window.quillImages Map
-      if (window.quillImages) {
-        blobUrls.forEach(blobUrl => {
-          const file = window.quillImages.get(blobUrl);
-          if (file) {
-            allContentImages.push(file);
-          }
-        });
-      }
-
-      // Add content images to form data
-      allContentImages.forEach((image) => {
-        formData.append("contentImages", image);
-      });
-
-      // Add other form data
+      // Add other form data (content already has Cloudinary URLs)
       formData.append("title", title);
       formData.append("content", content);
       formData.append("tags", JSON.stringify(tags));
@@ -261,14 +289,6 @@ const CreateForumPost = () => {
       });
 
       if (response.data.success) {
-        // Cleanup blob URLs
-        if (window.quillImages) {
-          window.quillImages.forEach((file, blobUrl) => {
-            URL.revokeObjectURL(blobUrl);
-          });
-          window.quillImages.clear();
-        }
-        
         showSuccessDialog("Tạo bài viết thành công!");
         setTimeout(() => {
           navigate("/forum");

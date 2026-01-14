@@ -48,7 +48,7 @@ const PostCard = ({ post, variant = "default" }) => {
         {/* Thumbnail */}
         <div className="relative overflow-hidden aspect-[16/9] bg-gray-200">
           <img
-            src={post.contentImageUrls && post.contentImageUrls.length > 0 ? post.contentImageUrls[0] : "https://via.placeholder.com/800x450"}
+            src={post.coverImageUrl || "https://via.placeholder.com/800x450"}
             alt={post.title}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"

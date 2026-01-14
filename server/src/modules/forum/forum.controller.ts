@@ -5,14 +5,26 @@ class forumController {
   // Controller methods here
   async getAllForums(req: any, res: any): Promise<void> {
     try {
+      console.log("📥 getAllForums called");
       const query = req.query || {};
       const options = {
-        select: req.query.select || null,
+        select: req.query.select || null
       };
+      console.log("Query options:", options);
       const forums = await ForumService.getAllForums(query, options);
-      res.status(200).json({ success: true, data: forums });
+      console.log("Forums found:", forums.length);
+      
+      // Use authorName from DB (already saved when creating)
+      const transformedForums = forums.map((forum: any) => ({
+        ...forum,
+        authorName: forum.authorName || 'Anonymous'
+      }));
+      
+      console.log("Transformed forums:", transformedForums.length);
+      res.status(200).json({ success: true, data: transformedForums });
     } catch (error) {
-      res.status(500).json({ success: false, message: "Server Error", error });
+      console.error("❌ getAllForums error:", error);
+      res.status(500).json({ success: false, message: "Server Error", error: error.message });
     }
   }
   async getForumById(req: any, res: any): Promise<void> {
@@ -51,45 +63,22 @@ class forumController {
     try {
       const forumData = { ...req.body };
       
-      // Get author ID from authenticated user
+      // Get author ID and name from authenticated user
       if (req.user && req.user.id) {
         forumData.authorId = req.user.id;
+        forumData.authorName = req.user.fullName || 'Anonymous';
       } else {
         res.status(401).json({ success: false, message: "User not authenticated" });
         return;
       }
       
-      // Handle uploaded images from Cloudinary
-      if (req.files) {
-        const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-        
-        // Cover image
-        if (files.coverImage && files.coverImage[0]) {
-          forumData.coverImageUrl = files.coverImage[0].path;
-        }
-        
-        // Content images - replace blob URLs with Cloudinary URLs
-        if (files.contentImages && files.contentImages.length > 0) {
-          const contentImageUrls = files.contentImages.map((file: any) => file.path);
-          forumData.contentImageUrls = contentImageUrls;
-          
-          // Replace blob URLs in HTML content with actual Cloudinary URLs
-          let content = forumData.content || "";
-          const blobUrlPattern = /<img[^>]+src="(blob:[^"]+)"[^>]*>/g;
-          let imageIndex = 0;
-          
-          content = content.replace(blobUrlPattern, (match: string, blobUrl: string) => {
-            if (imageIndex < contentImageUrls.length) {
-              const cloudinaryUrl = contentImageUrls[imageIndex];
-              imageIndex++;
-              return match.replace(blobUrl, cloudinaryUrl);
-            }
-            return match;
-          });
-          
-          forumData.content = content;
-        }
+      // Handle uploaded cover image from Cloudinary
+      if (req.file) {
+        forumData.coverImageUrl = req.file.path;
       }
+      
+      // Content already has Cloudinary URLs from editor uploads
+      // No need to process contentImages
       
       const forum = await ForumService.createForum(forumData);
       res.status(201).json({ success: true, data: forum });
@@ -118,6 +107,32 @@ class forumController {
       }
       res.status(200).json({ success: true, data: forum });
     } catch (error) {
+      res.status(500).json({ success: false, message: "Server Error", error });
+    }
+  }
+  
+  async uploadImage(req: any, res: any): Promise<void> {
+    try {
+      console.log("📥 Upload image request received");
+      console.log("User:", req.user);
+      console.log("File:", req.file);
+      
+      if (!req.file) {
+        console.log("❌ No file uploaded");
+        res.status(400).json({ success: false, message: "No image file uploaded" });
+        return;
+      }
+      
+      console.log("✅ Image uploaded to Cloudinary:", req.file.path);
+      
+      // Return Cloudinary URL
+      res.status(200).json({ 
+        success: true, 
+        url: req.file.path,
+        message: "Image uploaded successfully" 
+      });
+    } catch (error) {
+      console.error("❌ Upload image error:", error);
       res.status(500).json({ success: false, message: "Server Error", error });
     }
   }

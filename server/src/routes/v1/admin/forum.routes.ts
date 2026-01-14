@@ -4,15 +4,25 @@ import { Router } from "express";
 import forumController from "../../../modules/forum/forum.controller";
 import authenticateToken from "../../../middlewares/auth/authenticateToken";
 import { authorizeRoles } from "../../../middlewares/auth/authorizeRoles";
-import { uploadForumImages } from "../../../middlewares/servers/uploadCloudinary";
+import { uploadContentImage, uploadSingle } from "../../../middlewares/servers/uploadCloudinary";
 const router: Router = Router();
-// Create a new forum - Protected route
+
+// Upload single content image for editor
+router.post(
+    "/upload-image",
+    authenticateToken,
+    authorizeRoles("admin"),
+    uploadContentImage,
+    forumController.uploadImage
+);
+
+// Create a new forum - Protected route (only cover image now)
 router.get("/", forumController.getAllForums);
 router.post(
     "/",
     authenticateToken,
     authorizeRoles("admin"),
-    uploadForumImages,
+    uploadSingle,
     forumController.createForum
 );
 // Update a forum by ID - Protected route
