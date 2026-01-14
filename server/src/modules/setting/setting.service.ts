@@ -1,5 +1,6 @@
 import settingRepository from "./setting.repository";
 import Setting, { ISetting } from "./setting.model";
+import cloudinary from "../../config/cloudinary";
 
 class SettingService {
     /**
@@ -169,13 +170,9 @@ class SettingService {
     // Get all banners (admin - including inactive)
     async getAdminBanners(key: string) {
         try {
-            console.log('[Service] getAdminBanners - key:', key);
             let setting = await settingRepository.getSettingByKey(key);
-            console.log('[Service] getAdminBanners - setting found:', !!setting);
-            
+        
             if (!setting) {
-                // Create default setting if it doesn't exist
-                console.log('[Service] getAdminBanners - creating default setting');
                 setting = await settingRepository.createSetting({
                     key: key,
                     name: key.charAt(0).toUpperCase() + key.slice(1),
@@ -185,18 +182,13 @@ class SettingService {
                 } as Partial<ISetting>);
             }
             
-            console.log('[Service] getAdminBanners - banners:', setting.banners?.length);
-            
             if (!setting.banners || !Array.isArray(setting.banners)) {
-                console.log('[Service] getAdminBanners - no banners array, returning empty');
                 return [];
             }
             
             const filtered = setting.banners.filter((b) => !b.isDeleted);
-            console.log('[Service] getAdminBanners - filtered count:', filtered.length);
             return filtered.sort((a, b) => a.order - b.order);
         } catch (error) {
-            console.error('[Service] getAdminBanners - Error:', error);
             throw error;
         }
     }
@@ -208,7 +200,6 @@ class SettingService {
             throw new Error(`Setting ${key} not found`);
         }
         
-        // Ensure setting has required fields for validation (for old documents)
         if (!setting.name) {
             setting.name = key.charAt(0).toUpperCase() + key.slice(1);
         }
@@ -220,6 +211,16 @@ class SettingService {
         if (!banner) {
             throw new Error("Banner not found");
         }
+        
+        // Xóa ảnh trên Cloudinary nếu có publicId
+        if (banner.publicId) {
+            try {
+                await cloudinary.uploader.destroy(banner.publicId);
+            } catch (err) {
+                console.error('Error deleting image from Cloudinary:', err);
+            }
+        }
+        
         banner.isDeleted = true;
         await setting.save();
         return setting.banners.filter((b) => !b.isDeleted).sort((a, b) => a.order - b.order);
@@ -228,14 +229,11 @@ class SettingService {
     // Update banner
     async updateBanner(key: string, bannerId: string, data: Partial<any>) {
         try {
-            console.log('[Service] updateBanner - key:', key, 'bannerId:', bannerId);
             let setting = await settingRepository.getSettingByKey(key);
             if (!setting) {
                 throw new Error(`Setting ${key} not found`);
             }
-            console.log('[Service] updateBanner - setting found, banners count:', setting.banners?.length);
             
-            // Ensure setting has required fields for validation (for old documents)
             if (!setting.name) {
                 setting.name = key.charAt(0).toUpperCase() + key.slice(1);
             }
@@ -247,19 +245,21 @@ class SettingService {
             if (!banner) {
                 throw new Error("Banner not found");
             }
-            console.log('[Service] updateBanner - banner found, updating with data:', data);
             
+            // Update banner fields
             Object.assign(banner, data);
-            await setting.save();
             
-            const result = setting.banners.filter((b) => !b.isDeleted).sort((a, b) => a.order - b.order);
-            console.log('[Service] updateBanner - success, returning', result.length, 'banners');
+            const savedSetting = await setting.save();
+            
+            const result = savedSetting.banners.filter((b) => !b.isDeleted).sort((a, b) => a.order - b.order);
+            
             return result;
         } catch (error) {
             console.error('[Service] updateBanner - Error:', error);
             throw error;
         }
     }
+            
 
     // Reorder banners
     async reorderBanners(key: string, bannerOrders: { id: string; order: number }[]) {
@@ -268,7 +268,6 @@ class SettingService {
             throw new Error(`Setting ${key} not found`);
         }
 
-        // Ensure setting has required fields for validation (for old documents)
         if (!setting.name) {
             setting.name = key.charAt(0).toUpperCase() + key.slice(1);
         }

@@ -19,7 +19,7 @@ import OrderDashboard from "../pages/Admin/DashboardOrder/OrderDashboard";
 import PagePromotionManagement from "../pages/Admin/Promotion/Page";
 import CustomerCare from "../pages/Admin/CustomerCare/Page";
 import SettingPage from "../pages/Admin/Setting/SettingsManagement";
-import BannerManagement from "../pages/Admin/Banner/BannerManagement";
+// import BannerManagement from "../pages/Admin/Banner/BannerManagement";
 import AuthCallback from "../pages/Auth/AuthCallback";
 
 // Routes specifically for admin subdomain (serve admin at root)
@@ -54,7 +54,7 @@ export const adminSubdomainRoutes = (
       <Route path="manager-promotion" element={<PagePromotionManagement />} />
       <Route path="customer-care" element={<CustomerCare />} />
       <Route path="setting" element={<SettingPage />} />
-      <Route path="banner" element={<BannerManagement />} />
+      {/* <Route path="banner" element={<BannerManagement />} /> */}
     </Route>
   </>
 );

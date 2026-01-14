@@ -7,6 +7,7 @@ export interface IBanner {
     description: string;
     imageUrl: string;
     linkUrl: string;
+    publicId?: string;  // Cloudinary public ID để xóa ảnh
     isActive: boolean;
     order: number;
     createdAt: Date;
@@ -31,6 +32,10 @@ export const bannerSchema = new mongoose.Schema({
     linkUrl: {
         type: String,
         required: true
+    },
+    publicId: {
+        type: String,
+        trim: true
     },
     isActive: {
         type: Boolean,
