@@ -4,7 +4,6 @@ import {
   BookOpen,
   HelpCircle,
   Route,
-  LayoutDashboard,
   Library
 } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
@@ -14,15 +13,13 @@ const SideBar = () => {
 
   const isActive = (path) => location.pathname === path;
   const { user } = useAuth();
-  const isAdmin = user && (user.role === 'admin');
 
   const menuItems = [
     { path: '/', icon: Home, label: 'Trang chủ' },
     user && { path: '/my-learning', icon: Library, label: 'Khóa học' },
     { path: '/about', icon: BookOpen, label: 'Giới thiệu' },
     { path: '/advisory', icon: Route, label: 'Lộ trình' },
-    { path: "", icon: HelpCircle, label: 'Help' },
-    isAdmin && { path: `${import.meta.env.VITE_DASH_URL}/dashboard`, icon: LayoutDashboard, label: 'Dashboard' }
+    { path: "", icon: HelpCircle, label: 'Help' }
   ].filter(Boolean);
 
   return (
