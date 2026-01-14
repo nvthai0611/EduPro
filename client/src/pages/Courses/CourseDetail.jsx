@@ -55,12 +55,12 @@ const CourseDetail = () => {
   const courseId = course?._id;
 
   // Fetch minimal sections và lessons data (chỉ title, duration, type)
-  const {
-    data: sections = [],
-    isLoading: sectionsLoading,
-  } = useSectionsWithMinimalLessons(courseId, {
-    enabled: !!courseId,
-  });
+  // const {
+  //   data: sections = [],
+  //   isLoading: sectionsLoading,
+  // } = useSectionsWithMinimalLessons(courseId, {
+  //   enabled: !!courseId,
+  // });
 
   const { data: infoUser } = useQuery({
     queryKey: ["user-profile", user?.userId],
@@ -163,24 +163,24 @@ const CourseDetail = () => {
   };
 
   // Mở tất cả sections mặc định khi load
-  useEffect(() => {
-    if (sections.length > 0) {
-      const initialExpanded = {};
-      sections.forEach(section => {
-        initialExpanded[section._id] = true;
-      });
-      setExpandedSections(initialExpanded);
-    }
-  }, [sections]);
+  // useEffect(() => {
+  //   if (sections.length > 0) {
+  //     const initialExpanded = {};
+  //     sections.forEach(section => {
+  //       initialExpanded[section._id] = true;
+  //     });
+  //     setExpandedSections(initialExpanded);
+  //   }
+  // }, [sections]);
 
   // Tính tổng số lessons và duration
-  const totalLessons = sections.reduce((acc, section) => acc + (section.lessons?.length || 0), 0);
-  const totalDuration = sections.reduce((acc, section) => {
-    const sectionDuration = section.lessons?.reduce((sum, lesson) => {
-      return sum + (lesson.videoDuration || lesson.readingTime * 60 || 0);
-    }, 0) || 0;
-    return acc + sectionDuration;
-  }, 0);
+  // const totalLessons = sections.reduce((acc, section) => acc + (section.lessons?.length || 0), 0);
+  // const totalDuration = sections.reduce((acc, section) => {
+  //   const sectionDuration = section.lessons?.reduce((sum, lesson) => {
+  //     return sum + (lesson.videoDuration || lesson.readingTime * 60 || 0);
+  //   }, 0) || 0;
+  //   return acc + sectionDuration;
+  // }, 0);
 
   // Format duration helper
   const formatLessonDuration = (seconds) => {
@@ -459,120 +459,12 @@ const CourseDetail = () => {
                 <CardHeader>
                   <h3 className="text-xl font-semibold">Nội dung khóa học</h3>
                   <div className="flex items-center gap-4 text-sm text-gray-600 mt-2">
-                    <span className="flex items-center gap-1">
-                      <BookOpen className="w-4 h-4" />
-                      {sections.length} chương
-                    </span>
-                    <span>•</span>
-                    <span className="flex items-center gap-1">
-                      <Play className="w-4 h-4" />
-                      {totalLessons} bài học
-                    </span>
-                    <span>•</span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      {formatLessonDuration(totalDuration)}
-                    </span>
+                    
                   </div>
                 </CardHeader>
                 <CardContent>
-                  {sectionsLoading ? (
-                    <div className="flex justify-center items-center py-8">
-                      <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-                    </div>
-                  ) : sections.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <BookOpen className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                      <p>Chưa có nội dung nào</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {sections.map((section, sectionIndex) => {
-                        const sectionLessons = section.lessons || [];
-                        const sectionDuration = sectionLessons.reduce((sum, lesson) => {
-                          return sum + (lesson.videoDuration || lesson.readingTime * 60 || 0);
-                        }, 0);
-                        const isExpanded = expandedSections[section._id];
-
-                        return (
-                          <div key={section._id} className="border rounded-lg overflow-hidden">
-                            {/* Section Header */}
-                            <button
-                              onClick={() => toggleSection(section._id)}
-                              className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
-                            >
-                              <div className="flex items-center gap-3 text-left">
-                                {isExpanded ? (
-                                  <ChevronUp className="w-5 h-5 text-gray-600 flex-shrink-0" />
-                                ) : (
-                                  <ChevronDown className="w-5 h-5 text-gray-600 flex-shrink-0" />
-                                )}
-                                <div>
-                                  <h4 className="font-semibold text-gray-900">
-                                    Chương {sectionIndex + 1}: {section.title}
-                                  </h4>
-                                  <p className="text-sm text-gray-600 mt-1">
-                                    {sectionLessons.length} bài học • {formatLessonDuration(sectionDuration)}
-                                  </p>
-                                </div>
-                              </div>
-                            </button>
-
-                            {/* Section Lessons */}
-                            {isExpanded && sectionLessons.length > 0 && (
-                              <div className="border-t">
-                                {sectionLessons.map((lesson, lessonIndex) => {
-                                  const duration = lesson.videoDuration 
-                                    ? formatLessonDuration(lesson.videoDuration)
-                                    : lesson.readingTime 
-                                    ? `${lesson.readingTime}m đọc`
-                                    : null;
-
-                                  return (
-                                    <div
-                                      key={lesson._id}
-                                      className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors border-b last:border-b-0"
-                                    >
-                                      <div className="flex items-center gap-3 flex-1">
-                                        {lesson.type === 'video' ? (
-                                          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                                            <Video className="w-4 h-4 text-blue-600" />
-                                          </div>
-                                        ) : (
-                                          <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                                            <FileText className="w-4 h-4 text-green-600" />
-                                          </div>
-                                        )}
-                                        <div className="flex-1">
-                                          <p className="text-sm font-medium text-gray-900">
-                                            {lessonIndex + 1}. {lesson.title}
-                                          </p>
-                                        </div>
-                                      </div>
-                                      <div className="flex items-center gap-3 text-sm text-gray-600">
-                                        {duration && (
-                                          <span className="flex items-center gap-1">
-                                            <Clock className="w-3.5 h-3.5" />
-                                            {duration}
-                                          </span>
-                                        )}
-                                        {lesson.isFree && (
-                                          <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
-                                            Xem trước
-                                          </Badge>
-                                        )}
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </CardContent>
+                 
+                 </CardContent>
               </Card>
             )}
 

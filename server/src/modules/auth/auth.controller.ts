@@ -11,113 +11,24 @@ class AuthController {
    */
   async loginManager(req: Request, res: Response): Promise<Response> {
     try {
-      const { email, password } = req.body;
+      const user = req.user as any
 
-      // Validate input
-      if (!email || !password) {
-        return res.status(400).json({
-          success: false,
-          message: "Email và mật khẩu là bắt buộc",
-        });
-      }
-
-      // Find user by email
-      const user = await userService.getUserByEmail(email.trim().toLowerCase());
-
-      if (!user) {
-        return res.status(401).json({
-          success: false,
-          message: "Email hoặc mật khẩu không đúng",
-        });
-      }
-
-      // Check if user has password (not OAuth user)
-      if (!user.password) {
-        return res.status(401).json({
-          success: false,
-          message: "Tài khoản này không hỗ trợ đăng nhập bằng mật khẩu",
-        });
-      }
-
-      // Check if user role is admin (only admin can login via manager portal)
-      if (user.role !== "admin") {
-        return res.status(403).json({
-          success: false,
-          message: "Bạn không có quyền truy cập vào hệ thống quản trị",
-        });
-      }
-
-      // Check account status
-      if (user.status === false) {
-        return res.status(403).json({
-          success: false,
-          message: "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên",
-        });
-      }
-
-      // Verify password
-      const isPasswordValid = await (user as any).comparePassword(password);
-
-      if (!isPasswordValid) {
-        return res.status(401).json({
-          success: false,
-          message: "Email hoặc mật khẩu không đúng",
-        });
-      }
-
-      const sessionId = crypto.randomUUID();
-
-      // Create access token
-      const accessToken = await createAccessToken({
-        userId: (user as any)._id,
-        role: user.role,
-        image: user.image,
-        sessionId: sessionId,
-      });     
-
-      await Session.deleteMany({ userId: (user as any)._id });
-
-      // Lưu phiên đăng nhập mới
-      await Session.create({
-        userId: (user as any)._id,
-        sessionId,
-        // deviceId: req.headers["x-desktop-ref"],
-        userAgent: req.headers["user-agent"],
-        ip: req.ip,
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      const session = await Session.findOne({
+        userId: user._id,
+        isValid: true,
+        expiresAt: { $gt: new Date() },
       });
 
-      const isProduction = process.env.NODE_ENV === "production";
+      if (!session) {
+        return res.status(401).send('Invalid credentials');
+      }
 
-      // Cookie options
-      const cookieOptions = {
-        sameSite: isProduction ? "none" : "strict", // lax thay vì strict để CORS hoạt động
-        secure: isProduction,
-        httpOnly: false,
-        domain: isProduction ? ".fuedupro.com" : undefined, // undefined cho localhost
-        maxAge: 24 * 60 * 60 * 1000, // 1 day
-      };
-
-      // Set cookie
-      res.cookie("render_id", accessToken, cookieOptions as any);
-
-      // Return response
-      return res.status(200).json({
-        success: true,
-        message: "Đăng nhập thành công",
-        data: {
-          accessToken,
-          user: {
-            _id: (user as any)._id,
-            fullName: user.fullName,
-            email: user.email,
-            role: user.role,
-            image: user.image,
-            status: user.status,
-            accessToken: accessToken,
-          },
-        },
-      });
+      const dataFinal = {
+        render_id: user.sessionToken,
+        runtime_ctx: session.deviceId
+      }
+      
+      return res.json(dataFinal);
     } catch (error) {
       console.error("Login Manager Error:", error);
       return res.status(500).json({

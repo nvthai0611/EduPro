@@ -174,6 +174,10 @@ client.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  
+  const isFormData = config.data instanceof FormData;
+  
+  // Mã hóa dữ liệu nếu cần (KHÔNG áp dụng cho FormData)
 
   const deviceId = getDeviceId();
   if (deviceId) {
@@ -182,12 +186,19 @@ client.interceptors.request.use((config) => {
 
   // Mã hóa dữ liệu nếu cần
   if (
+    !isFormData &&
     config.encrypt &&
     config.data &&
     ["post", "put", "patch"].includes(config.method)
   ) {
     config.data = encryptData(config.data);
     config.headers["X-Encrypted"] = "true";
+  }
+  
+  // Nếu là FormData, để axios tự động set Content-Type với boundary
+  if (isFormData) {
+    // Xóa Content-Type để axios tự động set với boundary đúng
+    delete config.headers['Content-Type'];
   }
 
   return config;

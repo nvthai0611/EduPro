@@ -41,6 +41,24 @@ const toggleSettingStatus = async (id) => {
 }
 const addNewBanner = async (data) => {
     const key = data.key || 'homepage'
+    
+    // Nếu có file, tạo FormData để upload
+    if (data.image instanceof File) {
+        const formData = new FormData()
+        formData.append('image', data.image)
+        formData.append('title', data.title)
+        formData.append('description', data.description || '')
+        formData.append('linkUrl', data.linkUrl)
+        formData.append('isActive', data.isActive)
+        
+        return await apiClient.post(`/admin/setting/${key}/slides`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        })
+    }
+    
+    // Nếu không có file, gửi data thông thường
     return await apiClient.post(`/admin/setting/${key}/slides`, data)
 }
 
@@ -51,6 +69,29 @@ const getAllBanners = async (params = {}) => {
 
 const updateBanner = async (id, data) => {
     const key = data.key || 'homepage'
+    
+    // Nếu có file mới, tạo FormData để upload
+    if (data.image instanceof File) {
+        const formData = new FormData()
+        formData.append('image', data.image)
+        formData.append('title', data.title)
+        formData.append('description', data.description || '')
+        formData.append('linkUrl', data.linkUrl)
+        formData.append('isActive', data.isActive)
+        
+        // Gửi publicId cũ để xóa ảnh cũ
+        if (data.oldPublicId) {
+            formData.append('oldPublicId', data.oldPublicId)
+        }
+        
+        return await apiClient.put(`/admin/setting/${key}/slides/${id}`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        })
+    }
+    
+    // Nếu không có file mới, gửi data thông thường
     return await apiClient.put(`/admin/setting/${key}/slides/${id}`, data)
 }
 
