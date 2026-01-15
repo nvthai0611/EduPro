@@ -13,20 +13,9 @@ const Sidebar = ({ trendingPosts = [], categories = [] }) => {
   };
 
   return (
-    <aside className="space-y-6">
+    <aside className="space-y-6 sticky top-20">
       {/* Search Box */}
-      <div className="bg-white rounded-xl p-4 border border-gray-100 sticky top-[140px]">
-        <form onSubmit={handleSearch} className="relative">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Tìm kiếm bài viết..."
-            className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-        </form>
-      </div>
+      
 
       {/* Trending Posts */}
       <div className="bg-white rounded-xl p-5 border border-gray-100 sticky top-[220px]">
@@ -93,7 +82,7 @@ const Sidebar = ({ trendingPosts = [], categories = [] }) => {
       </div> */}
 
       {/* Newsletter/CTA */}
-      <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-6 text-white sticky top-[820px]">
+      {/* <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-6 text-white sticky top-[820px]">
         <Calendar className="w-8 h-8 mb-3" />
         <h3 className="text-lg font-bold mb-2">Nhận tin mới nhất</h3>
         <p className="text-sm text-blue-100 mb-4">
@@ -112,7 +101,7 @@ const Sidebar = ({ trendingPosts = [], categories = [] }) => {
             Đăng ký ngay
           </button>
         </form>
-      </div>
+      </div> */}
     </aside>
   );
 };
