@@ -1,6 +1,5 @@
-import { useState, useRef, useMemo, useCallback } from "react";
+import { useState, useRef, useMemo, useCallback, useEffect, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
-import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { Card } from "../../shadcn-ui/components/ui/card";
 import { Input } from "../../shadcn-ui/components/ui/input";
@@ -9,6 +8,9 @@ import { Badge } from "../../shadcn-ui/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../shadcn-ui/components/ui/dialog";
 import { X, Upload, ImagePlus, Loader2, AlertCircle } from "lucide-react";
 import { apiClient } from "../../utils/clientAxios";
+
+// Lazy load ReactQuill for better performance
+const ReactQuill = lazy(() => import("react-quill"));
 
 const CreateForumPost = () => {
   const navigate = useNavigate();
@@ -26,7 +28,6 @@ const CreateForumPost = () => {
   // Image state
   const [coverImage, setCoverImage] = useState(null);
   const [coverImagePreview, setCoverImagePreview] = useState(null);
-  const [isUploadingCover, setIsUploadingCover] = useState(false);
   
   const coverInputRef = useRef(null);
   const quillRef = useRef(null);
@@ -34,8 +35,30 @@ const CreateForumPost = () => {
   // Validation errors
   const [errors, setErrors] = useState({});
 
-  // Handle cover image selection
-  const handleCoverImageChange = (e) => {
+  // Cleanup effect for file readers
+  useEffect(() => {
+    return () => {
+      if (coverImagePreview && coverImagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(coverImagePreview);
+      }
+    };
+  }, [coverImagePreview]);
+
+  // Show dialog helper - memoized
+  const showErrorDialog = useCallback((message) => {
+    setDialogMessage(message);
+    setDialogType("error");
+    setShowDialog(true);
+  }, []);
+
+  const showSuccessDialog = useCallback((message) => {
+    setDialogMessage(message);
+    setDialogType("success");
+    setShowDialog(true);
+  }, []);
+
+  // Handle cover image selection - optimized with useCallback
+  const handleCoverImageChange = useCallback((e) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -51,12 +74,10 @@ const CreateForumPost = () => {
 
     setCoverImage(file);
     
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setCoverImagePreview(reader.result);
-    };
-    reader.readAsDataURL(file);
-  };
+    // Use URL.createObjectURL for better performance
+    const objectUrl = URL.createObjectURL(file);
+    setCoverImagePreview(objectUrl);
+  }, [showErrorDialog]);
 
   // Image handler for Quill editor - upload immediately to Cloudinary
   const imageHandler = useCallback(() => {
@@ -96,55 +117,26 @@ const CreateForumPost = () => {
         const formData = new FormData();
         formData.append("image", file);
 
-        console.log("📤 Uploading image to /admin/forum/upload-image");
         const response = await apiClient.post("/admin/forum/upload-image", formData, {
           headers: { "Content-Type": "multipart/form-data" }
         });
-        console.log("✅ Full response object:", response);
-        console.log("Response data:", response.data);
-        console.log("Response status:", response.status);
-        console.log("Response headers:", response.headers);
 
         const imageUrl = response.data?.url || response.url || response.data?.data?.url;
-        console.log("Extracted URL:", imageUrl);
 
         if (imageUrl) {
-          console.log("🖼️ Inserting image at position:", cursorPosition);
-          console.log("Image URL:", imageUrl);
-          
           // Remove loading placeholder
           quill.deleteText(cursorPosition, 1);
           
-          // Try multiple methods to insert image
-          try {
-            // Method 1: insertEmbed
-            quill.insertEmbed(cursorPosition, "image", imageUrl);
-            console.log("✅ Image inserted via insertEmbed");
-          } catch (embedError) {
-            console.error("insertEmbed failed:", embedError);
-            
-            // Method 2: clipboard API
-            try {
-              const delta = quill.clipboard.convert(`<img src="${imageUrl}" />`);
-              quill.setContents(quill.getContents().concat(delta));
-              console.log("✅ Image inserted via clipboard");
-            } catch (clipboardError) {
-              console.error("clipboard failed:", clipboardError);
-            }
-          }
-          
+          // Insert image
+          quill.insertEmbed(cursorPosition, "image", imageUrl);
           quill.setSelection(cursorPosition + 1);
-          console.log("✅ Image insertion completed");
         } else {
-          console.log("❌ No URL in response");
           // Remove placeholder on error
           quill.deleteText(cursorPosition, 1);
           showErrorDialog("Upload ảnh thất bại");
         }
       } catch (error) {
-        console.error("❌ Error uploading image:", error);
-        console.error("Error response:", error.response?.data);
-        console.error("Error status:", error.response?.status);
+        console.error("Error uploading image:", error);
         // Remove placeholder on error
         const quill = quillRef.current?.getEditor();
         if (quill) {
@@ -155,7 +147,7 @@ const CreateForumPost = () => {
         );
       }
     };
-  }, []);
+  }, [showErrorDialog]);
 
   // Quill modules configuration - use useMemo to prevent recreation
   const modules = useMemo(() => ({
@@ -188,8 +180,8 @@ const CreateForumPost = () => {
     "image",
   ];
 
-  // Handle tag input
-  const handleTagKeyDown = (e) => {
+  // Handle tag input - memoized
+  const handleTagKeyDown = useCallback((e) => {
     if (e.key === "Enter" && tagInput.trim()) {
       e.preventDefault();
       
@@ -203,37 +195,27 @@ const CreateForumPost = () => {
       }
       setTagInput("");
     }
-  };
+  }, [tagInput, tags, showErrorDialog]);
 
-  // Remove tag
-  const removeTag = (tagToRemove) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
-  };
+  // Remove tag - memoized
+  const removeTag = useCallback((tagToRemove) => {
+    setTags(prevTags => prevTags.filter(tag => tag !== tagToRemove));
+  }, []);
 
-  // Remove cover image
-  const removeCoverImage = () => {
+  // Remove cover image - memoized
+  const removeCoverImage = useCallback(() => {
+    if (coverImagePreview && coverImagePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(coverImagePreview);
+    }
     setCoverImage(null);
     setCoverImagePreview(null);
     if (coverInputRef.current) {
       coverInputRef.current.value = "";
     }
-  };
+  }, [coverImagePreview]);
 
-  // Show dialog helper
-  const showErrorDialog = (message) => {
-    setDialogMessage(message);
-    setDialogType("error");
-    setShowDialog(true);
-  };
-
-  const showSuccessDialog = (message) => {
-    setDialogMessage(message);
-    setDialogType("success");
-    setShowDialog(true);
-  };
-
-  // Validate form
-  const validateForm = () => {
+  // Validate form - memoized
+  const validateForm = useCallback(() => {
     const newErrors = {};
 
     if (!title.trim()) {
@@ -258,10 +240,10 @@ const CreateForumPost = () => {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }, [title, content, tags, coverImage]);
 
-  // Submit form
-  const handleSubmit = async (e) => {
+  // Submit form - memoized
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
@@ -279,7 +261,7 @@ const CreateForumPost = () => {
         formData.append("coverImage", coverImage);
       }
 
-      // Add other form data (content already has Cloudinary URLs)
+      // Add other form data
       formData.append("title", title);
       formData.append("content", content);
       formData.append("tags", JSON.stringify(tags));
@@ -302,10 +284,15 @@ const CreateForumPost = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [title, content, tags, coverImage, validateForm, navigate, showErrorDialog, showSuccessDialog]);
+
+  // Memoized character count
+  const contentCharCount = useMemo(() => {
+    return content.replace(/<[^>]*>/g, "").trim().length;
+  }, [content]);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8 pt-20">
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -403,21 +390,27 @@ const CreateForumPost = () => {
               <span className="text-red-500 ml-1">*</span>
             </label>
 
-            <ReactQuill
-              ref={quillRef}
-              theme="snow"
-              value={content}
-              onChange={setContent}
-              modules={modules}
-              formats={formats}
-              placeholder="Viết nội dung bài viết của bạn..."
-              className="bg-white"
-              style={{ height: "400px", marginBottom: "50px" }}
-            />
+            <Suspense fallback={
+              <div className="flex items-center justify-center h-[400px] bg-gray-50 rounded-lg">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+              </div>
+            }>
+              <ReactQuill
+                ref={quillRef}
+                theme="snow"
+                value={content}
+                onChange={setContent}
+                modules={modules}
+                formats={formats}
+                placeholder="Viết nội dung bài viết của bạn..."
+                className="bg-white"
+                style={{ height: "400px", marginBottom: "50px" }}
+              />
+            </Suspense>
 
             <div className="mt-2 flex justify-between items-center">
               <span className="text-xs text-gray-500">
-                {content.replace(/<[^>]*>/g, "").trim().length} ký tự (tối thiểu 30)
+                {contentCharCount} ký tự (tối thiểu 30)
               </span>
               {errors.content && (
                 <p className="text-sm text-red-600 flex items-center gap-1">

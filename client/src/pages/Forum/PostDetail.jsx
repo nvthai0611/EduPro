@@ -60,7 +60,7 @@ const PostDetail = () => {
           {/* Featured Image */}
           <div className="w-full h-96 overflow-hidden bg-gray-200">
             <img
-              src={post.thumbnail}
+              src={post.coverImageUrl}
               alt={post.title}
               className="w-full h-full object-cover hover:scale-105 transition duration-300"
             />
@@ -86,27 +86,27 @@ const PostDetail = () => {
             {/* Author Info */}
             <div className="flex items-center gap-4 pb-6 border-b border-gray-200 mb-8">
               <img
-                src={post.author?.avatar || "https://i.pravatar.cc/150?img=3"}
-                alt={post.author?.authorName || "Author"}
+                src={post.avatar || "https://i.pravatar.cc/150?img=3"}
+                alt={post.authorName || "Author"}
                 className="w-14 h-14 rounded-full object-cover"
               />
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-gray-900">
-                  {post.author?.name || "Unknown"}
+                  {post.authorName|| "Unknown"}
                 </h3>
-                <p className="text-gray-600 text-sm">{post.author?.bio || ""}</p>
+                <p className="text-gray-600 text-sm">{post.email || ""}</p>
               </div>
             </div>
 
             {/* Post Stats */}
             <div className="flex gap-6 mb-8 pb-8 border-b border-gray-200 text-gray-600 text-sm">
               <span className="flex items-center gap-2">
-                <span className="font-semibold text-gray-900">{post.views}</span>
+                <span className="font-semibold text-gray-900">{post.views || "35"}</span>
                 <span>lượt xem</span>
               </span>
               <span className="flex items-center gap-2">
                 <span className="font-semibold text-gray-900">
-                  {post.commentsCount}
+                  {post.commentsCount || "0"}
                 </span>
                 <span>bình luận</span>
               </span>

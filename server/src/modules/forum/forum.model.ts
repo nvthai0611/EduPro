@@ -1,4 +1,5 @@
 import { model, Schema, Types } from "mongoose";
+import { generateSlug } from "../../utils/slug";
 
 
 export interface IForum{
@@ -46,12 +47,7 @@ const ForumSchema = new Schema<IForumDocument>(
 ForumSchema.pre("save", async function (next) {
   if (this.isModified("title") && !this.slug) {
     // Generate slug from title
-    const baseSlug = this.title
-      .toLowerCase()
-      .replace(/[^\w\s-]/g, "") // Remove special characters
-      .replace(/\s+/g, "-") // Replace spaces with hyphens
-      .replace(/--+/g, "-") // Replace multiple hyphens with single hyphen
-      .trim();
+    const baseSlug = generateSlug(this.title);
     
     // Check for uniqueness
     let slug = baseSlug;
