@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { BookOpen, User, Menu, X, ChevronDown, LogOut, Bell  } from "lucide-react";
 import LearningPlatformLogo from "../Logo/LearningPlatformLogo";
 import { useAuth } from "../../hooks/useAuth";
@@ -27,7 +27,11 @@ const Navbar = () => {
       icon: User,
     },
   ];
-
+    const location = useLocation();
+    const isForum = location.pathname === '/forum';
+  
+   
+  
   const handleLogout = async () => {
     try {
       const result = await authService.logout();
@@ -68,9 +72,10 @@ const Navbar = () => {
           <ToastContainer />
 
           {/* Search Bar - Desktop */}
+          {isForum ? null :
           <div className="hidden md:flex items-center flex-1 max-w-2xl">
             <SearchBar />
-          </div>
+          </div>}
           {/* Desktop Navigation */}
           {/* <div className="hidden md:flex items-center space-x-8">
             {navigationItems.map((item) => (
@@ -238,6 +243,7 @@ const Navbar = () => {
           </div>
         )}
       </div>
+        
     </nav>
   );
 };

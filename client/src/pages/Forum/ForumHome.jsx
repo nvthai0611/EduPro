@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2} from "lucide-react";
 import PostCard from "./components/PostCard";
 import Sidebar from "./components/Sidebar";
 import WritePostButton from "./components/WritePostButton";
@@ -10,16 +10,8 @@ const ForumHome = () => {
   const [page, setPage] = useState(1);
   const { data: posts = [], isLoading } = useGetAll();
 
-  // const categories = [
-  //   { name: "Tin tức", slug: "tin-tuc", count: 45 },
-  //   { name: "Review", slug: "review", count: 32 },
-  //   { name: "Thảo luận", slug: "thao-luan", count: 28 },
-  //   { name: "Hỏi đáp", slug: "hoi-dap", count: 19 },
-  //   { name: "Hướng dẫn", slug: "huong-dan", count: 15 },
-  // ];
-
   // Get trending posts (top 5)
-  const trendingPosts = posts.slice(0, 5);
+  const trendingPosts = posts.slice(0, 4);
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -30,10 +22,43 @@ const ForumHome = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-[4rem] w-full">
-
+        {/* Featured Posts Carousel */}
+        <div className="bg-white rounded-lg mb-8 p-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4 inline-block mr-4">Bài viết nổi bật trong tháng</h2>
+          {/* Xem thêm button */}
+          <p className="mb-4 text-gray-600 font-light inline-block text-sm"><a href="/top-4">Xem thêm</a></p>
+          <div className="relative">
+            <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-4">
+              {trendingPosts.map((post) => (
+                <div key={post._id} className="flex-shrink-0 w-64 bg-gray-50 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                  <img
+                    src={post.coverImageUrl || "https://via.placeholder.com/256x144"}
+                    alt={post.title}
+                    className="w-full h-36 object-cover"
+                  />
+                  <div className="p-4">
+                    <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 mb-2 min-h-[3rem] leading-tight">
+                      {post.title}
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      <img
+                        src={post.author?.avatar || "https://i.pravatar.cc/32"}
+                        alt={post.authorName}
+                        className="w-6 h-6 rounded-full"
+                      />
+                      <span className="text-xs text-gray-600">{post.authorName || "Anonymous"}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Carousel Navigation (optional, can add buttons if needed) */}
+          </div>
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          
           <main className="lg:col-span-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid p-4 gap-6">
               {posts.map((post) => (
                 <PostCard key={post.slug} post={post} />
               ))}

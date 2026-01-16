@@ -46,11 +46,11 @@ const PostCard = ({ post, variant = "default" }) => {
     <article className="group bg-white rounded-xl overflow-hidden hover:shadow-md transition-all duration-300 border border-gray-100">
       <Link to={`/posts/${post.slug || post._id}`} className="block">
         {/* Thumbnail */}
-        <div className="relative overflow-hidden aspect-[16/9] bg-gray-200">
+        <div className="float-left w-48 mr-4 mb-2 relative overflow-hidden bg-gray-200 rounded-lg">
           <img
             src={post.coverImageUrl || "https://via.placeholder.com/800x450"}
             alt={post.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
           />
           {post.category && (
@@ -66,7 +66,6 @@ const PostCard = ({ post, variant = "default" }) => {
           <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors">
             {post.title}
           </h3>
-
           {/* Excerpt */}
           {post.excerpt && (
             <p className="text-sm text-gray-600 mb-4 line-clamp-2">

@@ -6,8 +6,9 @@ import { Input } from "../../shadcn-ui/components/ui/input";
 import { Button } from "../../shadcn-ui/components/ui/button";
 import { Badge } from "../../shadcn-ui/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../shadcn-ui/components/ui/dialog";
-import { X, Upload, ImagePlus, Loader2, AlertCircle } from "lucide-react";
+import { X, Upload, ImagePlus, Loader2, AlertCircle, ChevronLeft } from "lucide-react";
 import { apiClient } from "../../utils/clientAxios";
+import { toast } from "react-toastify";
 
 // Lazy load ReactQuill for better performance
 const ReactQuill = lazy(() => import("react-quill"));
@@ -271,12 +272,14 @@ const CreateForumPost = () => {
       });
 
       if (response.data.success) {
+        toast.success("Tạo bài viết thành công!");
         showSuccessDialog("Tạo bài viết thành công!");
         setTimeout(() => {
           navigate("/forum");
         }, 1500);
       }
     } catch (error) {
+      toast.error("Có lỗi xảy ra khi tạo bài viết");
       console.error("Error creating post:", error);
       showErrorDialog(
         error.response?.data?.message || "Có lỗi xảy ra khi tạo bài viết"
@@ -294,6 +297,13 @@ const CreateForumPost = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8 pt-20">
       <div className="max-w-3xl mx-auto">
+         <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition"
+          >
+            <ChevronLeft className="w-5 h-5" />
+            <span className="text-sm font-medium">Quay lại</span>
+          </button>
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Tạo bài viết mới</h1>
