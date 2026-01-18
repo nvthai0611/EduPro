@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { Loader2} from "lucide-react";
+import { Loader2 } from "lucide-react";
 import PostCard from "./components/PostCard";
 import Sidebar from "./components/Sidebar";
 import WritePostButton from "./components/WritePostButton";
 import SideBar from "../Home/components/SideBar";
-import { useGetAll } from "../../hooks/useForum";
+import { useGetAllPosts } from "../../hooks/usePost";
 
 const ForumHome = () => {
   const [page, setPage] = useState(1);
-  const { data: posts = [], isLoading } = useGetAll();
+  const { data: posts = [], isLoading } = useGetAllPosts();
 
   // Get trending posts (top 5)
   const trendingPosts = posts.slice(0, 4);
@@ -56,7 +56,7 @@ const ForumHome = () => {
           </div>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          
+
           <main className="lg:col-span-8">
             <div className="grid p-4 gap-6">
               {posts.map((post) => (

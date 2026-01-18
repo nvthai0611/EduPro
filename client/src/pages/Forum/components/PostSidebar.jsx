@@ -1,7 +1,7 @@
-import { Heart, Bookmark, Share2, MessageCircle } from "lucide-react";
+import { Heart, Bookmark, Share2, MessageCircle, Pencil, Trash2 } from "lucide-react";
 import { toast } from "react-toastify";
 
-const PostSidebar = ({ post, onLike, onSave, onShare }) => {
+const PostSidebar = ({ post, onLike, onSave, onShare, onEdit, onDelete, isAuthor }) => {
   const liked = post?.liked || false;
   const saved = post?.saved || false;
   const likesCount = post?.likes || 0;
@@ -57,20 +57,44 @@ const PostSidebar = ({ post, onLike, onSave, onShare }) => {
   return (
     <div className="sticky top-24 self-start">
       <div className="bg-white p-2 flex flex-col gap-2">
+        {/* Management Buttons for Author */}
+        {isAuthor && (
+          <>
+            <button
+              onClick={onEdit}
+              className="group relative p-3 rounded-full text-blue-600 hover:bg-blue-50 transition-all duration-200"
+              title="Sửa bài viết"
+            >
+              <Pencil className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
+              <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                Chỉnh sửa
+              </span>
+            </button>
+            <button
+              onClick={onDelete}
+              className="group relative p-3 rounded-full text-red-600 hover:bg-red-50 transition-all duration-200"
+              title="Xóa bài viết"
+            >
+              <Trash2 className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
+              <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                Xóa
+              </span>
+            </button>
+            <div className="h-px bg-gray-100 mx-2 my-1" />
+          </>
+        )}
         {/* Like Button */}
         <button
           onClick={handleLike}
-          className={`group relative p-3 rounded-full transition-all duration-200 ${
-            liked
-              ? "bg-red-50 text-red-600 hover:bg-red-100"
-              : "text-gray-600 hover:bg-gray-100 hover:text-red-600"
-          }`}
+          className={`group relative p-3 rounded-full transition-all duration-200 ${liked
+            ? "bg-red-50 text-red-600 hover:bg-red-100"
+            : "text-gray-600 hover:bg-gray-100 hover:text-red-600"
+            }`}
           title={liked ? "Bỏ thích" : "Thích bài viết"}
         >
           <Heart
-            className={`w-5 h-5 transition-all duration-200 ${
-              liked ? "fill-current scale-110" : "group-hover:scale-110"
-            }`}
+            className={`w-5 h-5 transition-all duration-200 ${liked ? "fill-current scale-110" : "group-hover:scale-110"
+              }`}
           />
           <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
             {liked ? "Bỏ thích" : "Thích"}
@@ -92,17 +116,15 @@ const PostSidebar = ({ post, onLike, onSave, onShare }) => {
         {/* Save Button */}
         <button
           onClick={handleSave}
-          className={`group relative p-3 rounded-full transition-all duration-200 ${
-            saved
-              ? "bg-blue-50 text-blue-600 hover:bg-blue-100"
-              : "text-gray-600 hover:bg-gray-100 hover:text-blue-600"
-          }`}
+          className={`group relative p-3 rounded-full transition-all duration-200 ${saved
+            ? "bg-blue-50 text-blue-600 hover:bg-blue-100"
+            : "text-gray-600 hover:bg-gray-100 hover:text-blue-600"
+            }`}
           title={saved ? "Bỏ lưu" : "Lưu bài viết"}
         >
           <Bookmark
-            className={`w-5 h-5 transition-all duration-200 ${
-              saved ? "fill-current scale-110" : "group-hover:scale-110"
-            }`}
+            className={`w-5 h-5 transition-all duration-200 ${saved ? "fill-current scale-110" : "group-hover:scale-110"
+              }`}
           />
           <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
             {saved ? "Bỏ lưu" : "Lưu"}

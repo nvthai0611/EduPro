@@ -28,6 +28,10 @@ import optionalAuth from "../middlewares/auth/optionalAuth";
 import { reviewRoutes } from "./v1/reviews.routes";
 import { adminForumRoutes } from "./v1/admin/forum.routes";
 import { forumRoutes } from "./v1/forum.routes";
+import { postRoutes } from "./v1/posts.routes";
+import { answerRoutes } from "./v1/answers.routes";
+import { commentRoutes } from "./v1/comments.routes";
+
 
 export const apiRouter = (io?: Server) => {
   // Block direct browser access to API
@@ -102,5 +106,8 @@ export const apiRouter = (io?: Server) => {
 
   router.use("/admin/forum", adminForumRoutes);
   router.use("/forum", forumRoutes);
+  router.use("/posts", optionalAuth, postRoutes);
+  router.use("/answers", optionalAuth, answerRoutes);
+  router.use("/comments", optionalAuth, commentRoutes);
   return router;
 };

@@ -1,8 +1,9 @@
-import { Link } from "react-router-dom";
-import { Clock, Eye, MessageCircle, Share2, Bookmark } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { Clock, Eye, MessageCircle, Share2, Bookmark, Pencil } from "lucide-react";
 import { useState } from "react";
 
-const PostCard = ({ post, variant = "default" }) => {
+const PostCard = ({ post, variant = "default", canEdit = false }) => {
+  const navigate = useNavigate();
   const [isBookmarked, setIsBookmarked] = useState(false);
 
   const handleBookmark = (e) => {
@@ -15,6 +16,25 @@ const PostCard = ({ post, variant = "default" }) => {
     // TODO: Implement share functionality
     console.log("Share post:", post._id);
   };
+
+  const handleEdit = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(`/forum/edit/${post.slug || post._id}`);
+  };
+  const modifyTag = (tag) => {
+    try {
+      const parsed = JSON.parse(tag);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    } catch (e) {
+      // If not JSON, return as is
+    }
+    return [tag];
+  };
+  const flattenedTags = post.tags?.flatMap(tag => modifyTag(tag)) || [];
+
 
   if (variant === "compact") {
     const postPath = post.slug || post._id;
@@ -76,7 +96,7 @@ const PostCard = ({ post, variant = "default" }) => {
           {/* Tags */}
           {post.tags && post.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-4">
-              {post.tags.slice(0, 3).map((tag, index) => (
+              {flattenedTags.slice(0, 3).map((tag, index) => (
                 <span
                   key={index}
                   className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded-md hover:bg-gray-200 transition-colors"
@@ -112,15 +132,23 @@ const PostCard = ({ post, variant = "default" }) => {
 
             {/* Quick Actions */}
             <div className="flex items-center gap-2">
+              {canEdit && (
+                <button
+                  onClick={handleEdit}
+                  className="p-2 hover:bg-blue-50 text-blue-600 rounded-full transition-colors"
+                  title="Chỉnh sửa bài viết"
+                >
+                  <Pencil className="w-4 h-4" />
+                </button>
+              )}
               <button
                 onClick={handleBookmark}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                 aria-label="Bookmark"
               >
                 <Bookmark
-                  className={`w-4 h-4 ${
-                    isBookmarked ? "fill-blue-600 text-blue-600" : "text-gray-400"
-                  }`}
+                  className={`w-4 h-4 ${isBookmarked ? "fill-blue-600 text-blue-600" : "text-gray-400"
+                    }`}
                 />
               </button>
               <button

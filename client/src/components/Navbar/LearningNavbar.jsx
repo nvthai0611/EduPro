@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { BookOpen, User, Menu, X, ChevronDown, LogOut, Bell  } from "lucide-react";
+import { BookOpen, User, Menu, X, ChevronDown, LogOut, Bell, FileText } from "lucide-react";
 import LearningPlatformLogo from "../Logo/LearningPlatformLogo";
 import { useAuth } from "../../hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -27,11 +27,24 @@ const Navbar = () => {
       icon: User,
     },
   ];
-    const location = useLocation();
-    const isForum = location.pathname === '/forum';
-  
-   
-  
+  const location = useLocation();
+  const forumPaths = ['/forum', '/posts'];
+  const isInForum = forumPaths.some(path => location.pathname.startsWith(path));
+  const isForum = isInForum; // Re-defining for backward compatibility in the template
+
+  const displayMenuItems = isInForum
+    ? [
+      {
+        label: "Bài viết của tôi",
+        path: "/forum/my-posts",
+        icon: FileText,
+      },
+      ...userMenuItems,
+    ]
+    : userMenuItems;
+
+
+
   const handleLogout = async () => {
     try {
       const result = await authService.logout();
@@ -73,9 +86,9 @@ const Navbar = () => {
 
           {/* Search Bar - Desktop */}
           {isForum ? null :
-          <div className="hidden md:flex items-center flex-1 max-w-2xl">
-            <SearchBar />
-          </div>}
+            <div className="hidden md:flex items-center flex-1 max-w-2xl">
+              <SearchBar />
+            </div>}
           {/* Desktop Navigation */}
           {/* <div className="hidden md:flex items-center space-x-8">
             {navigationItems.map((item) => (
@@ -94,52 +107,52 @@ const Navbar = () => {
             {user ? (
               <div className="flex items-center space-x-4 justify-center" ref={userMenuRef}>
                 {/* // Notification Bell Icon */}
-             <div className="relative">
+                <div className="relative">
                   <button className="text-gray-700 hover:text-blue-600 p-2 rounded-md transition-colors">
                     <Bell className="w-6 h-6" />
                   </button>
                   <span className="absolute top-2 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full transform translate-x-1/2 -translate-y-1/2">
-                   0
+                    0
                   </span>
                 </div>
                 <div className="relative">
-                <button
-                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  <img
-                    src={user.image || "https://static.vecteezy.com/system/resources/previews/024/766/958/non_2x/default-male-avatar-profile-icon-social-media-user-free-vector.jpg"}
-                    alt={user.fullName}
-                    className="w-8 h-8 rounded-full object-cover"
-                  />
-                  <span>{user.fullName}</span>
-                  <ChevronDown className="w-4 h-4" />
-                </button>
+                  <button
+                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                    className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  >
+                    <img
+                      src={user.image || "https://static.vecteezy.com/system/resources/previews/024/766/958/non_2x/default-male-avatar-profile-icon-social-media-user-free-vector.jpg"}
+                      alt={user.fullName}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                    <span>{user.fullName}</span>
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
 
-                {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
-                    {userMenuItems.map((item) => (
-                      <Link
-                        key={item.path}
-                        to={item.path}
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                        onClick={() => setIsUserMenuOpen(false)}
+                  {isUserMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+                      {displayMenuItems.map((item) => (
+                        <Link
+                          key={item.path}
+                          to={item.path}
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          <item.icon className="w-4 h-4 mr-3" />
+                          {item.label}
+                        </Link>
+                      ))}
+                      <hr className="my-1" />
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
                       >
-                        <item.icon className="w-4 h-4 mr-3" />
-                        {item.label}
-                      </Link>
-                    ))}
-                    <hr className="my-1" />
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                    >
-                      <LogOut className="w-4 h-4 mr-3" />
-                      Đăng xuất
-                    </button>
-                  </div>
-                )}
-              </div>
+                        <LogOut className="w-4 h-4 mr-3" />
+                        Đăng xuất
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             ) : (
               <div className="flex items-center space-x-3">
@@ -208,7 +221,7 @@ const Navbar = () => {
 
               {user ? (
                 <>
-                  {userMenuItems.map(item => (
+                  {displayMenuItems.map(item => (
                     <Link
                       key={item.path}
                       to={item.path}
@@ -243,7 +256,7 @@ const Navbar = () => {
           </div>
         )}
       </div>
-        
+
     </nav>
   );
 };
