@@ -26,7 +26,7 @@ const upload = multer({
 
 // Wrapper function với error handling
 export const uploadSingle = (req: any, res: any, next: any) => {
-  const multerSingle = upload.single("image");
+  const multerSingle = upload.single("coverImage");
   
   multerSingle(req, res, (err: any) => {
     if (err) {
@@ -38,3 +38,32 @@ export const uploadSingle = (req: any, res: any, next: any) => {
 };
 
 export const uploadMultiple = upload.array("images", 5);
+
+// Forum images upload (cover + content images)
+export const uploadForumImages = (req: any, res: any, next: any) => {
+  const multerFields = upload.fields([
+    { name: "coverImage", maxCount: 1 },
+    { name: "contentImages", maxCount: 5 }
+  ]);
+  
+  multerFields(req, res, (err: any) => {
+    if (err) {
+      console.error('[uploadForumImages] ERROR:', err.message);
+      return res.status(400).json({ success: false, error: err.message });
+    }
+    next();
+  });
+};
+
+// Single content image upload for editor
+export const uploadContentImage = (req: any, res: any, next: any) => {
+  const multerSingle = upload.single("image");
+  
+  multerSingle(req, res, (err: any) => {
+    if (err) {
+      console.error('[uploadContentImage] ERROR:', err.message);
+      return res.status(400).json({ success: false, error: err.message });
+    }
+    next();
+  });
+};

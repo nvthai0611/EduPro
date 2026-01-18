@@ -1,8 +1,9 @@
-import { Link } from "react-router-dom";
-import { Clock, Eye, MessageCircle, Share2, Bookmark } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { Clock, Eye, MessageCircle, Share2, Bookmark, Pencil } from "lucide-react";
 import { useState } from "react";
 
-const PostCard = ({ post, variant = "default" }) => {
+const PostCard = ({ post, variant = "default", canEdit = false }) => {
+  const navigate = useNavigate();
   const [isBookmarked, setIsBookmarked] = useState(false);
 
   const handleBookmark = (e) => {
@@ -16,14 +17,34 @@ const PostCard = ({ post, variant = "default" }) => {
     console.log("Share post:", post._id);
   };
 
+  const handleEdit = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(`/forum/edit/${post.slug || post._id}`);
+  };
+  const modifyTag = (tag) => {
+    try {
+      const parsed = JSON.parse(tag);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    } catch (e) {
+      // If not JSON, return as is
+    }
+    return [tag];
+  };
+  const flattenedTags = post.tags?.flatMap(tag => modifyTag(tag)) || [];
+
+
   if (variant === "compact") {
+    const postPath = post.slug || post._id;
     return (
       <Link
-        to={`/forum/${post.slug}`}
+        to={`/posts/${postPath}`}
         className="group flex gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors"
       >
         <img
-          src={post.thumbnail || "https://via.placeholder.com/120x80"}
+          src={post.coverImageUrl || "https://via.placeholder.com/120x80"}
           alt={post.title}
           className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
         />
@@ -32,7 +53,7 @@ const PostCard = ({ post, variant = "default" }) => {
             {post.title}
           </h4>
           <div className="flex items-center gap-2 text-xs text-gray-500">
-            <span>{post.author?.name || "Anonymous"}</span>
+            <span>{post.authorName || "Anonymous"}</span>
             <span>•</span>
             <span>{post.readTime || "5"} phút</span>
           </div>
@@ -43,13 +64,13 @@ const PostCard = ({ post, variant = "default" }) => {
 
   return (
     <article className="group bg-white rounded-xl overflow-hidden hover:shadow-md transition-all duration-300 border border-gray-100">
-      <Link to={`/forum/${post.slug}`} className="block">
+      <Link to={`/posts/${post.slug || post._id}`} className="block">
         {/* Thumbnail */}
-        <div className="relative overflow-hidden aspect-[16/9] bg-gray-200">
+        <div className="float-left w-48 mr-4 mb-2 relative overflow-hidden bg-gray-200 rounded-lg">
           <img
-            src={post.thumbnail || "https://via.placeholder.com/800x450"}
+            src={post.coverImageUrl || "https://via.placeholder.com/800x450"}
             alt={post.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
           />
           {post.category && (
@@ -65,7 +86,6 @@ const PostCard = ({ post, variant = "default" }) => {
           <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors">
             {post.title}
           </h3>
-
           {/* Excerpt */}
           {post.excerpt && (
             <p className="text-sm text-gray-600 mb-4 line-clamp-2">
@@ -76,7 +96,7 @@ const PostCard = ({ post, variant = "default" }) => {
           {/* Tags */}
           {post.tags && post.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-4">
-              {post.tags.slice(0, 3).map((tag, index) => (
+              {flattenedTags.slice(0, 3).map((tag, index) => (
                 <span
                   key={index}
                   className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded-md hover:bg-gray-200 transition-colors"
@@ -92,12 +112,12 @@ const PostCard = ({ post, variant = "default" }) => {
             <div className="flex items-center gap-3">
               <img
                 src={post.author?.avatar || "https://i.pravatar.cc/40"}
-                alt={post.author?.name}
+                alt={post.authorName}
                 className="w-8 h-8 rounded-full"
               />
               <div>
                 <p className="text-sm font-medium text-gray-900">
-                  {post.author?.name || "Anonymous"}
+                  {post.authorName || "Anonymous"}
                 </p>
                 <div className="flex items-center gap-2 text-xs text-gray-500">
                   <span>{post.createdAt || "1 ngày trước"}</span>
@@ -112,15 +132,23 @@ const PostCard = ({ post, variant = "default" }) => {
 
             {/* Quick Actions */}
             <div className="flex items-center gap-2">
+              {canEdit && (
+                <button
+                  onClick={handleEdit}
+                  className="p-2 hover:bg-blue-50 text-blue-600 rounded-full transition-colors"
+                  title="Chỉnh sửa bài viết"
+                >
+                  <Pencil className="w-4 h-4" />
+                </button>
+              )}
               <button
                 onClick={handleBookmark}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                 aria-label="Bookmark"
               >
                 <Bookmark
-                  className={`w-4 h-4 ${
-                    isBookmarked ? "fill-blue-600 text-blue-600" : "text-gray-400"
-                  }`}
+                  className={`w-4 h-4 ${isBookmarked ? "fill-blue-600 text-blue-600" : "text-gray-400"
+                    }`}
                 />
               </button>
               <button
