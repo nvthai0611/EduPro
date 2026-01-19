@@ -206,34 +206,6 @@ export default function CourseLearnDetail() {
     }
   }, [currentPlayingVideo, sections, queryClient, getNextLesson]);
 
-  // Debug logging
-  // useEffect(() => {
-  //   if (currentPlayingVideo) {
-  //     console.log('📹 Current Playing Video:', currentPlayingVideo);
-  //     console.log('🎬 Video ID:', currentPlayingVideo.videoId);
-  //     console.log('📝 Type:', currentPlayingVideo.type);
-  //   }
-  // }, [currentPlayingVideo]);
-
-    // useEffect(() => {
-    //   if (fullLessonData) {
-    //     console.log('✅ Full Lesson Data loaded:', fullLessonData);
-    //   }
-    //   if (lessonError) {
-    //     console.error('❌ Lesson Error:', lessonError);
-    //   }
-    // }, [fullLessonData, lessonError]);
-
-  // useEffect(() => {
-  //   if (fullArticleData) {
-  //     console.log('✅ Full Article Data loaded:', fullArticleData);
-  //   }
-  //   if (articleError) {
-  //     console.error('❌ Article Error:', articleError);
-  //   }
-  // }, [fullArticleData, articleError]);
-
-  // State cho dialog
   const [isCommentDialogOpen, setCommentDialogOpen] = useState(false);
 
   // Lesson comment state
