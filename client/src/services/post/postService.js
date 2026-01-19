@@ -101,7 +101,7 @@ export const postService = {
   // Delete a post
   deletePost: async (postId) => {
     try {
-      const response = await apiClient.delete(`/posts/id/${postId}`);
+      const response = await apiClient.delete(`/posts/${postId}`);
       return response.data;
     } catch (error) {
       console.error('Error deleting post:', error);
@@ -123,6 +123,29 @@ export const postService = {
       return response.data;
     } catch (error) {
       console.error('Error uploading image:', error);
+      throw error;
+    }
+  },
+  // post reaction
+  createPostReaction: async (postId, reactionData) => {
+    try {
+      const response = await apiClient.post(`/posts/${postId}/reactions`, reactionData);
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error creating post reaction:', error);
+      throw error;
+    }
+  },
+  deletePostReaction: async (postId, reactionId, type) => {
+    try {
+      const url = reactionId 
+        ? `/posts/${postId}/reactions/${reactionId}`
+        : `/posts/${postId}/reactions/by-type?type=${type}`;
+      const response = await apiClient.delete(url);
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting post reaction:', error);
       throw error;
     }
   },

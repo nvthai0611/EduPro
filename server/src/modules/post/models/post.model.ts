@@ -1,5 +1,5 @@
 import { model, Schema, Types } from "mongoose";
-import { generateSlug } from "../../utils/slug";
+import { generateSlug } from "../../../utils/slug";
 
 
 export interface IForum{
@@ -11,7 +11,9 @@ export interface IForum{
     coverImageUrl?: string;
     contentImageUrls?: string[];
     tags?: string[];
-    
+    // Like and save posts count
+    likesCount: number;
+    savesCount: number;
     // New fields for Answer/Comment system
     answersCount: number;
     commentsCount: number; // Semantics: Total comments (post + its answers)
@@ -39,6 +41,10 @@ const ForumSchema = new Schema<IForumDocument>(
         coverImageUrl: { type: String },
         contentImageUrls: { type: [String], default: [] },
         tags: { type: [String], default: [] },
+
+        //Like and save posts count
+        likesCount: { type: Number, default: 0 },
+        savesCount: { type: Number, default: 0 },
         
         // New fields
         answersCount: { type: Number, default: 0 },

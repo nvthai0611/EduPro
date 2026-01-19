@@ -30,6 +30,20 @@ class postService {
   async updatePost(id: string, data: any): Promise<any> {
     return PostRepository.updatePost(id, data);
   }
+
+  // Post reaction
+  async findUserReactions(userId: string, postId: string): Promise<any[]> {
+    return PostRepository.findUserReactions(userId, postId);
+  }
+  async createPostReaction(data: any): Promise<any> {
+    return PostRepository.createPostReaction(data);
+  }
+  async deletePostReaction(id: string): Promise<any> {
+    return PostRepository.deletePostReaction(id);
+  }
+  async deleteUserReaction(userId: string, postId: string, type: string): Promise<any> {
+    return PostRepository.deleteUserReaction(userId, postId, type);
+  }
 }
 
 export const PostService = new postService();

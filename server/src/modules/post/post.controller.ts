@@ -29,14 +29,27 @@ class postController {
   }
   async getPostById(req: any, res: any): Promise<void> {
     try {
-      const post = await PostService.getPostById(req.params.id);
+      let post = await PostService.getPostById(req.params.id);
       if (!post) {
         res.status(404).json({ success: false, message: "Post not found" });
         return;
       }
+      
+      // Check for user reactions if authenticated
+      const userId = req.user?.id || req.user?.userId;
+      if (userId) {
+        const reactions = await PostService.findUserReactions(userId, post._id.toString());
+        post = {
+          ...post,
+          isLiked: reactions.some(r => r.type === "LIKE"),
+          isSaved: reactions.some(r => r.type === "SAVE"),
+          userReactions: reactions
+        };
+      }
+
       res.status(200).json({ success: true, data: post   });
     } catch (error) {
-      res.status(500).json({ success: false, message: "Server Error", error });
+      res.status(500).json({ success: false, message: "Server Error", error: error.message });
     }
   }
   async getMine(req: any, res: any): Promise<void> {
@@ -62,14 +75,27 @@ class postController {
   }
   async getPostsBySlug(req: any, res: any): Promise<void> {
     try {
-      const post = await PostService.getPostBySlug(req.params.slug);
+      let post = await PostService.getPostBySlug(req.params.slug);
       if (!post) {
         res.status(404).json({ success: false, message: "Post not found" });
         return;
       } 
+
+      // Check for user reactions if authenticated
+      const userId = req.user?.id || req.user?.userId;
+      if (userId) {
+        const reactions = await PostService.findUserReactions(userId, post._id.toString());
+        post = {
+          ...post,
+          isLiked: reactions.some(r => r.type === "LIKE"),
+          isSaved: reactions.some(r => r.type === "SAVE"),
+          userReactions: reactions
+        };
+      }
+
       res.status(200).json({ success: true, data: post });
     } catch (error) {
-      res.status(500).json({ success: false, message: "Server Error", error });
+      res.status(500).json({ success: false, message: "Server Error", error: error.message });
     }
   }
   async createPost(req: any, res: any): Promise<void> {
@@ -122,7 +148,16 @@ class postController {
         return;
       }
 
-      const post = await PostService.updatePost(req.params.id, req.body);
+      // 3. Prepare update data
+      const updateData = { ...req.body };
+      
+      // Handle uploaded cover image from Cloudinary if new file uploaded
+      if (req.file) {
+        updateData.coverImageUrl = req.file.path;
+      }
+
+      // 4. Update post
+      const post = await PostService.updatePost(req.params.id, updateData);
       res.status(200).json({ success: true, data: post });
     } catch (error) {
       res.status(500).json({ success: false, message: "Server Error", error: error.message });
@@ -149,6 +184,7 @@ class postController {
       // 3. Extract image URLs for cleanup before deleting from DB
       const imageUrls: string[] = [];
       if (post.coverImageUrl) imageUrls.push(post.coverImageUrl);
+      
       
       // Extract from content
       const imgRegex = /<img[^>]+src="([^">]+)"/g;
@@ -198,6 +234,57 @@ class postController {
     } catch (error) {
       console.error("❌ Upload image error:", error);
       res.status(500).json({ success: false, message: "Server Error", error });
+    }
+  }
+
+  // Post reaction
+  async createPostReaction(req: any, res: any): Promise<void> {
+    try {
+      const { id: postId } = req.params;
+      const { type } = req.body;
+      
+      // Get author ID and name from authenticated user
+      if (!req.user || !req.user.id) {
+        res.status(401).json({ success: false, message: "User not authenticated" });
+        return;
+      }
+
+      const userId = req.user.id;
+      
+      const reaction = await PostService.createPostReaction({
+        userId,
+        postId,
+        type
+      });
+      
+      res.status(201).json({ success: true, data: reaction });
+    } catch (error) {
+      console.error("Error creating post reaction:", error);
+      res.status(500).json({ success: false, message: "Server Error", error: error.message });
+    }
+  }
+
+  async deletePostReaction(req: any, res: any): Promise<void> {
+    try {
+      const { id: postId, reactionId } = req.params;
+      const { type } = req.query; // Allow passing type in query for easier "unlike"
+      
+      const userId = req.user?.id || req.user?.userId;
+
+      let reaction;
+      if (reactionId && reactionId !== "by-type") {
+        reaction = await PostService.deletePostReaction(reactionId);
+      } else if (userId && postId && type) {
+        reaction = await PostService.deleteUserReaction(userId, postId, type as string);
+      } else {
+        res.status(400).json({ success: false, message: "Reaction ID or (Post ID + Type) is required" });
+        return;
+      }
+
+      res.status(200).json({ success: true, data: reaction });
+    } catch (error) {
+      console.error("Error deleting post reaction:", error);
+      res.status(500).json({ success: false, message: "Server Error", error: error.message });
     }
   }
 }

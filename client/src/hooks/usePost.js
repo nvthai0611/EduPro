@@ -142,3 +142,31 @@ export const useUploadPostImage = () => {
     mutationFn: (imageFile) => postService.uploadImage(imageFile),
   });
 };
+
+// Post reaction mutation
+export const useCreatePostReaction = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ postId, reactionData }) => postService.createPostReaction(postId, reactionData),
+    onSuccess: (data, variables) => {
+      // Invalidate specific post and list
+      queryClient.invalidateQueries({ queryKey: postKeys.detail(variables.postId) });
+      queryClient.invalidateQueries({ queryKey: postKeys.list() });
+    },
+  });
+};
+
+export const useDeletePostReaction = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ postId, reactionId, type }) => postService.deletePostReaction(postId, reactionId, type),
+    onSuccess: (data, variables) => {
+      // Invalidate specific post and list
+      queryClient.invalidateQueries({ queryKey: postKeys.detail(variables.postId) });
+      queryClient.invalidateQueries({ queryKey: postKeys.list() });
+    },
+  });
+};
+

@@ -1,5 +1,5 @@
 import  Answers, { IAnswer } from "./answer.model";
-import Posts from "../post/post.model";
+import Posts from "../post/models/post.model";
 import AnswerVotes from "../vote/vote.model";
 import mongoose, { Types } from "mongoose";
 
