@@ -239,3 +239,24 @@ export const formatGradientColor = () => {
 
   return gradients;
 }
+
+export const formatTimeAgo = (date) => {
+  const now = new Date();
+  const past = new Date(date);
+  const diffMs = now - past;
+
+  const seconds = Math.floor(diffMs / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  const months = Math.floor(days / 30);
+  const years = Math.floor(days / 365);
+
+  if (seconds < 60) return `Đăng ${seconds} giây trước`;
+  if (minutes < 60) return `Đăng ${minutes} phút trước`;
+  if (hours < 24) return `Đăng ${hours} giờ trước`;
+  if (days < 30) return `Đăng ${days} ngày trước`;
+  if (months < 12) return `Đăng ${months} tháng trước`;
+
+  return `Đăng ${years} năm trước`;
+}

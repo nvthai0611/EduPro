@@ -14,6 +14,9 @@ import CourseDetail from "../pages/Courses/CourseDetail";
 // import Home from "../pages/Home/Home";
 import LoginPage from "../pages/Auth/Login";
 import ForumHome from "../pages/Forum/ForumHome";
+import PostDetail from "../pages/Forum/PostDetail";
+import CreateForumPost from "../pages/Forum/CreateForumPost";
+import MyPosts from "../pages/Forum/MyPosts";
 
 // Learning Platform
 
@@ -32,9 +35,13 @@ export const publicRoutes = (
           <Route index element={<CourseList />} />
           <Route path="category/:categorySlug" element={<CourseList />} />
           <Route path=":slug" element={<CourseDetail />} />
-          
+
         </Route>
         <Route path="/forum" element={<ForumHome />} />
+        <Route path="/forum/create" element={<CreateForumPost />} />
+        <Route path="/forum/edit/:slug" element={<CreateForumPost />} />
+        <Route path="/forum/my-posts" element={<MyPosts />} />
+        <Route path="/posts/:slug" element={<PostDetail />} />
       </Route>
     </Route>
   </>
