@@ -5,6 +5,7 @@ import Sidebar from "./components/Sidebar";
 import WritePostButton from "./components/WritePostButton";
 import SideBar from "../Home/components/SideBar";
 import { useGetAllPosts } from "../../hooks/usePost";
+import { Link } from "react-router-dom";
 
 const ForumHome = () => {
   const [page, setPage] = useState(1);
@@ -30,8 +31,12 @@ const ForumHome = () => {
           <div className="relative">
             <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-4">
               {trendingPosts.map((post) => (
-                <div key={post._id} className="flex-shrink-0 w-64 bg-gray-50 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                  <img
+                <div key={post.slug} className="flex-shrink-0 w-64 bg-gray-50 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                 
+                  <Link
+                         to={`/posts/${post.slug || post._id}`}
+                         
+                       > <img
                     src={post.coverImageUrl || "https://via.placeholder.com/256x144"}
                     alt={post.title}
                     className="w-full h-36 object-cover"
@@ -49,6 +54,7 @@ const ForumHome = () => {
                       <span className="text-xs text-gray-600">{post.authorName || "Anonymous"}</span>
                     </div>
                   </div>
+                  </Link>
                 </div>
               ))}
             </div>

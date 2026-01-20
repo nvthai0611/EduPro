@@ -399,15 +399,28 @@ const CreateForumPost = () => {
         response = await createPostMutation.mutateAsync(formData);
       }
 
-      if (response.success || response.data?.success) {
+      // console.log("📝 Create/Update response:", response);
+
+      // Check if operation was successful
+      const isSuccess = response?.success || response?.data?.success;
+      // console.log("✅ Is success:", isSuccess);
+
+      if (isSuccess) {
         toast.success(isEdit ? "Cập nhật bài viết thành công!" : "Tạo bài viết thành công!");
         showSuccessDialog(isEdit ? "Cập nhật bài viết thành công!" : "Tạo bài viết thành công!");
         setTimeout(() => {
           if (isEdit) {
-            navigate(`/posts/${response.data?.slug || post.slug}`);
+            navigate(`/posts/${response.data?.slug || response?.slug || post.slug}`);
           } else {
-            window.location.href = "/forum";
+            navigate("/forum");
           }
+        }, 1500);
+      } else {
+        // If response doesn't have success flag, still redirect if we have data
+        console.warn("⚠️ Response doesn't have success flag, but attempting redirect anyway");
+        toast.success(isEdit ? "Cập nhật bài viết thành công!" : "Tạo bài viết thành công!");
+        setTimeout(() => {
+          navigate("/forum");
         }, 1500);
       }
     } catch (error) {

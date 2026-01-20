@@ -17,7 +17,8 @@ class postController {
       // Use authorName from DB (already saved when creating)
       const transformedPosts = posts.map((post: any) => ({
         ...post,
-        authorName: post.authorName || 'Anonymous'
+        authorName: post.authorName || 'Anonymous',
+        excerpt: post.content ? post.content.slice(0, 150).replace(/<\/?[^>]+(>|$)/g, "") + "..." : ""
       }));
       
       console.log("Transformed posts:", transformedPosts.length);

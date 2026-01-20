@@ -68,13 +68,11 @@ ForumSchema.pre("save", async function (next) {
     // Generate slug from title
     const baseSlug = generateSlug(this.title);
     
-    // Check for uniqueness
-    let slug = baseSlug;
-    let counter = 1;
-    while (await model("Posts").findOne({ slug })) {
-      slug = `${baseSlug}-${counter}`;
-      counter++;
-    }
+    // Add timestamp and random string for uniqueness
+    const timestamp = Date.now();
+    const randomStr = Math.random().toString(36).substring(2, 8); // 6 random chars
+    const slug = `${baseSlug}-${timestamp}-${randomStr}`;
+    
     this.slug = slug;
   }
   next();
