@@ -63,6 +63,26 @@ const ForumSchema = new Schema<IForumDocument>(
         toObject: { virtuals: true },
     }
 );
+
+// Indexes for performance optimization at scale
+// Compound index for sorting by createdAt (most common query)
+ForumSchema.index({ createdAt: -1 });
+
+// Index for author queries
+ForumSchema.index({ authorId: 1, createdAt: -1 });
+
+// Index for tag-based queries
+ForumSchema.index({ tags: 1, createdAt: -1 });
+
+// Text index for search functionality
+ForumSchema.index({ title: "text", content: "text" });
+
+// Index for trending posts (by engagement)
+ForumSchema.index({ likesCount: -1, commentsCount: -1 });
+
+// Index for slug lookup (already unique, but explicit for clarity)
+ForumSchema.index({ slug: 1 });
+
 ForumSchema.pre("save", async function (next) {
   if (this.isModified("title") && !this.slug) {
     // Generate slug from title

@@ -1,21 +1,102 @@
 import { apiClient } from "../../utils/clientAxios";
 
 export const postService = {
-  // Get all posts
-  getAll: async () => {
+  // Get all posts with pagination
+  getAll: async (params = {}) => {
     try {
-      const response = await apiClient.get('/posts');
-      // Handle nested response structure { success, data }
-      if (response.data?.success && response.data?.data) {
-        return response.data.data;
+      const queryParams = new URLSearchParams();
+      
+      // Add pagination parameters
+      if (params.page) queryParams.append('page', params.page);
+      if (params.limit) queryParams.append('limit', params.limit);
+      if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+      if (params.sortOrder) queryParams.append('sortOrder', params.sortOrder);
+      if (params.search) queryParams.append('search', params.search);
+      if (params.tags) queryParams.append('tags', params.tags);
+      if (params.authorId) queryParams.append('authorId', params.authorId);
+      
+      const url = `/posts${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      // console.log("🌐 Fetching URL:", url);
+      const response = await apiClient.get(url);
+      
+      // console.log("🌐 Raw Axios Response:", response);
+      // console.log("🌐 Response.data:", response.data);
+      
+      // Check if response itself has success flag (interceptor already unwrapped)
+      if (response.success) {
+        const result = {
+          posts: response.data || [],
+          pagination: response.pagination || {}
+        };
+        // console.log("🌐 Returning (from response):", result);
+        return result;
       }
-      return response.data;
+      
+      // Otherwise check response.data for nested structure
+      if (response.data?.success) {
+        const result = {
+          posts: response.data.data || [],
+          pagination: response.data.pagination || {}
+        };
+        // console.log("🌐 Returning (from response.data):", result);
+        return result;
+      }
+      
+      // console.log("🌐 Response doesn't have success flag, using fallback");
+      return { posts: Array.isArray(response.data) ? response.data : [], pagination: {} };
     } catch (error) {
       console.error('Error fetching posts:', error);
       throw error;
     }
   },
+  // Get trending posts
+getTrending: async (params = {}) => {
+  try {
+    const queryParams = new URLSearchParams();
+    if (params.limit) queryParams.append('limit', params.limit);
+    if (params.timeRange) queryParams.append('timeRange', params.timeRange);
+    
+    const url = `/posts/trending${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await apiClient.get(url);
+    
+    if (response.success) {
+      return response.data;
+    }
+    
+    if (response.data?.success) {
+      return response.data.data;
+    }
+    
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    console.error('Error fetching trending posts:', error);
+    throw error;
+  }
+},
 
+// Get featured posts
+getFeatured: async (params = {}) => {
+  try {
+    const queryParams = new URLSearchParams();
+    if (params.limit) queryParams.append('limit', params.limit);
+    
+    const url = `/posts/featured${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await apiClient.get(url);
+    
+    if (response.success) {
+      return response.data;
+    }
+    
+    if (response.data?.success) {
+      return response.data.data;
+    }
+    
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    console.error('Error fetching featured posts:', error);
+    throw error;
+  }
+},
   // Get post by ID
   getPostById: async (id) => {
     try {

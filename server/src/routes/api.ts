@@ -106,7 +106,7 @@ export const apiRouter = (io?: Server) => {
 
   router.use("/admin/forum", adminForumRoutes);
   router.use("/forum", forumRoutes);
-  router.use("/posts", optionalAuth, postRoutes);
+  router.use("/posts", postRoutes);
   router.use("/answers", optionalAuth, answerRoutes);
   router.use("/comments", optionalAuth, commentRoutes);
   return router;

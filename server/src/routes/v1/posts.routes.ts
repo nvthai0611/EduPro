@@ -42,4 +42,7 @@ router.post("/:id/reactions", authenticateToken, postController.createPostReacti
 // Delete post reaction - Protected route (login user)
 router.delete("/:id/reactions/:reactionId", authenticateToken, postController.deletePostReaction);
 
+// get trending posts
+router.get("/trending", postController.getTrendingPosts);
+router.get("/featured", postController.getFeaturedPosts);
 export const postRoutes: Router = router;

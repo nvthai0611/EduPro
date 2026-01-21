@@ -6,17 +6,17 @@ import {
   Route,
   Library
 } from 'lucide-react';
-import { useAuth } from '../../../hooks/useAuth';
+// import { useAuth } from '../../../hooks/useAuth';
 
 const SideBar = () => {
   // const location = useLocation();
 
   const isActive = (path) => location.pathname === path;
-  const { user } = useAuth();
+  // const { user } = useAuth();
 
   const menuItems = [
     { path: '/', icon: Home, label: 'Trang chủ' },
-    user && { path: '/forum', icon: Library, label: 'Thảo luận' },
+     { path: '/forum', icon: Library, label: 'Thảo luận' },
     { path: '/about', icon: BookOpen, label: 'Giới thiệu' },
     { path: '/advisory', icon: Route, label: 'Lộ trình' },
     { path: "", icon: HelpCircle, label: 'Help' }
