@@ -1,7 +1,7 @@
 import { Loader2, ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import PostCard from "./components/PostCard";
-import Sidebar from "./components/Sidebar";
+
 import WritePostButton from "./components/WritePostButton";
 import SideBar from "../Home/components/SideBar";
 import { useMyPosts } from "../../hooks/usePost";
@@ -20,7 +20,6 @@ const MyPosts = () => {
     // For trending sidebar (we can still show global trending or user trending)
     // Let's just show an empty array or fetch global ones if needed.
     // For now, let's keep it simple.
-    const trendingPosts = [];
 
     return (
         <div className="min-h-screen bg-gray-50 flex">

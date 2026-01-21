@@ -1,5 +1,5 @@
 import Comments, { IComment } from "./comment.model";
-import Posts from "../post/post.model";
+import Posts from "../post/models/post.model";
 import Answers from "../answer/answer.model";
 
 export class CommentService {
