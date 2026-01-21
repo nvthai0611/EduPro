@@ -49,7 +49,7 @@ const PostCard = ({ post, variant = "default", canEdit = false }) => {
           alt={post.title}
           className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
         />
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 ml-2">
           <h4 className="text-sm font-semibold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors mb-1">
             {post.title}
           </h4>

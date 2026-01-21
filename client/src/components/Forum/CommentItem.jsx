@@ -2,11 +2,14 @@ import { useState } from "react";
 import { formatTimeAgo } from "../../utils/format";
 import CreateComment from "./CreateComment";
 
-const CommentItem = ({ comment, onReply }) => {
+const CommentItem = ({ comment, onReply, rootCommentId }) => {
     const [isReplying, setIsReplying] = useState(false);
 
     const handleReplySubmit = async (content) => {
-        await onReply(comment._id, content); // Pass parentId
+        // If this is a reply (has parentId), use the root comment ID
+        // Otherwise, use this comment's ID as the parent
+        const targetParentId = comment.parentId ? (rootCommentId || comment.parentId) : comment._id;
+        await onReply(targetParentId, content);
         setIsReplying(false);
     };
 
@@ -31,14 +34,12 @@ const CommentItem = ({ comment, onReply }) => {
                 </div>
 
                 <div className="flex gap-4 mt-1 ml-1">
-                    {!comment.parentId && (
-                        <button
-                            onClick={() => setIsReplying(!isReplying)}
-                            className="text-xs font-medium text-gray-500 hover:text-blue-600 transition-colors"
-                        >
-                            Trả lời
-                        </button>
-                    )}
+                    <button
+                        onClick={() => setIsReplying(!isReplying)}
+                        className="text-xs font-medium text-gray-500 hover:text-blue-600 transition-colors"
+                    >
+                        Trả lời
+                    </button>
                 </div>
 
                 {isReplying && (

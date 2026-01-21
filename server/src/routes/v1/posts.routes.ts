@@ -6,6 +6,8 @@ import optionalAuthenticate from "../../middlewares/auth/optionalAuthenticate";
 import { authorizeRoles } from "../../middlewares/auth/authorizeRoles";
 import postController from "../../modules/post/post.controller";
 import { uploadContentImage, uploadSingle } from "../../middlewares/servers/uploadCloudinary";
+import answerController from "../../modules/answer/answer.controller";
+import commentController from "../../modules/comment/comment.controller";
 const router: Router = Router();
 
 router.get("/health", (req, res) => {
@@ -41,6 +43,15 @@ router.post("/:id/reactions", authenticateToken, postController.createPostReacti
 
 // Delete post reaction - Protected route (login user)
 router.delete("/:id/reactions/:reactionId", authenticateToken, postController.deletePostReaction);
+
+// router.get("/:id/answers", answerController.getAnswersByPostId);
+
+// // Create answer for a post
+// router.post("/:id/answers", authenticateToken, answerController.createAnswer);
+
+// Create comment for a post
+router.post("/:id/comments", authenticateToken, commentController.createPostComment);
+
 
 // get trending posts
 router.get("/trending", postController.getTrendingPosts);

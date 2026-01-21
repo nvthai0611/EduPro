@@ -70,17 +70,29 @@ const PostComments = ({ postId }) => {
 
             {/* List */}
             <div className={`space-y-2 transition-opacity ${isRefreshing ? 'opacity-50 pointer-events-none' : ''}`}>
-                {rootComments.map(comment => (
-                    <div key={comment._id}>
-                        <CommentItem comment={comment} onReply={handleReply} />
-                        {/* Render Replies */}
-                        <div className="pl-12 border-l-2 border-gray-100 ml-4">
-                            {getReplies(comment._id).map(reply => (
-                                <CommentItem key={reply._id} comment={reply} onReply={handleReply} />
-                            ))}
-                        </div>
-                    </div>
-                ))}
+                {rootComments.map(comment => {
+                    const renderCommentWithReplies = (parentComment, depth = 0, rootId = null) => {
+                        const replies = getReplies(parentComment._id);
+                        const currentRootId = rootId || parentComment._id;
+                        return (
+                            <div key={parentComment._id}>
+                                <CommentItem 
+                                    comment={parentComment} 
+                                    onReply={handleReply}
+                                    rootCommentId={currentRootId}
+                                />
+                                {/* Render Replies recursively */}
+                                {replies.length > 0 && (
+                                    <div className="pl-12 border-l-2 border-gray-100 ml-4">
+                                        {replies.map(reply => renderCommentWithReplies(reply, depth + 1, currentRootId))}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    };
+                    
+                    return renderCommentWithReplies(comment);
+                })}
                 {rootComments.length === 0 && (
                     <p className="text-gray-400 text-sm italic">Chưa có bình luận nào.</p>
                 )}

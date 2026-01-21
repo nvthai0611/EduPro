@@ -131,7 +131,7 @@ const ForumHome = () => {
                       className="w-full h-36 object-cover"
                     />
                     <div className="p-4">
-                      <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 mb-2 min-h-[3rem] leading-tight">
+                      <h3 className="text-sm font-semibold text-gray-900 line-clamp-3 mb-2 min-h-[3rem] leading-tight">
                         {post.title}
                       </h3>
                       <div className="flex items-center gap-2">
