@@ -107,7 +107,6 @@ app.use(cookieParser());
 
 app.use(attachUser); 
 app.use(morgan("dev"));
-app.use(dbLogger); 
 
 app.use("/uploads", express.static("uploads"));
 app.use(
@@ -223,7 +222,7 @@ const socketService = new SocketService(io);
 socketService.listen();
 
 // ================= API Routes =================
-app.use("/api/v1", limitRequestsMiddleware, apiRouter(io));
+app.use("/api/v1", limitRequestsMiddleware, dbLogger, apiRouter(io));
 
 // ================= 404 & Error Handler =================
 app.use((req, res, next) => {

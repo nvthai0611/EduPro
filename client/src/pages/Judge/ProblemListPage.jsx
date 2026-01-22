@@ -1,33 +1,13 @@
-import { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { useMemo, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft } from "lucide-react"
-
-const problems = [
-  {
-    id: "two-sum",
-    title: "Two Sum",
-    difficulty: "Easy",
-    tests: 3,
-    solved: false,
-  },
-  {
-    id: "reverse-string",
-    title: "Reverse String",
-    difficulty: "Easy",
-    tests: 5,
-    solved: true,
-  },
-  {
-    id: "longest-substring",
-    title: "Longest Substring Without Repeating Characters",
-    difficulty: "Medium",
-    tests: 10,
-    solved: false,
-  },
-]
+import { ArrowLeft, Pencil, Trash2 } from "lucide-react"
+import { AddProblemDialog } from "./AddProblemDialog"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { getAllProblems } from "../../services/user/judgeService"
+import { deleteProblem } from "../../services/admin/judgeService"
 
 const difficultyColor = {
   Easy: "bg-green-100 text-green-700 border-green-200",
@@ -36,48 +16,88 @@ const difficultyColor = {
 }
 
 export default function ProblemListPage() {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
   const [difficultyFilter, setDifficultyFilter] = useState("All")
-  const [statusFilter, setStatusFilter] = useState("All")
+  const queryClient = useQueryClient()
 
-  const filteredProblems = problems.filter((p) => {
-    const matchDifficulty =
-      difficultyFilter === "All" || p.difficulty === difficultyFilter
-
-    const matchStatus =
-      statusFilter === "All" ||
-      (statusFilter === "Solved" && p.solved) ||
-      (statusFilter === "Unsolved" && !p.solved)
-
-    return matchDifficulty && matchStatus
+  const {
+    data: problems = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["problems"],
+    queryFn: getAllProblems,
+    staleTime: 5 * 60 * 1000, // cache 5 phút
   })
+
+  const deleteProblemMutation = useMutation({
+    mutationFn: deleteProblem,
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["problems"] })
+    },
+
+    onError: (err) => {
+      alert(err.response?.data?.message ?? "Xóa thất bại")
+    },
+  })
+
+
+  const filteredProblems = useMemo(() => {
+    return problems.filter((p) => {
+      const matchDifficulty =
+        difficultyFilter === "All" || p.difficulty === difficultyFilter
+
+      return matchDifficulty
+    })
+  }, [problems, difficultyFilter])
+
+  /* ---------------- LOADING / ERROR ---------------- */
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-slate-500">
+        Đang tải danh sách bài...
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-red-500">
+        Không thể tải danh sách bài
+      </div>
+    )
+  }
+
+  /* ---------------- RENDER ---------------- */
 
   return (
     <div className="min-h-screen px-4 py-6 mt-[100px]">
       <div className="mx-auto max-w-6xl space-y-6">
 
-        <div className="relative text-center">
-          {/* Back button */}
-          <Button
-            variant="ghost"
-            onClick={() => navigate(-1)}
-            className="absolute left-0 top-1/2 -translate-y-1/2
-               inline-grid grid-flow-col auto-cols-max items-center gap-2
-               text-slate-600 hover:text-slate-900"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Quay lại</span>
-          </Button>
+        {/* HEADER */}
+        <div className="sticky top-0 z-30 bg-background/80 backdrop-blur border-b">
+          <div className="relative mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate(-1)}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
 
-          {/* Title */}
-          <h1 className="text-3xl font-bold">
-            Danh sách bài
-          </h1>
+            <h1 className="absolute left-1/2 -translate-x-1/2 text-xl font-semibold">
+              Problems
+            </h1>
+
+            <AddProblemDialog />
+          </div>
         </div>
 
-        {/* FILTER BAR */}
+        {/* FILTER */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          {/* Difficulty filter */}
           <div className="flex flex-wrap gap-2">
             {["All", "Easy", "Medium", "Hard"].map((level) => (
               <Badge
@@ -93,34 +113,16 @@ export default function ProblemListPage() {
               </Badge>
             ))}
           </div>
-
-          {/* Status filter */}
-          <div className="flex flex-wrap gap-2">
-            {["All", "Solved", "Unsolved"].map((status) => (
-              <Badge
-                key={status}
-                variant="outline"
-                onClick={() => setStatusFilter(status)}
-                className={`cursor-pointer px-3 py-1 ${statusFilter === status
-                  ? "bg-emerald-600 text-white border-emerald-600"
-                  : "hover:bg-slate-100"
-                  }`}
-              >
-                {status}
-              </Badge>
-            ))}
-          </div>
         </div>
 
-        {/* Header (ẩn trên mobile) */}
+        {/* TABLE HEADER */}
         <div className="hidden md:grid grid-cols-12 px-4 text-xs font-semibold text-slate-500">
           <div className="col-span-6">Tên bài</div>
           <div className="col-span-2">Độ khó</div>
           <div className="col-span-2">Test cases</div>
-          <div className="col-span-2 text-right">Trạng thái</div>
         </div>
 
-        {/* List */}
+        {/* LIST */}
         <div className="space-y-2">
           {filteredProblems.length === 0 && (
             <div className="text-center text-slate-500 py-10">
@@ -129,53 +131,67 @@ export default function ProblemListPage() {
           )}
 
           {filteredProblems.map((p, index) => (
-            <Link key={p.id} to={`/problems/${p.id}`} className="block">
-              <Card className="hover:shadow-sm hover:border-blue-300 transition">
-                <CardContent className="p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-12 items-center gap-3">
+            <Card key={p._id} className="hover:shadow-sm hover:border-blue-300 transition">
+              <CardContent className="p-4">
+                <div className="grid grid-cols-1 md:grid-cols-12 items-center gap-3">
 
-                    {/* Title */}
-                    <div className="md:col-span-6">
-                      <div className="font-medium">
-                        {index + 1}. {p.title}
-                      </div>
-                      <div className="mt-1 text-xs text-slate-500 md:hidden">
-                        {p.tests} test cases
-                      </div>
+                  <div className="md:col-span-6 cursor-pointer" onClick={() => navigate(`/problems/${p.slug}`)}>
+                    <div className="font-medium">
+                      {index + 1}. {p.title}
                     </div>
-
-                    {/* Difficulty */}
-                    <div className="md:col-span-2">
-                      <Badge
-                        variant="outline"
-                        className={difficultyColor[p.difficulty]}
-                      >
-                        {p.difficulty}
-                      </Badge>
+                    <div className="mt-1 text-xs text-slate-500 md:hidden">
+                      {p.testCases?.length ?? 0} test cases
                     </div>
-
-                    {/* Tests */}
-                    <div className="md:col-span-2 text-sm text-slate-600 hidden md:block">
-                      {p.tests} tests
-                    </div>
-
-                    {/* Status */}
-                    <div className="md:col-span-2 text-right">
-                      {p.solved ? (
-                        <span className="text-emerald-600 font-medium">
-                          Solved
-                        </span>
-                      ) : (
-                        <span className="text-slate-400">
-                          Unsolved
-                        </span>
-                      )}
-                    </div>
-
                   </div>
-                </CardContent>
-              </Card>
-            </Link>
+
+                  <div className="md:col-span-2">
+                    <Badge
+                      variant="outline"
+                      className={difficultyColor[p.difficulty] ?? ""}
+                    >
+                      {p.difficulty}
+                    </Badge>
+                  </div>
+
+                  <div className="md:col-span-2 hidden md:block text-sm text-slate-600">
+                    {p.testCases?.length ?? 0} tests
+                  </div>
+
+                  <div className="md:col-span-2 hidden md:flex items-center gap-2 justify-end">
+                    {/* Update */}
+                    <AddProblemDialog
+                      initialData={p}
+                      trigger={
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-blue-600 hover:bg-blue-50"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      }
+                    />
+
+                    {/* Delete */}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-red-600 hover:bg-red-50"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        if (window.confirm("Bạn có chắc muốn xóa bài này?")) {
+                          deleteProblemMutation.mutate(p._id)
+                        }
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </div>
