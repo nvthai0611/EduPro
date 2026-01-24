@@ -77,7 +77,7 @@ const articleSchema = new mongoose.Schema<IArticleDocument>(
     },
   },
   { 
-    collection: "articles", 
+    collection: "Articles", 
     timestamps: true 
   }
 );
