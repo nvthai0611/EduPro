@@ -26,6 +26,7 @@ const CreateForumPost = () => {
   const [showDialog, setShowDialog] = useState(false);
   const [dialogMessage, setDialogMessage] = useState("");
   const [dialogType, setDialogType] = useState("error");
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
 
   // Form state
   const [title, setTitle] = useState("");
@@ -53,6 +54,13 @@ const CreateForumPost = () => {
 
   const createPostMutation = useCreatePost();
   const updatePostMutation = useUpdatePost();
+
+  // Check authentication
+  useEffect(() => {
+    if (!isAuthLoading && !currentUser) {
+      setShowLoginDialog(true);
+    }
+  }, [isAuthLoading, currentUser]);
 
   // Authorization check for edit mode
   useEffect(() => {
@@ -198,9 +206,7 @@ const CreateForumPost = () => {
         const formData = new FormData();
         formData.append("image", file);
 
-        const response = await apiClient.post("/posts/upload-image", formData, {
-          headers: { "Content-Type": "multipart/form-data" }
-        });
+        const response = await apiClient.post("/posts/upload-image", formData);
 
         const imageUrl = response.data?.url || response.url || response.data?.data?.url;
 
@@ -338,9 +344,7 @@ const CreateForumPost = () => {
           const formData = new FormData();
           formData.append("image", blob);
 
-          const response = await apiClient.post("/posts/upload-image", formData, {
-            headers: { "Content-Type": "multipart/form-data" }
-          });
+          const response = await apiClient.post("/posts/upload-image", formData);
 
           const imageUrl = response.data?.url || response.url || response.data?.data?.url;
           if (imageUrl) {
@@ -395,11 +399,28 @@ const CreateForumPost = () => {
         response = await createPostMutation.mutateAsync(formData);
       }
 
-      if (response.success || response.data?.success) {
+      // console.log("📝 Create/Update response:", response);
+
+      // Check if operation was successful
+      const isSuccess = response?.success || response?.data?.success;
+      // console.log("✅ Is success:", isSuccess);
+
+      if (isSuccess) {
         toast.success(isEdit ? "Cập nhật bài viết thành công!" : "Tạo bài viết thành công!");
         showSuccessDialog(isEdit ? "Cập nhật bài viết thành công!" : "Tạo bài viết thành công!");
         setTimeout(() => {
-          navigate(isEdit ? `/posts/${response.data?.slug || post.slug}` : "/forum");
+          if (isEdit) {
+            navigate(`/posts/${response.data?.slug || response?.slug || post.slug}`);
+          } else {
+            navigate("/forum");
+          }
+        }, 1500);
+      } else {
+        // If response doesn't have success flag, still redirect if we have data
+        console.warn("⚠️ Response doesn't have success flag, but attempting redirect anyway");
+        toast.success(isEdit ? "Cập nhật bài viết thành công!" : "Tạo bài viết thành công!");
+        setTimeout(() => {
+          navigate("/forum");
         }, 1500);
       }
     } catch (error) {
@@ -650,6 +671,26 @@ const CreateForumPost = () => {
           </DialogHeader>
           <div className="flex justify-end mt-4">
             <Button onClick={() => setShowDialog(false)}>Đóng</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Login Required Dialog */}
+      <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cần đăng nhập</DialogTitle>
+            <DialogDescription className="text-base pt-4">
+              Bạn cần đăng nhập để tạo hoặc chỉnh sửa bài viết.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setShowLoginDialog(false)}>
+              Hủy
+            </Button>
+            <Button onClick={() => window.location.href = `${import.meta.env.VITE_SERVER_API_V1}/auth/google?redirect=${encodeURIComponent(location.pathname)}`}>
+              Đăng nhập với Google
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

@@ -1,29 +1,6 @@
 import { CommentService } from "./comment.service";
 
 class CommentController {
-  
-  async createComment(req: any, res: any): Promise<void> {
-    try {
-      const { targetType, targetId } = req.params; // or derived from route structure
-      // Wait, standard route might be /posts/:id/comments, so targetType is implied
-      
-      // Let's rely on arguments passed from route-specific handlers if needed, 
-      // or we can expect body to contain content and route to define target.
-      
-      // We'll use a flexible approach:
-      // If route is /posts/:id/comments -> targetType='post', targetId=:id
-      // If route is /answers/:id/comments -> targetType='answer', targetId=:id
-      
-      const routeTargetType = req.baseUrl.includes('posts') ? 'post' : 'answer';
-      // Careful: req.baseUrl might vary. 
-      // Better: pass targetType via route middleware or explicit method calls.
-      
-      // Let's assume specific methods for now to be safe.
-      throw new Error("Use specific methods createPostComment or createAnswerComment");
-    } catch (error) {
-        // ...
-    }
-  }
 
   async createPostComment(req: any, res: any): Promise<void> {
        try {

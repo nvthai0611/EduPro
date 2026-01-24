@@ -1,6 +1,7 @@
 import { useNavigate, Link } from "react-router-dom";
 import { Clock, Eye, MessageCircle, Share2, Bookmark, Pencil } from "lucide-react";
 import { useState } from "react";
+import { formatTimeAgo } from "../../../utils/format";
 
 const PostCard = ({ post, variant = "default", canEdit = false }) => {
   const navigate = useNavigate();
@@ -41,14 +42,14 @@ const PostCard = ({ post, variant = "default", canEdit = false }) => {
     return (
       <Link
         to={`/posts/${postPath}`}
-        className="group flex gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors"
+        className="group flex  p-3 hover:bg-gray-50 rounded-lg transition-colors"
       >
         <img
           src={post.coverImageUrl || "https://via.placeholder.com/120x80"}
           alt={post.title}
           className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
         />
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 ml-2">
           <h4 className="text-sm font-semibold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors mb-1">
             {post.title}
           </h4>
@@ -120,7 +121,7 @@ const PostCard = ({ post, variant = "default", canEdit = false }) => {
                   {post.authorName || "Anonymous"}
                 </p>
                 <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <span>{post.createdAt || "1 ngày trước"}</span>
+                  <span>{formatTimeAgo(post.createdAt) || "1 ngày trước"}</span>
                   <span>•</span>
                   <span className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
