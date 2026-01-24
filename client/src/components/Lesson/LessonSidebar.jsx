@@ -78,7 +78,7 @@ const LessonSidebar = ({
     <div className={cn("bg-white border-r border-gray-200 h-full overflow-y-auto", className)}>
       <div className="p-4">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Nội dung khóa học
+          Nội dung khóa học a
         </h3>
         
         <div className="space-y-2">
