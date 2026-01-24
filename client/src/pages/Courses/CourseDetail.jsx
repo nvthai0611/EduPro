@@ -500,7 +500,7 @@ const CourseDetail = () => {
                             className="flex items-start space-x-4 border-b pb-4"
                           >
                             <img
-                              src={review.userId.image}
+                              src={review.userId.image || `https://i.pravatar.cc/150?u=${review.userId._id}`}
                               alt={review.userId.fullName}
                               className="w-12 h-12 rounded-full object-cover"
                             ></img>
