@@ -188,20 +188,21 @@ export const parsePrice = (formattedPrice) => {
 };
 
 // Format duration from minutes to hours and minutes or H:MM:SS format
-export const formatDuration = (minutes, format = 'text') => {
-  if (minutes === undefined || minutes === null || minutes === 0) return format === 'text' ? "0 phút" : "0:00";
+export const formatDuration = (value, format = 'text') => {
+  if (value === undefined || value === null || value === 0) return format === 'text' ? "0 phút" : "0:00";
+  
+  // Auto-detect if value is in seconds (likely if > 1000) or minutes
+  let totalMinutes;
+  if (value > 1000) {
+    // Likely in seconds, convert to minutes
+    totalMinutes = Math.floor(value / 60);
+  } else {
+    totalMinutes = Math.floor(value);
+  }
   
   if (format === 'time') {
     // Format as H:MM:SS or MM:SS for video duration
-    // If input is already in seconds, use it directly
-    let totalSeconds;
-    if (minutes > 1000) {
-      // Likely already in seconds
-      totalSeconds = Math.floor(minutes);
-    } else {
-      // Convert minutes to seconds
-      totalSeconds = Math.floor(minutes * 60);
-    }
+    const totalSeconds = value > 1000 ? Math.floor(value) : Math.floor(value * 60);
     
     const hours = Math.floor(totalSeconds / 3600);
     const mins = Math.floor((totalSeconds % 3600) / 60);
@@ -215,8 +216,8 @@ export const formatDuration = (minutes, format = 'text') => {
   }
   
   // Default text format (for course total duration)
-  const hours = Math.floor(minutes / 60);
-  const mins = Math.floor(minutes % 60);
+  const hours = Math.floor(totalMinutes / 60);
+  const mins = Math.floor(totalMinutes % 60);
   if (hours > 0) {
     return `${hours} giờ ${mins} phút`;
   }
