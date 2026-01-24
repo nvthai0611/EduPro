@@ -38,7 +38,7 @@ const ForumSchema = new Schema<IForumDocument>(
         updatedAt: { type: Date, default: Date.now },
     },
     {
-        collection: "forums",
+        collection: "Forums",
         timestamps: true,
         toJSON: { virtuals: true },
         toObject: { virtuals: true },

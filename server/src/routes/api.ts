@@ -31,6 +31,7 @@ import { forumRoutes } from "./v1/forum.routes";
 import { postRoutes } from "./v1/posts.routes";
 import { answerRoutes } from "./v1/answers.routes";
 import { commentRoutes } from "./v1/comments.routes";
+import { progressRoutes } from "./v1/progress.routes";
 
 
 export const apiRouter = (io?: Server) => {
@@ -109,5 +110,7 @@ export const apiRouter = (io?: Server) => {
   router.use("/posts", postRoutes);
   router.use("/answers", optionalAuth, answerRoutes);
   router.use("/comments", optionalAuth, commentRoutes);
+
+  router.use("/progress", progressRoutes);
   return router;
 };
