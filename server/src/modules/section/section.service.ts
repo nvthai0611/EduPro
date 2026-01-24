@@ -90,9 +90,94 @@ class SectionService {
         return populatedSections;
     }
 
-    // Get sections with minimal lesson data (for list view - lightweight)
+    // Get sections with minimal lesson data (for list view - lightweight) - NO PAGINATION
     async getSectionsWithMinimalLessons(courseId: string): Promise<any[]> {
         const sections = await SectionRepository.getSectionsByCourseId(courseId);
+        
+        // Helper function to extract YouTube video ID from URL
+        const extractVideoId = (url: string): string | null => {
+            if (!url) return null;
+            
+            // Support multiple YouTube URL formats
+            const patterns = [
+                /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+                /^([a-zA-Z0-9_-]{11})$/ // Direct video ID
+            ];
+            
+            for (const pattern of patterns) {
+                const match = url.match(pattern);
+                if (match && match[1]) {
+                    return match[1];
+                }
+            }
+            return null;
+        };
+        
+        // Populate lessons với chỉ các fields cần thiết
+        const populatedSections = await Promise.all(
+            sections.map(async (section: any) => {
+                // Populate lessons với select minimal fields
+                const populatedSection = await section.populate({
+                    path: 'lessons',
+                    select: '_id title type videoUrl videoDuration readingTime order isPreview isFree'
+                });
+                
+                // Get articles với minimal fields
+                const articles = await ArticleRepository.findArticlesBySection(section._id.toString());
+                const minimalArticles = articles.map((article: any) => ({
+                    _id: article._id,
+                    title: article.title,
+                    type: 'article',
+                    readingTime: article.readingTime,
+                    order: article.order,
+                    isPreview: article.isPreview,
+                    isFree: article.isFree
+                }));
+                
+                // Merge lessons và articles - chỉ giữ minimal fields và extract videoId
+                const combinedContent = [
+                    ...(populatedSection.lessons || []).map((lesson: any) => {
+                        // SAFEGUARD: Lessons từ lessons collection KHÔNG BAO GIỞ có type='article'
+                        // Nếu có, đây là data bị sai trong DB - force về 'video'
+                        const lessonType = lesson.type === 'article' ? 'video' : (lesson.type || 'video');
+                        
+                        return {
+                            _id: lesson._id,
+                            title: lesson.title,
+                            type: lessonType, // Use corrected type
+                            videoId: extractVideoId(lesson.videoUrl), // Extract videoId từ videoUrl
+                            videoDuration: lesson.videoDuration,
+                            readingTime: lesson.readingTime,
+                            order: lesson.order,
+                            isPreview: lesson.isPreview,
+                            isFree: lesson.isFree
+                        };
+                    }),
+                    ...minimalArticles
+                ].sort((a, b) => (a.order || 0) - (b.order || 0));
+                
+                return {
+                    _id: section._id,
+                    title: section.title,
+                    order: section.order,
+                    courseId: section.courseId,
+                    lessons: combinedContent // Replace lessons array with combined content
+                };
+            })
+        );
+
+        return populatedSections;
+    }
+
+    // Get sections with minimal lesson data + PAGINATION (cho CourseDetail)
+    async getSectionsWithMinimalLessonsPaginated(courseId: string, page: number = 1, limit: number = 10): Promise<any> {
+        const skip = (page - 1) * limit;
+        
+        // Get total count
+        const totalSections = await SectionRepository.countSectionsByCourseId(courseId);
+        
+        // Get paginated sections
+        const sections = await SectionRepository.getSectionsByCourseIdPaginated(courseId, skip, limit);
         
         // Helper function to extract YouTube video ID from URL
         const extractVideoId = (url: string): string | null => {
@@ -166,7 +251,18 @@ class SectionService {
             })
         );
 
-        return populatedSections;
+        // Return with pagination metadata
+        return {
+            sections: populatedSections,
+            pagination: {
+                page,
+                limit,
+                total: totalSections,
+                totalPages: Math.ceil(totalSections / limit),
+                hasNextPage: page < Math.ceil(totalSections / limit),
+                hasPrevPage: page > 1
+            }
+        };
     }
 }
 

@@ -148,3 +148,18 @@ export const getSectionsWithMinimalLessons = async (req: any, res: any) => {
     res.status(400).json({ success: false, message: error.message });
   }
 };
+
+// Public endpoint - Get sections with minimal lesson data + PAGINATION (cho CourseDetail)
+export const getSectionsWithMinimalLessonsPaginated = async (req: any, res: any) => {
+  try {
+    const courseId = req.params.courseId;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    
+    const result = await SectionService.getSectionsWithMinimalLessonsPaginated(courseId, page, limit);
+    res.setHeader("x-encrypted", "true");
+    res.status(200).json({ success: true, encryptedData: encryptData(result) });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};

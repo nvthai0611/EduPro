@@ -1,4 +1,4 @@
-import  { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,16 +33,16 @@ import {
   Loader2
 } from 'lucide-react';
 // import { courseService } from '../../../services/admin/courseService';
-import { 
-  useCreateCourse, 
-  useUpdateCourse, 
-  useSubmitCourseForReview, 
+import {
+  useCreateCourse,
+  useUpdateCourse,
+  useSubmitCourseForReview,
   useAdminCourses
 } from '../../../hooks/useCourseQueries';
 
 const CourseManagement = () => {
   const navigate = useNavigate();
-  
+
   // State
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -74,10 +74,10 @@ const CourseManagement = () => {
   const { data: courses = [], isLoading: loading, error } = useAdminCourses(filters, {
     select: (data) => {
       if (!Array.isArray(data)) return [];
-      
+
       // Debug: Log raw data from backend
       console.log('Raw courses data from backend:', data.slice(0, 2));
-      
+
       // Filter out invalid courses and add default status
       return data
         .filter(course => course && course._id)
@@ -103,7 +103,7 @@ const CourseManagement = () => {
       approved: { label: "Đã duyệt", className: "bg-blue-100 text-blue-800" },
       rejected: { label: "Bị từ chối", className: "bg-red-100 text-red-800" },
     };
-    
+
     // Return draft as default if status is undefined/null or not found
     return statusConfig[status] || statusConfig.draft;
   };
@@ -127,13 +127,15 @@ const CourseManagement = () => {
   };
 
   const handleToggleDelete = async (course) => {
-    const isDeleted = course?.isDeleted ? false : true;
-    const updatedCourse = { ...course, isDeleted: isDeleted };
-    
-    updateCourseMutation.mutate({ 
-      id: course._id, 
-      data: updatedCourse 
-    });
+    if (window.confirm('Bạn có chắc chắn muốn xóa khóa học này?')) {
+      const isDeleted = course?.isDeleted ? false : true;
+      const updatedCourse = { ...course, isDeleted: isDeleted };
+
+      updateCourseMutation.mutate({
+        id: course._id,
+        data: updatedCourse
+      });
+    }
   };
 
   const handleEditCourse = async () => {
@@ -148,17 +150,11 @@ const CourseManagement = () => {
     });
   };
 
-  // const handleDeleteCourse = async (courseId) => {
-  //   if (window.confirm('Bạn có chắc chắn muốn xóa khóa học này?')) {
-  //     deleteCourseMutation.mutate(courseId);
-  //   }
-  // };
-
   const handleToggleStatus = async (course, newStatus) => {
     const updatedCourse = { ...course, status: newStatus };
-    updateCourseMutation.mutate({ 
-      id: course._id, 
-      data: updatedCourse 
+    updateCourseMutation.mutate({
+      id: course._id,
+      data: updatedCourse
     });
   };
 
@@ -195,7 +191,7 @@ const CourseManagement = () => {
   //   return `${mins}m`;
   // };
 
-    const handleArrayFieldChange = (field, index, value) => {
+  const handleArrayFieldChange = (field, index, value) => {
     const newArray = [...(selectedCourse[field] || [])];
     newArray[index] = value;
     setSelectedCourse(prev => ({ ...prev, [field]: newArray }));
@@ -377,138 +373,138 @@ const CourseManagement = () => {
                   {courses.map(course => {
                     // Ensure course has status field
                     const courseStatus = course?.status || 'draft';
-                    
+
                     return (
-                    <tr key={course._id} className="border-b hover:bg-gray-50">
-                      <td className="p-4">
-                        <div className="flex items-center space-x-3">
-                          <img
-                            src={course?.thumbnail || 'https://via.placeholder.com/60x40'}
-                            alt={course?.title || 'Course'}
-                            className="w-15 h-10 object-cover rounded"
-                          />
-                          <div>
-                            <h4 className="font-medium text-gray-900">{course?.title}</h4>
-                            <p className="text-sm text-gray-600 line-clamp-1">
-                              {course?.description}
-                            </p>
+                      <tr key={course._id} className="border-b hover:bg-gray-50">
+                        <td className="p-4">
+                          <div className="flex items-center space-x-3">
+                            <img
+                              src={course?.thumbnail || 'https://via.placeholder.com/60x40'}
+                              alt={course?.title || 'Course'}
+                              className="w-15 h-10 object-cover rounded"
+                            />
+                            <div>
+                              <h4 className="font-medium text-gray-900">{course?.title}</h4>
+                              <p className="text-sm text-gray-600 line-clamp-1">
+                                {course?.description}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <Badge variant="outline">
-                          {course?.level === 'beginner' ? 'Cơ bản' :
-                            course?.level === 'intermediate' ? 'Trung bình' : 'Nâng cao'}
-                        </Badge>
-                      </td>
-                      <td className="p-4">
-                        <span className="font-medium">
-                          {formatPrice(course?.price)}
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        <span className="font-medium">
-                          {formatPrice(course?.salePrice ? course.salePrice : 0)}
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center space-x-1">
-                          <Users className="w-4 h-4 text-gray-400" />
-                          <span>{course?.totalStudents || 0}</span>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center space-x-1">
-                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          <span>{course?.rating?.toFixed(1) || '5.0'}</span>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <Badge className={getStatusBadge(courseStatus).className}>
-                          {getStatusBadge(courseStatus).label}
-                        </Badge>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => navigate(`/courses/${course?.slug}/builder`)}
-                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                            title="Xây dựng nội dung"
-                          >
-                            <Layers className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            title="Xem khóa học như học viên"
-                            // onClick={() => window.open(`${import.meta.env.VITE_CLIENT_URL}/courses/${course?.slug}`, '_blank')}
-                            onClick={() => window.open(`${import.meta.env.VITE_CLIENT_URL}/learn/${course?.slug}`, '_blank')}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          {courseStatus !== 'pending' && (
+                        </td>
+                        <td className="p-4">
+                          <Badge variant="outline">
+                            {course?.level === 'beginner' ? 'Cơ bản' :
+                              course?.level === 'intermediate' ? 'Trung bình' : 'Nâng cao'}
+                          </Badge>
+                        </td>
+                        <td className="p-4">
+                          <span className="font-medium">
+                            {formatPrice(course?.price)}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <span className="font-medium">
+                            {formatPrice(course?.salePrice ? course.salePrice : 0)}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex items-center space-x-1">
+                            <Users className="w-4 h-4 text-gray-400" />
+                            <span>{course?.totalStudents || 0}</span>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex items-center space-x-1">
+                            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                            <span>{course?.rating?.toFixed(1) || '5.0'}</span>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <Badge className={getStatusBadge(courseStatus).className}>
+                            {getStatusBadge(courseStatus).label}
+                          </Badge>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex items-center space-x-2">
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => {
-                                setSelectedCourse(course);
-                                setShowEditDialog(true);
-                              }}
+                              onClick={() => navigate(`/courses/${course?.slug}/builder`)}
+                              className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                              title="Xây dựng nội dung"
                             >
-                              <Edit className="w-4 h-4" />
+                              <Layers className="w-4 h-4" />
                             </Button>
-                          )}
-                          {courseStatus === 'draft' && (
-                            <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              title="Xem khóa học như học viên"
+                              // onClick={() => window.open(`${import.meta.env.VITE_CLIENT_URL}/courses/${course?.slug}`, '_blank')}
+                              onClick={() => window.open(`${import.meta.env.VITE_CLIENT_URL}/learn/${course?.slug}`, '_blank')}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            {courseStatus !== 'pending' && (
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => {
                                   setSelectedCourse(course);
-                                  setShowSubmitModal(true);
+                                  setShowEditDialog(true);
                                 }}
-                                className="text-blue-600 hover:text-blue-700"
                               >
-                                Submit
+                                <Edit className="w-4 h-4" />
                               </Button>
-                              
-                            </>
-                          )}
-                          {courseStatus === 'approved' && (
-                            <Button
+                            )}
+                            {courseStatus === 'draft' && (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedCourse(course);
+                                    setShowSubmitModal(true);
+                                  }}
+                                  className="text-blue-600 hover:text-blue-700"
+                                >
+                                  Submit
+                                </Button>
+
+                              </>
+                            )}
+                            {courseStatus === 'approved' && (
+                              <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleToggleStatus(course, 'published')}
                               >
                                 Xuất bản
                               </Button>)}
-                          {courseStatus === 'published' && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleToggleDelete(course)}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              Xóa
-                            </Button>
-                          )}
-                          {(courseStatus === 'approved' || courseStatus === 'rejected') && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedCourse(course);
-                                setShowAdminNoteModal(true);
-                              }}
-                              className="text-purple-600 hover:text-purple-700"
-                              title="Xem phản hồi admin"
-                            >
-                              <MessageSquare className="w-4 h-4" />
-                            </Button>
-                          )}
-                          {/* {course?.status !== 'pending' && (
+                            {courseStatus === 'published' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleToggleDelete(course)}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                Xóa
+                              </Button>
+                            )}
+                            {(courseStatus === 'approved' || courseStatus === 'rejected') && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedCourse(course);
+                                  setShowAdminNoteModal(true);
+                                }}
+                                className="text-purple-600 hover:text-purple-700"
+                                title="Xem phản hồi admin"
+                              >
+                                <MessageSquare className="w-4 h-4" />
+                              </Button>
+                            )}
+                            {/* {course?.status !== 'pending' && (
                             <Button
                               variant="ghost"
                               size="sm"
@@ -518,10 +514,11 @@ const CourseManagement = () => {
                               <Trash2 className="w-4 h-4" />
                             </Button>
                           )} */}
-                        </div>
-                      </td>
-                    </tr>
-                  )})}
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
@@ -627,7 +624,7 @@ const CourseManagement = () => {
             <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
               Hủy
             </Button>
-            <Button 
+            <Button
               onClick={handleCreateCourse}
               disabled={createCourseMutation.isPending}
             >
@@ -653,7 +650,7 @@ const CourseManagement = () => {
               Cập nhật thông tin khóa học của bạn
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedCourse && (
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-4 px-6">
@@ -709,9 +706,9 @@ const CourseManagement = () => {
                     />
                     {selectedCourse.thumbnail && (
                       <div className="mt-2">
-                        <img 
-                          src={selectedCourse.thumbnail} 
-                          alt="Preview" 
+                        <img
+                          src={selectedCourse.thumbnail}
+                          alt="Preview"
                           className="w-40 h-24 object-cover rounded border"
                           onError={(e) => e.target.src = 'https://via.placeholder.com/160x96'}
                         />
@@ -799,7 +796,7 @@ const CourseManagement = () => {
                       Thêm mục
                     </Button>
                   </div>
-                  
+
                   <div className="space-y-3">
                     {(selectedCourse.whatYouWillLearn || []).map((item, index) => (
                       <div key={index} className="flex gap-2 items-start">
@@ -852,7 +849,7 @@ const CourseManagement = () => {
                       Thêm mục
                     </Button>
                   </div>
-                  
+
                   <div className="space-y-3">
                     {(selectedCourse.requirements || []).map((item, index) => (
                       <div key={index} className="flex gap-2 items-start">
@@ -879,7 +876,7 @@ const CourseManagement = () => {
                       <div className="text-center py-8 border-2 border-dashed rounded-lg">
                         <AlertCircle className="w-8 h-8 mx-auto text-gray-400 mb-2" />
                         <p className="text-sm text-gray-500">
-                          Chưa có yêu cầu. Click "Thêm mục" để bắt đầu.
+                          Chưa có yêu cầu. Click &quot;Thêm mục&quot; để bắt đầu.
                         </p>
                       </div>
                     )}
@@ -905,7 +902,7 @@ const CourseManagement = () => {
                       Thêm mục
                     </Button>
                   </div>
-                  
+
                   <div className="space-y-3">
                     {(selectedCourse.targetAudience || []).map((item, index) => (
                       <div key={index} className="flex gap-2 items-start">
@@ -932,7 +929,7 @@ const CourseManagement = () => {
                       <div className="text-center py-8 border-2 border-dashed rounded-lg">
                         <UserCheck className="w-8 h-8 mx-auto text-gray-400 mb-2" />
                         <p className="text-sm text-gray-500">
-                          Chưa có đối tượng. Click "Thêm mục" để bắt đầu.
+                          Chưa có đối tượng. Click &quot;Thêm mục&quot; để bắt đầu.
                         </p>
                       </div>
                     )}
@@ -942,8 +939,8 @@ const CourseManagement = () => {
 
               <DialogFooter className="px-6 pb-6 pt-4 border-t">
                 <div className="flex justify-between w-full">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => {
                       setShowEditDialog(false);
                       setActiveTab('basic');
