@@ -34,6 +34,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getUserProfile } from "../../services/user/userService";
 import courseReviewService from "../../services/courseReviewService";
+import CourseCurriculum from "./components/CourseCurriculum";
 
 const CourseDetail = () => {
   const { slug } = useParams();
@@ -55,12 +56,12 @@ const CourseDetail = () => {
   const courseId = course?._id;
 
   // Fetch minimal sections và lessons data (chỉ title, duration, type)
-  // const {
-  //   data: sections = [],
-  //   isLoading: sectionsLoading,
-  // } = useSectionsWithMinimalLessons(courseId, {
-  //   enabled: !!courseId,
-  // });
+  const {
+    data: sections = [],
+    isLoading: sectionsLoading,
+  } = useSectionsWithMinimalLessons(courseId, {
+    enabled: !!courseId,
+  });
 
   const { data: infoUser } = useQuery({
     queryKey: ["user-profile", user?.userId],
@@ -162,25 +163,14 @@ const CourseDetail = () => {
     }));
   };
 
-  // Mở tất cả sections mặc định khi load
-  // useEffect(() => {
-  //   if (sections.length > 0) {
-  //     const initialExpanded = {};
-  //     sections.forEach(section => {
-  //       initialExpanded[section._id] = true;
-  //     });
-  //     setExpandedSections(initialExpanded);
-  //   }
-  // }, [sections]);
-
   // Tính tổng số lessons và duration
-  // const totalLessons = sections.reduce((acc, section) => acc + (section.lessons?.length || 0), 0);
-  // const totalDuration = sections.reduce((acc, section) => {
-  //   const sectionDuration = section.lessons?.reduce((sum, lesson) => {
-  //     return sum + (lesson.videoDuration || lesson.readingTime * 60 || 0);
-  //   }, 0) || 0;
-  //   return acc + sectionDuration;
-  // }, 0);
+  const totalLessons = sections.reduce((acc, section) => acc + (section.lessons?.length || 0), 0);
+  const totalDuration = sections.reduce((acc, section) => {
+    const sectionDuration = section.lessons?.reduce((sum, lesson) => {
+      return sum + (lesson.videoDuration || lesson.readingTime * 60 || 0);
+    }, 0) || 0;
+    return acc + sectionDuration;
+  }, 0);
 
   // Format duration helper
   const formatLessonDuration = (seconds) => {
@@ -459,12 +449,22 @@ const CourseDetail = () => {
                 <CardHeader>
                   <h3 className="text-xl font-semibold">Nội dung khóa học</h3>
                   <div className="flex items-center gap-4 text-sm text-gray-600 mt-2">
-                    
+                    <span>{sections.length} chương</span>
+                    <span>•</span>
+                    <span>{totalLessons} bài học</span>
+                    <span>•</span>
+                    <span>{formatDuration(totalDuration)}</span>
                   </div>
                 </CardHeader>
                 <CardContent>
-                 
-                 </CardContent>
+                  <CourseCurriculum
+                    sections={sections}
+                    sectionsLoading={sectionsLoading}
+                    expandedSections={expandedSections}
+                    toggleSection={toggleSection}
+                    formatLessonDuration={formatLessonDuration}
+                  />
+                </CardContent>
               </Card>
             )}
 
