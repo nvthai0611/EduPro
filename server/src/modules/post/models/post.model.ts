@@ -1,5 +1,5 @@
 import { model, Schema, Types } from "mongoose";
-import { generateSlug } from "../../utils/slug";
+import { generateSlug } from "../../../utils/slug";
 
 
 export interface IForum{
@@ -11,7 +11,9 @@ export interface IForum{
     coverImageUrl?: string;
     contentImageUrls?: string[];
     tags?: string[];
-    
+    // Like and save posts count
+    likesCount: number;
+    savesCount: number;
     // New fields for Answer/Comment system
     answersCount: number;
     commentsCount: number; // Semantics: Total comments (post + its answers)
@@ -39,6 +41,10 @@ const ForumSchema = new Schema<IForumDocument>(
         coverImageUrl: { type: String },
         contentImageUrls: { type: [String], default: [] },
         tags: { type: [String], default: [] },
+
+        //Like and save posts count
+        likesCount: { type: Number, default: 0 },
+        savesCount: { type: Number, default: 0 },
         
         // New fields
         answersCount: { type: Number, default: 0 },
@@ -57,18 +63,36 @@ const ForumSchema = new Schema<IForumDocument>(
         toObject: { virtuals: true },
     }
 );
+
+// Indexes for performance optimization at scale
+// Compound index for sorting by createdAt (most common query)
+ForumSchema.index({ createdAt: -1 });
+
+// Index for author queries
+ForumSchema.index({ authorId: 1, createdAt: -1 });
+
+// Index for tag-based queries
+ForumSchema.index({ tags: 1, createdAt: -1 });
+
+// Text index for search functionality
+ForumSchema.index({ title: "text", content: "text" });
+
+// Index for trending posts (by engagement)
+ForumSchema.index({ likesCount: -1, commentsCount: -1 });
+
+// Index for slug lookup (already unique, but explicit for clarity)
+ForumSchema.index({ slug: 1 });
+
 ForumSchema.pre("save", async function (next) {
   if (this.isModified("title") && !this.slug) {
     // Generate slug from title
     const baseSlug = generateSlug(this.title);
     
-    // Check for uniqueness
-    let slug = baseSlug;
-    let counter = 1;
-    while (await model("Posts").findOne({ slug })) {
-      slug = `${baseSlug}-${counter}`;
-      counter++;
-    }
+    // Add timestamp and random string for uniqueness
+    const timestamp = Date.now();
+    const randomStr = Math.random().toString(36).substring(2, 8); // 6 random chars
+    const slug = `${baseSlug}-${timestamp}-${randomStr}`;
+    
     this.slug = slug;
   }
   next();

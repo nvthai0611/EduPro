@@ -3,9 +3,20 @@ import { PostRepository } from "./post.repository";
 
 class postService {
   // Service methods here
-  async getAllPosts(query: any = {}, options: any = {}): Promise<any[]> {
+  async getAllPosts(query: any = {}, options: any = {}): Promise<any> {
     return PostRepository.findAllPosts(query, options);
   }
+  async getTrendingPosts(limit: number, timeRange: number): Promise<any[]> {
+  const dateThreshold = new Date();
+  dateThreshold.setDate(dateThreshold.getDate() - timeRange);
+  
+  return await PostRepository.findTrendingPosts(dateThreshold, limit);
+}
+
+async getFeaturedPosts(limit: number): Promise<any[]> {
+  return await PostRepository.findFeaturedPosts(limit);
+}
+
   async getPostById(id: string): Promise<any> {
     return PostRepository.findPostById(id);
   }
@@ -29,6 +40,20 @@ class postService {
   }
   async updatePost(id: string, data: any): Promise<any> {
     return PostRepository.updatePost(id, data);
+  }
+
+  // Post reaction
+  async findUserReactions(userId: string, postId: string): Promise<any[]> {
+    return PostRepository.findUserReactions(userId, postId);
+  }
+  async createPostReaction(data: any): Promise<any> {
+    return PostRepository.createPostReaction(data);
+  }
+  async deletePostReaction(id: string): Promise<any> {
+    return PostRepository.deletePostReaction(id);
+  }
+  async deleteUserReaction(userId: string, postId: string, type: string): Promise<any> {
+    return PostRepository.deleteUserReaction(userId, postId, type);
   }
 }
 

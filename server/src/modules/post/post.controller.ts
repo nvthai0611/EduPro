@@ -6,37 +6,127 @@ class postController {
   async getAllPosts(req: any, res: any): Promise<void> {
     try {
       console.log("📥 getAllPosts called");
-      const query = req.query || {};
-      const options = {
-        select: req.query.select || null
-      };
-      console.log("Query options:", options);
-      const posts = await PostService.getAllPosts(query, options);
-      console.log("Posts found:", posts.length);
       
-      // Use authorName from DB (already saved when creating)
-      const transformedPosts = posts.map((post: any) => ({
+      // Parse pagination parameters
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const sortBy = req.query.sortBy || "createdAt";
+      const sortOrder = req.query.sortOrder || "desc";
+      const select = req.query.select || null;
+
+      // Build query filters
+      const query: any = {};
+      if (req.query.authorId) query.authorId = req.query.authorId;
+      if (req.query.tags) query.tags = { $in: req.query.tags.split(",") };
+      if (req.query.search) {
+        query.$text = { $search: req.query.search };
+      }
+
+      const options = {
+        page,
+        limit,
+        sortBy,
+        sortOrder,
+        select
+      };
+
+      console.log("Query options:", options);
+      
+      const result = await PostService.getAllPosts(query, options);
+      
+      console.log("Posts found:", result.posts.length);
+      
+      // Transform posts to include excerpt
+      const transformedPosts = result.posts.map((post: any) => ({
         ...post,
-        authorName: post.authorName || 'Anonymous'
+        authorName: post.authorName || 'Anonymous',
+        excerpt: post.content ? post.content.slice(0, 150).replace(/<\/?[^>]+(>|$)/g, "") + "..." : ""
       }));
       
       console.log("Transformed posts:", transformedPosts.length);
-      res.status(200).json({ success: true, data: transformedPosts });
+      
+      // Return paginated response with metadata
+      res.status(200).json({ 
+        success: true, 
+        data: transformedPosts,
+        pagination: {
+          page: result.page,
+          limit: result.limit,
+          total: result.total,
+          totalPages: result.totalPages,
+          hasNextPage: result.page < result.totalPages,
+          hasPrevPage: result.page > 1
+        }
+      });
     } catch (error) {
       console.error("❌ getAllPosts error:", error);
       res.status(500).json({ success: false, message: "Server Error", error: error.message });
     }
   }
+    
+async getTrendingPosts(req: any, res: any): Promise<void> {
+  try {
+    const limit = parseInt(req.query.limit as string) || 4;
+    const timeRange = parseInt(req.query.timeRange as string) || 30; // days
+    
+    const result = await PostService.getTrendingPosts(limit, timeRange);
+    
+    res.status(200).json({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    console.error("Error getting trending posts:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to get trending posts",
+      error: error instanceof Error ? error.message : "Unknown error"
+    });
+  }
+}
+
+async getFeaturedPosts(req: any, res: any): Promise<void> {
+  try {
+    const limit = parseInt(req.query.limit as string) || 4;
+    
+    const result = await PostService.getFeaturedPosts(limit);
+    
+    res.status(200).json({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    console.error("Error getting featured posts:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to get featured posts",
+      error: error instanceof Error ? error.message : "Unknown error"
+    });
+  }
+}
   async getPostById(req: any, res: any): Promise<void> {
     try {
-      const post = await PostService.getPostById(req.params.id);
+      let post = await PostService.getPostById(req.params.id);
       if (!post) {
         res.status(404).json({ success: false, message: "Post not found" });
         return;
       }
+      
+      // Check for user reactions if authenticated
+      const userId = req.user?.id || req.user?.userId;
+      if (userId) {
+        const reactions = await PostService.findUserReactions(userId, post._id.toString());
+        post = {
+          ...post,
+          isLiked: reactions.some(r => r.type === "LIKE"),
+          isSaved: reactions.some(r => r.type === "SAVE"),
+          userReactions: reactions
+        };
+      }
+
       res.status(200).json({ success: true, data: post   });
     } catch (error) {
-      res.status(500).json({ success: false, message: "Server Error", error });
+      res.status(500).json({ success: false, message: "Server Error", error: error.message });
     }
   }
   async getMine(req: any, res: any): Promise<void> {
@@ -62,14 +152,27 @@ class postController {
   }
   async getPostsBySlug(req: any, res: any): Promise<void> {
     try {
-      const post = await PostService.getPostBySlug(req.params.slug);
+      let post = await PostService.getPostBySlug(req.params.slug);
       if (!post) {
         res.status(404).json({ success: false, message: "Post not found" });
         return;
       } 
+
+      // Check for user reactions if authenticated
+      const userId = req.user?.id || req.user?.userId;
+      if (userId) {
+        const reactions = await PostService.findUserReactions(userId, post._id.toString());
+        post = {
+          ...post,
+          isLiked: reactions.some(r => r.type === "LIKE"),
+          isSaved: reactions.some(r => r.type === "SAVE"),
+          userReactions: reactions
+        };
+      }
+
       res.status(200).json({ success: true, data: post });
     } catch (error) {
-      res.status(500).json({ success: false, message: "Server Error", error });
+      res.status(500).json({ success: false, message: "Server Error", error: error.message });
     }
   }
   async createPost(req: any, res: any): Promise<void> {
@@ -122,7 +225,16 @@ class postController {
         return;
       }
 
-      const post = await PostService.updatePost(req.params.id, req.body);
+      // 3. Prepare update data
+      const updateData = { ...req.body };
+      
+      // Handle uploaded cover image from Cloudinary if new file uploaded
+      if (req.file) {
+        updateData.coverImageUrl = req.file.path;
+      }
+
+      // 4. Update post
+      const post = await PostService.updatePost(req.params.id, updateData);
       res.status(200).json({ success: true, data: post });
     } catch (error) {
       res.status(500).json({ success: false, message: "Server Error", error: error.message });
@@ -149,6 +261,7 @@ class postController {
       // 3. Extract image URLs for cleanup before deleting from DB
       const imageUrls: string[] = [];
       if (post.coverImageUrl) imageUrls.push(post.coverImageUrl);
+      
       
       // Extract from content
       const imgRegex = /<img[^>]+src="([^">]+)"/g;
@@ -198,6 +311,57 @@ class postController {
     } catch (error) {
       console.error("❌ Upload image error:", error);
       res.status(500).json({ success: false, message: "Server Error", error });
+    }
+  }
+
+  // Post reaction
+  async createPostReaction(req: any, res: any): Promise<void> {
+    try {
+      const { id: postId } = req.params;
+      const { type } = req.body;
+      
+      // Get author ID and name from authenticated user
+      if (!req.user || !req.user.id) {
+        res.status(401).json({ success: false, message: "User not authenticated" });
+        return;
+      }
+
+      const userId = req.user.id;
+      
+      const reaction = await PostService.createPostReaction({
+        userId,
+        postId,
+        type
+      });
+      
+      res.status(201).json({ success: true, data: reaction });
+    } catch (error) {
+      console.error("Error creating post reaction:", error);
+      res.status(500).json({ success: false, message: "Server Error", error: error.message });
+    }
+  }
+
+  async deletePostReaction(req: any, res: any): Promise<void> {
+    try {
+      const { id: postId, reactionId } = req.params;
+      const { type } = req.query; // Allow passing type in query for easier "unlike"
+      
+      const userId = req.user?.id || req.user?.userId;
+
+      let reaction;
+      if (reactionId && reactionId !== "by-type") {
+        reaction = await PostService.deletePostReaction(reactionId);
+      } else if (userId && postId && type) {
+        reaction = await PostService.deleteUserReaction(userId, postId, type as string);
+      } else {
+        res.status(400).json({ success: false, message: "Reaction ID or (Post ID + Type) is required" });
+        return;
+      }
+
+      res.status(200).json({ success: true, data: reaction });
+    } catch (error) {
+      console.error("Error deleting post reaction:", error);
+      res.status(500).json({ success: false, message: "Server Error", error: error.message });
     }
   }
 }

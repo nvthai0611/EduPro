@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { TrendingUp, Calendar, Users, Search } from "lucide-react";
 import PostCard from "./PostCard";
 
-const Sidebar = ({ trendingPosts = [], categories = [] }) => {
+const Sidebar = ({ trendingPosts = [], isLoading = false }) => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleSearch = (e) => {
@@ -18,23 +18,24 @@ const Sidebar = ({ trendingPosts = [], categories = [] }) => {
       
 
       {/* Trending Posts */}
-      <div className="bg-white rounded-xl p-5 border border-gray-100 sticky top-[220px]">
-        <div className="flex items-center gap-2 mb-4">
-          <TrendingUp className="w-5 h-5 text-blue-600" />
-          <h3 className="text-lg font-bold text-gray-900">Đang thịnh hành</h3>
+        <div className="bg-white rounded-xl p-5 border border-gray-100 sticky top-[220px]">
+          <div className="flex items-center gap-2 mb-4">
+            <TrendingUp className="w-5 h-5 text-blue-600" />
+            <h3 className="text-lg font-bold text-gray-900">Đang thịnh hành</h3>
+          </div>
+          <div className="space-y-1">
+            {trendingPosts.length > 0 ? (
+              trendingPosts.map((post, index) => (
+                <PostCard key={post._id || index} post={post} variant="compact" />
+                
+              ))
+            ) : (
+              <p className="text-sm text-gray-500 py-4 text-center">
+                Chưa có bài viết nào
+              </p>
+            )}
+          </div>
         </div>
-        <div className="space-y-1">
-          {trendingPosts.length > 0 ? (
-            trendingPosts.map((post, index) => (
-              <PostCard key={post._id || index} post={post} variant="compact" />
-            ))
-          ) : (
-            <p className="text-sm text-gray-500 py-4 text-center">
-              Chưa có bài viết nào
-            </p>
-          )}
-        </div>
-      </div>
 
       {/* Categories */}
       {/* <div className="bg-white rounded-xl p-5 border border-gray-100 sticky top-[520px]">
