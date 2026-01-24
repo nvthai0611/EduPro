@@ -8,6 +8,18 @@ class SectionRepository {
   async getSectionsByCourseId(courseId: string): Promise<any[]> {
     return Section.find({ courseId: courseId }).sort({ order: 1 });
   }
+  
+  async getSectionsByCourseIdPaginated(courseId: string, skip: number, limit: number): Promise<any[]> {
+    return Section.find({ courseId: courseId })
+      .sort({ order: 1 })
+      .skip(skip)
+      .limit(limit);
+  }
+  
+  async countSectionsByCourseId(courseId: string): Promise<number> {
+    return Section.countDocuments({ courseId: courseId });
+  }
+  
   async getSectionById(sectionId: string): Promise<any | null> {
     return Section.findById(sectionId);
   }
