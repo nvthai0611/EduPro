@@ -276,6 +276,7 @@ export const useSectionsWithLessons = (courseId, options = {}) => {
 /**
  * Hook to fetch sections with MINIMAL lesson data (for list view - lightweight)
  * Chỉ load title, type, duration - KHÔNG load content, assignments, etc.
+ * KHÔNG có pagination - load tất cả (dùng cho CourseLearnDetail)
  */
 export const useSectionsWithMinimalLessons = (courseId, options = {}) => {
   return useQuery({
@@ -289,6 +290,26 @@ export const useSectionsWithMinimalLessons = (courseId, options = {}) => {
     gcTime: 1000 * 60 * 30, // 30 minutes cache
     refetchOnWindowFocus: false,
     select: (data) => Array.isArray(data) ? data : [],
+    ...options,
+  });
+};
+
+/**
+ * Hook to fetch sections with MINIMAL lesson data + PAGINATION
+ * Dùng cho CourseDetail page với Load More button
+ */
+export const useSectionsWithMinimalLessonsPaginated = (courseId, page = 1, limit = 10, options = {}) => {
+  return useQuery({
+    queryKey: [...sectionKeys.withLessons(courseId), 'minimal', 'paginated', page, limit],
+    queryFn: async () => {
+      const response = await userSectionService.getSectionsWithMinimalLessonsPaginated(courseId, page, limit);
+      return response?.data || response;
+    },
+    enabled: !!courseId,
+    staleTime: 1000 * 60 * 10, // 10 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes cache
+    refetchOnWindowFocus: false,
+    placeholderData: (previousData) => previousData, // Keep previous data while loading
     ...options,
   });
 };
