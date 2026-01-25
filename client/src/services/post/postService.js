@@ -14,6 +14,7 @@ export const postService = {
       if (params.search) queryParams.append('search', params.search);
       if (params.tags) queryParams.append('tags', params.tags);
       if (params.authorId) queryParams.append('authorId', params.authorId);
+      if (params.feed) queryParams.append('feed', params.feed);
       
       const url = `/posts${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
       // console.log("🌐 Fetching URL:", url);
@@ -60,10 +61,12 @@ getTrending: async (params = {}) => {
     const response = await apiClient.get(url);
     
     if (response.success) {
+      // console.log("🌐(postService) Returning (from response):", response.data);
       return response.data;
     }
     
     if (response.data?.success) {
+      // console.log("🌐(postService) Returning (from response.data):", response.data.data);
       return response.data.data;
     }
     
@@ -84,10 +87,12 @@ getFeatured: async (params = {}) => {
     const response = await apiClient.get(url);
     
     if (response.success) {
+      // console.log("🌐(postService) Returning (from response):", response.data);
       return response.data;
     }
     
     if (response.data?.success) {
+      // console.log("🌐(postService) Returning (from response.data):", response.data.data);
       return response.data.data;
     }
     

@@ -6,14 +6,13 @@ class postController {
   // Controller methods here
   async getAllPosts(req: any, res: any): Promise<void> {
     try {
-      console.log("📥 getAllPosts called");
-      
       // Parse pagination parameters
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
-      const sortBy = req.query.sortBy || "createdAt";
-      const sortOrder = req.query.sortOrder || "desc";
+      let sortBy = req.query.sortBy || "createdAt";
+      let sortOrder = req.query.sortOrder || "desc";
       const select = req.query.select || null;
+      const feed = req.query.feed || "latest";
 
       // Build query filters
       const query: any = {};
@@ -23,28 +22,54 @@ class postController {
         query.$text = { $search: req.query.search };
       }
 
+      // Feed Mapping Strategy
+      // feed=latest   → default sorting (createdAt desc)
+      // feed=top      → sortBy=likesCount
+      // feed=hot      → sortBy=engagement
+      // feed=for-you  → featured=true
+      
+      let featured = false;
+
+      switch (feed) {
+        case 'top':
+          sortBy = 'likesCount';
+          sortOrder = 'desc';
+          break;
+        case 'hot':
+          sortBy = 'engagement';
+          sortOrder = 'desc';
+          break;
+        case 'for-you':
+          featured = true;
+          break;
+        case 'author':
+          // Temporary: don't use it now
+          break;
+        case 'latest':
+        default:
+          sortBy = 'createdAt';
+          sortOrder = 'desc';
+          break;
+      }
+
       const options = {
         page,
         limit,
         sortBy,
         sortOrder,
-        select
+        select,
+        featured // Pass featured flag to options
       };
-
-      // console.log("Query options:", options);
       
       const result = await PostService.getAllPosts(query, options);
       
-      // console.log("Posts found:", result.posts.length);
-      
       // Transform posts to include excerpt
-      const transformedPosts = result.posts.map((post: any) => ({
+      const transformedPosts = (result.posts || []).map((post: any) => ({
         ...post,
         authorName: post.authorName || 'Anonymous',
         excerpt: post.content ? post.content.slice(0, 150).replace(/<\/?[^>]+(>|$)/g, "") + "..." : ""
       }));
       
-      console.log("Transformed posts:", transformedPosts.length);
       res.setHeader("x-encrypted", "true");
       // Return paginated response with metadata
       res.status(200).json({ 
@@ -74,7 +99,8 @@ async getTrendingPosts(req: any, res: any): Promise<void> {
     res.setHeader("x-encrypted", "true");
     res.status(200).json({
       success: true,
-      encryptedData: encryptData(result)
+      encryptedData: encryptData(result),
+      // data: result
     });
   } catch (error) {
     console.error("Error getting trending posts:", error);
@@ -94,7 +120,8 @@ async getFeaturedPosts(req: any, res: any): Promise<void> {
     res.setHeader("x-encrypted", "true");
     res.status(200).json({
       success: true,
-      encryptedData: encryptData(result)
+      encryptedData: encryptData(result),
+      // data: result
     });
   } catch (error) {
     console.error("Error getting featured posts:", error);
@@ -142,13 +169,14 @@ async getFeaturedPosts(req: any, res: any): Promise<void> {
       res.setHeader("x-encrypted", "true");
       res.status(200).json({ success: true, encryptedData: encryptData(posts) });
     } catch (error) {
-      res.status(500).json({ success: false, message: "Server Error", error });
+      res.status(500).json({ success: false, message: "Server Error", error: error instanceof Error ? error.message : "Unknown error" });
     }
   }
   async getPostsByUser(req: any, res: any): Promise<void> {
     try {
       const posts = await PostService.getPostsByUser(req.params.userId);
-      res.status(200).json({ success: true, data: posts });
+      res.setHeader("x-encrypted", "true");
+      res.status(200).json({ success: true, encryptedData: encryptData(posts) });
     } catch (error) {
       res.status(500).json({ success: false, message: "Server Error", error });
     }

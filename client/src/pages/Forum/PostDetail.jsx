@@ -21,7 +21,10 @@ const PostDetail = () => {
   const [saved, setSaved] = useState(false);
 
   const { user: currentUser } = useAuth();
-  const currentUserId = currentUser?._id || currentUser?.id;
+  const currentUserId = currentUser?.userId || currentUser?._id || currentUser?.id;
+
+  // console.log("🔍(PostDetail) currentUser:", currentUser);
+  // console.log("🔍(PostDetail) currentUserId:", currentUserId);
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isLoginRequiredOpen, setIsLoginRequiredOpen] = useState(false);

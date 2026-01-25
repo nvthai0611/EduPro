@@ -74,7 +74,7 @@ const CreateForumPost = () => {
 
       // Handle different ID formats (string, object with _id, etc.)
       const authorId = post.authorId?._id ? post.authorId._id.toString() : post.authorId?.toString();
-      const userId = (currentUser?._id || currentUser?.id || currentUser?.userId)?.toString();
+      const userId = (currentUser?.userId || currentUser?._id || currentUser?.id)?.toString();
 
 
 

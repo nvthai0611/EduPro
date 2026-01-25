@@ -6,16 +6,20 @@ class postService {
   async getAllPosts(query: any = {}, options: any = {}): Promise<any> {
     return PostRepository.findAllPosts(query, options);
   }
-  async getTrendingPosts(limit: number, timeRange: number): Promise<any[]> {
-  const dateThreshold = new Date();
-  dateThreshold.setDate(dateThreshold.getDate() - timeRange);
-  
-  return await PostRepository.findTrendingPosts(dateThreshold, limit);
-}
+  async getTrendingPosts(
+    limit: number,
+    timeRange: number,
+    page: number = 1
+  ): Promise<any> {
+    const dateThreshold = new Date();
+    dateThreshold.setDate(dateThreshold.getDate() - timeRange);
 
-async getFeaturedPosts(limit: number): Promise<any[]> {
-  return await PostRepository.findFeaturedPosts(limit);
-}
+    return await PostRepository.findTrendingPosts(dateThreshold, page, limit);
+  }
+
+  async getFeaturedPosts(limit: number, page: number = 1): Promise<any> {
+    return await PostRepository.findFeaturedPosts(page, limit);
+  }
 
   async getPostById(id: string): Promise<any> {
     return PostRepository.findPostById(id);

@@ -28,7 +28,7 @@ class AuthService {
     return Cookies.get(this.refreshTokenKey);
   }
 
-  storeUserData(user, refreshToken = null) {
+  storeUserData(accessToken, refreshToken = null) {
     const isProduction = import.meta.env.VITE_PROD === "production";
     const cookieOptions = {
       sameSite: isProduction ? "None" : "Lax",
@@ -36,7 +36,9 @@ class AuthService {
       path: "/",
     };
 
-    Cookies.set(this.accessTokenKey, user.accessToken, cookieOptions);
+    if (accessToken) {
+      Cookies.set(this.accessTokenKey, accessToken, cookieOptions);
+    }
 
     if (refreshToken) {
       Cookies.set(this.refreshTokenKey, refreshToken, cookieOptions);
@@ -105,10 +107,9 @@ class AuthService {
       const response = await apiClient.post(url, credentials);
       const res = response.data;
 
-      if (response.success && res.accessToken && res.user) {
+      if (response.success && res.accessToken) {
         apiClient.setToken(res.accessToken); // lưu token vào cookie
-
-        this.storeUserData(res.user, null);
+        // User data is already in the JWT token, no need to store separately
       }
 
       return response;
@@ -149,10 +150,10 @@ class AuthService {
 
       const response = await apiClient.post("/auth/refresh", { refreshToken });
 
-      if (response.success && response.token && response.user) {
+      if (response.success && response.token) {
         apiClient.setToken(response.token);
         this.storeUserData(
-          response.user,
+          response.token,
           response.refreshToken || refreshToken
         );
         return true;
@@ -178,13 +179,12 @@ class AuthService {
     try {
       const response = await apiClient.put("/auth/profile", userData);
 
-      if (response.success && response.user) {
-        const updatedUser = {
-          ...this.getUser(),
-          ...response.user,
-        };
-        this.storeUserData(updatedUser);
+      if (response.success && response.token) {
+        // Update token if backend returns a new one with updated user data
+        apiClient.setToken(response.token);
+        this.storeUserData(response.token);
       }
+      // If backend doesn't return new token, user needs to re-login to see updated data in JWT
 
       return response;
     } catch (error) {
@@ -222,14 +222,14 @@ class AuthService {
 
   async fetchCurrentUser() {
     try {
-      // Thay vì gọi API không tồn tại, decode token để lấy user info
+      // Decode token to get user info
       const token = apiClient.getTokenFromCookie();
-      console.log(token);
+      console.log("🔍(fetchCurrentUser) Token:", token ? "Found" : "Not found");
 
       if (!token) return null;
       const user = decodeJWT(token);
-      console.log(user);
-      this.storeUserData(user);
+      console.log("🔍(fetchCurrentUser) Decoded user:", user);
+      // Don't store user data here, it's already in the token
       return user;
     } catch (error) {
       console.error("fetchCurrentUser error:", error);

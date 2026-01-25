@@ -5,6 +5,8 @@ import PostCard from "./components/PostCard";
 import Sidebar from "./components/Sidebar";
 import WritePostButton from "./components/WritePostButton";
 import SideBar from "../Home/components/SideBar";
+import FeedTabs from "./components/FeedTabs";
+import { FeedType } from "./constants";
 import { useFeaturedPosts, useGetAllPosts, useTrendingPosts } from "../../hooks/usePost";
 import { Link } from "react-router-dom";
 import {
@@ -20,48 +22,37 @@ import {
 const ForumHome = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const currentPage = parseInt(searchParams.get("page")) || 1;
+  const currentFeed = searchParams.get("feed") || FeedType.LATEST;
   const pageSize = 5; // Posts per page
 
   // Fetch posts with pagination
   const { data, isLoading, isFetching } = useGetAllPosts({
     page: currentPage,
     limit: pageSize,
-    sortBy: "createdAt",
+    feed: currentFeed,
+    sortBy: "createdAt", // Fallback, ignored by backend if feed is specific
     sortOrder: "desc"
   });
 
   const posts = useMemo(() => data?.posts || [], [data?.posts]);
   const pagination = useMemo(() => data?.pagination || {}, [data?.pagination]);
   const { data: featuredPosts = [], isLoading: isFeaturedLoading } = useFeaturedPosts({ limit: 4 });
+  // console.log("🌐(ForumHome) Featured Posts:", featuredPosts);
 
   // Fetch trending posts (for sidebar)
-  const { data: trendingPosts = [], isLoading: isTrendingLoading } = useTrendingPosts({ 
-    limit: 5, 
+  const { data: trendingPosts = [], isLoading: isTrendingLoading } = useTrendingPosts({
+    limit: 5,
     timeRange: 7 // Last 7 days
   });
-  // Debug pagination data
-  // useEffect(() => {
-  //   console.log("📊 Pagination Data:", {
-  //     posts: posts.length,
-  //     pagination,
-  //     currentPage,
-  //     isLoading,
-  //     isFetching
-  //   });
-  // }, [posts, pagination, currentPage, isLoading, isFetching]);
-
-  // Get trending posts (top 4 from first page)
-  // const [trendingPosts, setTrendingPosts] = useState([]);
-
-  // useEffect(() => {
-  //   if (currentPage === 1 && posts.length > 0) {
-  //     setTrendingPosts(posts.slice(0, 4));
-  //   }
-  // }, [posts, currentPage]);
+  // console.log("🌐(ForumHome) Trending Posts:", trendingPosts);
+  // Handle feed tab change
+  const handleFeedChange = (feed) => {
+    setSearchParams({ feed, page: "1" });
+  };
 
   // Handle page change
   const handlePageChange = (page) => {
-    setSearchParams({ page: page.toString() });
+    setSearchParams({ feed: currentFeed, page: page.toString() });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -97,15 +88,15 @@ const ForumHome = () => {
         <SideBar />
       </div>
 
-     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-[4rem] w-full">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-[4rem] w-full">
         {/* Featured Posts Carousel */}
         <div className="bg-white rounded-lg mb-8 p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-gray-900">
               Bài viết nổi bật trong tháng
             </h2>
-            <Link 
-              to="/posts/featured" 
+            <Link
+              to="/posts/featured"
               className="text-sm text-blue-600 hover:text-blue-700 font-medium"
             >
               Xem thêm →
@@ -154,6 +145,7 @@ const ForumHome = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
           <main className="lg:col-span-8">
+            <FeedTabs active={currentFeed} onChange={handleFeedChange} />
             <div className="grid p-4 gap-6">
               {posts.map((post) => (
                 <PostCard key={post.slug} post={post} />
@@ -223,13 +215,13 @@ const ForumHome = () => {
                 </Pagination>
 
                 {/* Pagination Info */}
-              
+
               </div>
             )}
           </main>
           <aside className="lg:col-span-4">
-            <Sidebar 
-              trendingPosts={trendingPosts} 
+            <Sidebar
+              trendingPosts={trendingPosts}
               isLoading={isTrendingLoading}
             />
           </aside>
