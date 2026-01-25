@@ -1,8 +1,7 @@
 import { apiClient } from '../../utils/clientAxios';
 
 export const articleService = {
-  // ==================== CRUD Operations ====================
-  
+
   // Tạo article mới
   createArticle: async (articleData) => {
     try {
