@@ -3,9 +3,6 @@ import Setting, { ISetting } from "./setting.model";
 import cloudinary from "../../config/cloudinary";
 
 class SettingService {
-    /**
-     * ==================== SETTING CRUD OPERATIONS ====================
-     */
 
     // Get all settings
     async getAllSettings(filter?: any) {
