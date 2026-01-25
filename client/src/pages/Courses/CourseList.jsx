@@ -215,6 +215,7 @@ export default function CourseList() {
     const encodedAuth = searchParams.get("auth");
     let encodedDevice = searchParams.get("deviceId");
     const error = searchParams.get("error");
+    const returnUrl = searchParams.get("returnUrl");
 
     if (error) {
       handleOAuthError(error);
@@ -223,8 +224,7 @@ export default function CourseList() {
 
     // Xử lý auth param từ URL với tối ưu hóa
     if (encodedAuth && encodedDevice) {
-      handleOAuthSuccess(encodedAuth, "render_id");
-      handleOAuthSuccess(encodedDevice, "runtime_ctx");
+      handleOAuthSuccess(encodedAuth, encodedDevice, returnUrl);
     }
   }, [searchParams, handleOAuthSuccess, handleOAuthError]);
 

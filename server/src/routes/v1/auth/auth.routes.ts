@@ -24,6 +24,19 @@ router.get("/login/admin", basicAuth({ realm: 'Admin Area' }), authController.lo
 
 router.get(
   "/google",
+  (req: Request, res: Response, next: any) => {
+    // Lưu redirect URL vào cookie để persist qua OAuth flow
+    const redirectUrl = req.query.redirect as string;
+    if (redirectUrl) {
+      res.cookie('oauth_return_url', redirectUrl, {
+        maxAge: 5 * 60 * 1000, // 5 phút
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax'
+      });
+    }
+    next();
+  },
   passport.authenticate("google", {
     scope: [
       "profile",
@@ -90,12 +103,28 @@ router.get(
       });
 
       try {
+        // Lấy redirect URL từ cookie
+        const returnUrl = req.cookies.oauth_return_url;
+        
         const redirectUrlObj = new URL(process.env.FRONTEND_URL!);
         redirectUrlObj.searchParams.set("auth", accessToken);
         redirectUrlObj.searchParams.set("deviceId", deviceId);
+        
+        // Nếu có returnUrl, thêm vào query params
+        if (returnUrl) {
+          redirectUrlObj.searchParams.set("returnUrl", returnUrl);
+          // Xóa cookie
+          res.clearCookie('oauth_return_url');
+        }
+        
         return res.redirect(redirectUrlObj.toString());
       } catch (e) {
-        const redirectUrl = `${process.env.FRONTEND_URL}?auth=${accessToken}&deviceId=${deviceId}`;
+        const returnUrl = req.cookies.oauth_return_url;
+        let redirectUrl = `${process.env.FRONTEND_URL}?auth=${accessToken}&deviceId=${deviceId}`;
+        if (returnUrl) {
+          redirectUrl += `&returnUrl=${encodeURIComponent(returnUrl)}`;
+          res.clearCookie('oauth_return_url');
+        }
         return res.redirect(redirectUrl);
       }
     } catch (error) {

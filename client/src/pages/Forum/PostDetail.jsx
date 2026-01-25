@@ -10,6 +10,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { toast } from "react-toastify";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../../shadcn-ui/components/ui/dialog";
 import { Button } from "../../shadcn-ui/components/ui/button";
+import LoginRequiredDialog from "../../components/Auth/LoginRequiredDialog";
 
 const PostDetail = () => {
 
@@ -23,6 +24,7 @@ const PostDetail = () => {
   const currentUserId = currentUser?._id || currentUser?.id;
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isLoginRequiredOpen, setIsLoginRequiredOpen] = useState(false);
   const deletePostMutation = useDeletePost();
 
   const { data: post = {}, isLoading } = usePostBySlug(slug, {
@@ -40,10 +42,10 @@ const PostDetail = () => {
 
   // Handler functions for PostSidebar
   const handleLike = async (isLiked) => {
-    // if (!currentUserId) {
-    //   toast.error("Vui lòng đăng nhập để thực hiện hành động này");
-    //   return;
-    // }
+    if (!currentUserId) {
+      setIsLoginRequiredOpen(true);
+      return;
+    }
 
     try {
       if (isLiked) {
@@ -64,10 +66,10 @@ const PostDetail = () => {
   };
 
   const handleSave = async (isSaved) => {
-    // if (!currentUserId) {
-    //   toast.error("Vui lòng đăng nhập để thực hiện hành động này");
-    //   return;
-    // }
+    if (!currentUserId) {
+      setIsLoginRequiredOpen(true);
+      return;
+    }
 
     try {
       if (isSaved) {
@@ -344,7 +346,10 @@ const PostDetail = () => {
 
             {/* Post Comments (Directly on Post) */}
             <div className="px-8 pb-8 md:px-12 md:pb-12 bg-gray-50 border-t border-gray-100">
-              <PostComments postId={post._id} />
+              <PostComments 
+                postId={post._id} 
+                onLoginRequired={() => setIsLoginRequiredOpen(true)}
+              />
             </div>
 
           </article>
@@ -357,6 +362,13 @@ const PostDetail = () => {
           /> */}
         </div>
       </div>
+
+      {/* Login Required Dialog */}
+      <LoginRequiredDialog 
+        open={isLoginRequiredOpen} 
+        onOpenChange={setIsLoginRequiredOpen}
+        message="Bạn cần đăng nhập để thực hiện hành động này"
+      />
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

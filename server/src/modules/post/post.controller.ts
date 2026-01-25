@@ -1,3 +1,4 @@
+import { encryptData } from "../../utils/encryption";
 import { PostService } from "./post.service";
 
 
@@ -30,11 +31,11 @@ class postController {
         select
       };
 
-      console.log("Query options:", options);
+      // console.log("Query options:", options);
       
       const result = await PostService.getAllPosts(query, options);
       
-      console.log("Posts found:", result.posts.length);
+      // console.log("Posts found:", result.posts.length);
       
       // Transform posts to include excerpt
       const transformedPosts = result.posts.map((post: any) => ({
@@ -44,11 +45,11 @@ class postController {
       }));
       
       console.log("Transformed posts:", transformedPosts.length);
-      
+      res.setHeader("x-encrypted", "true");
       // Return paginated response with metadata
       res.status(200).json({ 
         success: true, 
-        data: transformedPosts,
+        encryptedData: encryptData(transformedPosts),
         pagination: {
           page: result.page,
           limit: result.limit,
@@ -70,10 +71,10 @@ async getTrendingPosts(req: any, res: any): Promise<void> {
     const timeRange = parseInt(req.query.timeRange as string) || 30; // days
     
     const result = await PostService.getTrendingPosts(limit, timeRange);
-    
+    res.setHeader("x-encrypted", "true");
     res.status(200).json({
       success: true,
-      data: result
+      encryptedData: encryptData(result)
     });
   } catch (error) {
     console.error("Error getting trending posts:", error);
@@ -90,10 +91,10 @@ async getFeaturedPosts(req: any, res: any): Promise<void> {
     const limit = parseInt(req.query.limit as string) || 4;
     
     const result = await PostService.getFeaturedPosts(limit);
-    
+    res.setHeader("x-encrypted", "true");
     res.status(200).json({
       success: true,
-      data: result
+      encryptedData: encryptData(result)
     });
   } catch (error) {
     console.error("Error getting featured posts:", error);
@@ -124,7 +125,8 @@ async getFeaturedPosts(req: any, res: any): Promise<void> {
         };
       }
 
-      res.status(200).json({ success: true, data: post   });
+      res.setHeader("x-encrypted", "true");
+      res.status(200).json({ success: true, encryptedData: encryptData(post) });
     } catch (error) {
       res.status(500).json({ success: false, message: "Server Error", error: error.message });
     }
@@ -137,7 +139,8 @@ async getFeaturedPosts(req: any, res: any): Promise<void> {
         return;
       }
       const posts = await PostService.getPostsByUser(userId);
-      res.status(200).json({ success: true, data: posts });
+      res.setHeader("x-encrypted", "true");
+      res.status(200).json({ success: true, encryptedData: encryptData(posts) });
     } catch (error) {
       res.status(500).json({ success: false, message: "Server Error", error });
     }
@@ -169,8 +172,8 @@ async getFeaturedPosts(req: any, res: any): Promise<void> {
           userReactions: reactions
         };
       }
-
-      res.status(200).json({ success: true, data: post });
+      res.setHeader("x-encrypted", "true");
+      res.status(200).json({ success: true, encryptedData: encryptData(post) });
     } catch (error) {
       res.status(500).json({ success: false, message: "Server Error", error: error.message });
     }
@@ -197,7 +200,8 @@ async getFeaturedPosts(req: any, res: any): Promise<void> {
       // No need to process contentImages
       
       const post = await PostService.createPost(postData);
-      res.status(201).json({ success: true, data: post });
+      res.setHeader("x-encrypted", "true");
+      res.status(201).json({ success: true, encryptedData: encryptData(post) });
     } catch (error) {
       res.status(500).json({ success: false, message: "Server Error", error });
     }
@@ -235,7 +239,8 @@ async getFeaturedPosts(req: any, res: any): Promise<void> {
 
       // 4. Update post
       const post = await PostService.updatePost(req.params.id, updateData);
-      res.status(200).json({ success: true, data: post });
+      res.setHeader("x-encrypted", "true");
+      res.status(200).json({ success: true, encryptedData: encryptData(post) });
     } catch (error) {
       res.status(500).json({ success: false, message: "Server Error", error: error.message });
     }
