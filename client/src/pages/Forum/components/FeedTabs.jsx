@@ -1,8 +1,8 @@
-import { FeedType } from "../constants";
+import { FeedType } from "../../../utils/constants";
 
 const FEED_TABS = [
     { label: "Dành cho bạn", value: FeedType.FOR_YOU },
-    { label: "Theo tác giả", value: FeedType.AUTHOR },
+    // { label: "Theo tác giả", value: FeedType.AUTHOR },
     { label: "Mới nhất", value: FeedType.LATEST },
     { label: "Sôi nổi", value: FeedType.HOT },
     { label: "Đánh giá cao nhất", value: FeedType.TOP },

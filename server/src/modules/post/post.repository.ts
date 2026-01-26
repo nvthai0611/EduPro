@@ -39,9 +39,9 @@ class postRepository {
         $addFields: {
           engagementScore: {
             $add: [
-              { $ifNull: ["$likesCount", 0] },
-              { $multiply: [{ $ifNull: ["$commentsCount", 0] }, 2] },
-              { $multiply: [{ $ifNull: ["$viewsCount", 0] }, 0.1] },
+              { $multiply: [{ $ifNull: ["$likesCount", 0] }, 0.5] },
+              { $multiply: [{ $ifNull: ["$commentsCount", 0] }, 10] },
+              { $multiply: [{ $ifNull: ["$viewsCount", 0] }, 0.05] },
             ],
           },
           // Calculate featured score regardless (so we can sort by it if needed)
@@ -188,12 +188,12 @@ class postRepository {
       },
       {
         $addFields: {
-          // Calculate engagement score: likes + (comments * 2) + (views * 0.1)
+   
           engagementScore: {
             $add: [
-              { $ifNull: ["$likesCount", 0] },
-              { $multiply: [{ $ifNull: ["$commentsCount", 0] }, 2] },
-              { $multiply: [{ $ifNull: ["$viewsCount", 0] }, 0.1] },
+              { $multiply: [{ $ifNull: ["$likesCount", 0] }, 0.5] },
+              { $multiply: [{ $ifNull: ["$commentsCount", 0] }, 10] },
+              { $multiply: [{ $ifNull: ["$viewsCount", 0] }, 0.05] },
             ],
           },
         },

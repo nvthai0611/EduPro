@@ -6,7 +6,7 @@ import Sidebar from "./components/Sidebar";
 import WritePostButton from "./components/WritePostButton";
 import SideBar from "../Home/components/SideBar";
 import FeedTabs from "./components/FeedTabs";
-import { FeedType } from "./constants";
+import { FeedType } from "../../utils/constants";
 import { useFeaturedPosts, useGetAllPosts, useTrendingPosts } from "../../hooks/usePost";
 import { Link } from "react-router-dom";
 import {
