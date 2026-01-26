@@ -59,6 +59,26 @@ class postService {
   async deleteUserReaction(userId: string, postId: string, type: string): Promise<any> {
     return PostRepository.deleteUserReaction(userId, postId, type);
   }
+
+  // Post view tracking
+  async trackView(postId: string, viewerId: string): Promise<{ success: boolean; isNewView: boolean; message?: string }> {
+    try {
+      // Try to create a new view record
+      const view = await PostRepository.createPostView(postId, viewerId);
+      
+      if (view) {
+        // New view - increment the counter
+        await PostRepository.incrementViewCount(postId);
+        return { success: true, isNewView: true };
+      } else {
+        // View already exists (duplicate)
+        return { success: true, isNewView: false, message: "Already viewed" };
+      }
+    } catch (error: any) {
+      console.error("❌ trackView error:", error);
+      throw error;
+    }
+  }
 }
 
 export const PostService = new postService();

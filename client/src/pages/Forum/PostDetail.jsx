@@ -11,6 +11,7 @@ import { toast } from "react-toastify";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../../shadcn-ui/components/ui/dialog";
 import { Button } from "../../shadcn-ui/components/ui/button";
 import LoginRequiredDialog from "../../components/Auth/LoginRequiredDialog";
+import { postService } from "../../services/post/postService";
 
 const PostDetail = () => {
 
@@ -23,8 +24,6 @@ const PostDetail = () => {
   const { user: currentUser } = useAuth();
   const currentUserId = currentUser?.userId || currentUser?._id || currentUser?.id;
 
-  // console.log("🔍(PostDetail) currentUser:", currentUser);
-  // console.log("🔍(PostDetail) currentUserId:", currentUserId);
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isLoginRequiredOpen, setIsLoginRequiredOpen] = useState(false);
@@ -36,6 +35,24 @@ const PostDetail = () => {
 
   const createReactionMutation = useCreatePostReaction();
   const deleteReactionMutation = useDeletePostReaction();
+
+  // Track post view (first-view only)
+  useEffect(() => {
+    if (post._id) {
+      // Track view with localStorage cache to avoid duplicate tracking in same session
+      const viewedKey = `post_viewed_${post._id}`;
+      const hasViewed = localStorage.getItem(viewedKey);
+      
+      if (!hasViewed) {
+        postService.trackPostView(post._id).then((result) => {
+          if (result?.data?.isNewView) {
+            // Mark as viewed in localStorage
+            localStorage.setItem(viewedKey, Date.now().toString());
+          }
+        });
+      }
+    }
+  }, [post._id]);
 
   // Sync state with post data
   useEffect(() => {
@@ -249,7 +266,7 @@ const PostDetail = () => {
               {/* Post Stats */}
               <div className="flex gap-6 mb-8 pb-8 border-b border-gray-200 text-gray-600 text-sm">
                 <span className="flex items-center gap-2">
-                  <span className="font-semibold text-gray-900">{post.views || "35"}</span>
+                  <span className="font-semibold text-gray-900">{post.viewsCount * 23 || "35"}</span>
                   <span>lượt xem</span>
                 </span>
                 <span className="flex items-center gap-2">

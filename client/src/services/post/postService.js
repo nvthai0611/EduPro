@@ -187,7 +187,7 @@ getFeatured: async (params = {}) => {
   // Delete a post
   deletePost: async (postId) => {
     try {
-      const response = await apiClient.delete(`/posts/${postId}`);
+      const response = await apiClient.delete(`/posts/id/${postId}`);
       return response.data;
     } catch (error) {
       console.error('Error deleting post:', error);
@@ -233,6 +233,18 @@ getFeatured: async (params = {}) => {
     } catch (error) {
       console.error('Error deleting post reaction:', error);
       throw error;
+    }
+  },
+
+  // Track post view (first-view only)
+  trackPostView: async (postId) => {
+    try {
+      const response = await apiClient.post(`/posts/${postId}/view`);
+      return response.data;
+    } catch (error) {
+      // Silently fail - view tracking is not critical
+      console.debug('View tracking failed:', error);
+      return null;
     }
   },
 };

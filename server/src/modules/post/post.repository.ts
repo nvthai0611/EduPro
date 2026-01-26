@@ -1,5 +1,6 @@
 import PostReactions from "./models/post-reactions.model";
 import Posts from "./models/post.model";
+import PostViews from "./models/post-views.model";
 
 class postRepository {
   // Repository methods here
@@ -394,6 +395,38 @@ class postRepository {
     }
     return reaction;
   }
+
+  // Post view tracking methods
+  async findExistingView(postId: string, viewerId: string) {
+    return PostViews.findOne({ postId, viewerId }).lean();
+  }
+
+  async createPostView(postId: string, viewerId: string) {
+    try {
+      const view = await PostViews.create({
+        postId,
+        viewerId,
+        viewedAt: new Date(),
+      });
+      return view;
+    } catch (error: any) {
+      // Duplicate key error (code 11000) means view already exists
+      if (error.code === 11000) {
+        return null; // Already viewed
+      }
+      throw error;
+    }
+  }
+
+  async incrementViewCount(postId: string) {
+    return Posts.findByIdAndUpdate(
+      postId,
+      { $inc: { viewsCount: 1 } },
+      { new: true }
+    );
+  }
+
+  
 }
 
 export const PostRepository = new postRepository();

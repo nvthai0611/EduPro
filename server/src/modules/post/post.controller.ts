@@ -397,5 +397,51 @@ async getFeaturedPosts(req: any, res: any): Promise<void> {
       res.status(500).json({ success: false, message: "Server Error", error: error.message });
     }
   }
+
+  // Track post view (first-view only with deduplication)
+  async trackPostView(req: any, res: any): Promise<void> {
+    try {
+      const { id: postId } = req.params;
+      
+      // Determine viewerId based on authentication status
+      let viewerId: string;
+      
+      if (req.user?.id || req.user?.userId) {
+        // Authenticated user - use userId
+        viewerId = (req.user.id || req.user.userId).toString();
+      } else {
+        // Anonymous user - use sessionId from cookie or generate fingerprint
+        const sessionId = req.cookies?.sessionId;
+        const fingerprint = `${req.ip}_${req.headers['user-agent'] || 'unknown'}`;
+        
+        viewerId = sessionId || fingerprint;
+        
+        // If no sessionId exists, create one and set cookie
+        if (!sessionId) {
+          const newSessionId = `anon_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+          res.cookie('sessionId', newSessionId, { 
+            httpOnly: true, 
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+            sameSite: 'lax'
+          });
+          viewerId = newSessionId;
+        }
+      }
+      
+      const result = await PostService.trackView(postId, viewerId);
+      
+      res.status(200).json({ 
+        success: true, 
+        data: result 
+      });
+    } catch (error) {
+      console.error("Error tracking post view:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Server Error", 
+        error: error.message 
+      });
+    }
+  }
 }
 export default new postController();
