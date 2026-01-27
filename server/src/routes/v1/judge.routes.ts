@@ -10,7 +10,9 @@ router.get("/problems", ProblemController.getAll);
 router.get("/problems/:slug", ProblemController.getBySlug);
 
 // SUBMISSION ROUTER
-router.post("/submissions", SubmissionController.create);
+router.post("/submissions/run", SubmissionController.runCode);
+
+router.post("/submissions/submit", SubmissionController.submitCode);
 
 router.get("/submissions/me", SubmissionController.getMySubmissions);
 

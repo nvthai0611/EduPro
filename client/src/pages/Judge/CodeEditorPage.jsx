@@ -1,15 +1,16 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import Editor from "@monaco-editor/react"
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Code2, Send } from "lucide-react"
+import { ArrowLeft, Code2, Play, Send } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import { apiClient } from "../../utils/clientAxios"
+import ProblemDescription from "./ProblemDescription"
 
 const defaultCode = {
   javascript: `console.log("Hello World");`,
@@ -37,36 +38,81 @@ const handleEditorWillMount = (monaco) => {
   })
 }
 
+const decodeBase64 = (str) => {
+  try {
+    return atob(str);
+  } catch {
+    return str;
+  }
+};
+
+const problemData = {
+  id: "01",
+  title: "Chào mừng đến với JavaScript",
+  difficulty: "Dễ",
+  description: "Hãy viết chương trình in ra dòng chữ 'Hello World' trên màn hình console.",
+  input: ["Không có đầu vào"],
+  example: "Output: Hello World",
+  initialCode: "console.log(\"Hello World\");"
+};
+
 export default function CodeEditorPage() {
   const navigate = useNavigate();
   const [code, setCode] = useState(defaultCode.javascript)
+  const [result, setResult] = useState(null);
+  const [running, setRunning] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  /* 🧪 MOCK DATA – sau này nối Judge0 */
+
   const [status, setStatus] = useState("Chưa chạy")
   const [summary, setSummary] = useState({ passed: 0, total: 0 })
   const [testResults, setTestResults] = useState([])
 
-  useEffect(() => {
-    document.documentElement.classList.remove("dark")
-  }, [])
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    const response = await apiClient.post("/judge/submissions/submit", {
+      problemId: problemData.id,
+      code,
+      language_id: 63,
+    });
 
-  const handleSubmit = () => {
-    console.log(code);
+    const testcases = response.testcases;
 
-    // mock kết quả
-    setStatus("Đã chấm")
-    setSummary({ passed: 2, total: 3 })
-    setTestResults([
-      { status_id: 3, time: "0.01", memory: "1024" },
-      { status_id: 3, time: "0.02", memory: "1100" },
-      {
-        status_id: 4,
-        time: "0.01",
-        memory: "900",
-        stdout: "Sai output",
-      },
-    ])
-  }
+    const formattedResults = testcases.map((tc) => ({
+      status_id: tc.status.id,
+      time: tc.time,
+      memory: tc.memory,
+      stdout: tc.stdout ? decodeBase64(tc.stdout) : null,
+      stderr: tc.stderr ? decodeBase64(tc.stderr) : null,
+      compile_output: tc.compile_output
+        ? decodeBase64(tc.compile_output)
+        : null,
+    }));
+
+    const passed = formattedResults.filter(
+      (r) => r.status_id === 3
+    ).length;
+
+    setStatus("Đã chấm");
+    setSummary({
+      passed,
+      total: formattedResults.length,
+    });
+    setTestResults(formattedResults);
+    setSubmitting(false);
+  };
+
+  const handleRunCode = async () => {
+    setRunning(true);
+    const response = await apiClient.post("/judge/submissions/run", {
+      problemId: problemData.id,
+      code: code,
+      language_id: 63
+    });
+    setResult(response);
+
+    setRunning(false);
+  };
 
   return (
     <div className="min-h-screen w-full bg-slate-50 text-slate-900 flex flex-col lg:grid lg:grid-cols-12 mt-[70px] mb-5">
@@ -75,7 +121,6 @@ export default function CodeEditorPage() {
         <Card className="rounded-none border-none bg-white">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Two Sum</CardTitle>
               <div>
                 <Button
                   variant="ghost"
@@ -92,31 +137,7 @@ export default function CodeEditorPage() {
 
           <CardContent className="space-y-6 text-sm leading-relaxed">
             {/* Problem */}
-            <div className="space-y-4">
-              <p>
-                Given an array of integers <b>nums</b> and an integer{" "}
-                <b>target</b>, return indices of the two numbers such that they
-                add up to target.
-              </p>
-
-              <div>
-                <b>Example:</b>
-                <pre className="bg-slate-100 p-2 rounded mt-2 text-xs">
-                  nums = [2,7,11,15]
-                  target = 9
-
-                  Output: [0,1]
-                </pre>
-              </div>
-
-              <div>
-                <b>Constraints:</b>
-                <ul className="list-disc ml-5">
-                  <li>2 ≤ nums.length ≤ 10⁴</li>
-                  <li>-10⁹ ≤ nums[i] ≤ 10⁹</li>
-                </ul>
-              </div>
-            </div>
+            <ProblemDescription problem={problemData} />
 
             {/* RESULTS AREA */}
             <div className="pt-4 border-t space-y-4">
@@ -169,11 +190,20 @@ export default function CodeEditorPage() {
                           <td className="border px-2 py-1">
                             {r.memory || "N/A"}
                           </td>
-                          <td className="border px-2 py-1 text-left">
-                            {r.stdout ||
-                              r.stderr ||
-                              r.compile_output ||
-                              "—"}
+                          <td className="border px-2 py-1 text-left whitespace-pre-wrap">
+                            {r.status_id === 3 ? (
+                              <>
+                                {r.stdout
+                                  ? r.stdout
+                                  : r.stderr
+                                    ? r.stderr
+                                    : r.compile_output
+                                      ? r.compile_output
+                                      : "—"}
+                              </>
+                            ) : (
+                              <span>Sai Output</span>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -191,27 +221,35 @@ export default function CodeEditorPage() {
         {/* TOP BAR */}
         <div className="flex flex-wrap gap-2 items-center justify-between px-4 py-2 border-b border-slate-200 bg-white">
 
-          {/* <div className="flex items-center gap-2 text-sm">
-            <span className="text-slate-600">Language:</span>
-            <Badge variant="outline">JavaScript</Badge>
-          </div> */}
-
           <div className="flex items-center gap-2 rounded-md border bg-slate-50 px-3 py-1.5 text-sm">
             <Code2 className="h-4 w-4 text-yellow-500" />
             <span className="font-medium text-slate-700">JavaScript</span>
           </div>
 
-          <Button
-            onClick={handleSubmit}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            <Send className="w-4 h-4 mr-2" />
-            Submit
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={handleRunCode}
+              disabled={running}
+              className={`${running ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald-500 hover:bg-emerald-600'} text-white px-6 py-2 rounded-xl font-bold text-sm`}
+            >
+              <Play className="w-4 h-4 mr-2" />
+              {running ? "Đang chạy..." : "Chạy thử"}
+            </Button>
+
+            <Button
+              onClick={handleSubmit}
+              disabled={submitting}
+              className={`${submitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'} text-white px-6 py-2 rounded-xl font-bold text-sm`}
+            >
+              <Send className="w-4 h-4 mr-2" />
+              {submitting ? "Running..." : "Submit"}
+            </Button>
+
+          </div>
         </div>
 
         {/* EDITOR */}
-        <div className="flex-1 min-h-[400px]">
+        <div className="flex-[3] min-h-[400px]">
           <Editor
             height="100%"
             language="javascript"
@@ -229,6 +267,50 @@ export default function CodeEditorPage() {
             }}
           />
         </div>
+
+        <div className="flex-[2] bg-white border-t border-slate-100 p-4 text-slate-700 font-mono text-sm relative max-h-[300px]">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="text-xs font-semibold text-slate-500">
+              ▶ Console Output
+            </h3>
+
+          </div>
+
+          {/* Content */}
+          {result ? (
+            <div className="space-y-2 max-h-60 overflow-auto rounded-md border border-slate-200 p-2">
+              {result.stdout && (
+                <pre className="bg-white text-gray rounded-md p-2 whitespace-pre-wrap">
+                  {result.stdout}
+                </pre>
+              )}
+
+              {result.stderr && (
+                <pre className="bg-red-50/60 text-red-600 rounded-md p-2 whitespace-pre-wrap">
+                  {result.stderr}
+                </pre>
+              )}
+
+              {result.compile_output && (
+                <pre className="bg-amber-50/60 text-amber-700 rounded-md p-2 whitespace-pre-wrap">
+                  {result.compile_output}
+                </pre>
+              )}
+
+              {result.message && (
+                <pre className="text-slate-400 italic text-xs">
+                  {result.message}
+                </pre>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-full text-slate-400 text-xs">
+              {running ? "Đang chạy chương trình..." : "Chưa có output"}
+            </div>
+          )}
+        </div>
+
       </div>
     </div>
   )
