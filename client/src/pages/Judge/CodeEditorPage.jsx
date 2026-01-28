@@ -46,23 +46,101 @@ const decodeBase64 = (str) => {
   }
 };
 
-const problemData = {
-  id: "01",
-  title: "Chào mừng đến với JavaScript",
-  difficulty: "Dễ",
-  description: "Hãy viết chương trình in ra dòng chữ 'Hello World' trên màn hình console.",
-  input: ["Không có đầu vào"],
-  example: "Output: Hello World",
-  initialCode: "console.log(\"Hello World\");"
+const problems = {
+  "01": {
+    id: "01",
+    title: "Chào mừng đến với JavaScript",
+    difficulty: "Dễ",
+    description: "Hãy viết chương trình in ra dòng chữ 'Hello World' trên màn hình console.",
+    input: ["Không có đầu vào"],
+    example: "Output: Hello World",
+    initialCode: "console.log(\"Hello World\");"
+  },
+  "02": {
+    id: "02",
+    title: "Cộng ba số",
+    difficulty: "Dễ",
+    description: "Viết hàm solve(a, b, c) để trả về tổng của 3 số nguyên.",
+    input: ["3 số nguyên a b c"],
+    example: "Input: 10 20 30\nOutput: 60",
+    initialCode: "function solve(a, b, c) {\n    // Viết code tại đây\n    return a + b +c;\n}",
+  },
+  "03": {
+    id: "03",
+    title: "Chia hai số",
+    difficulty: "Dễ",
+    description: "Viết hàm solve(a, b) để trả về thương của a chia cho b.\n Nếu là số nguyên thì trả về số đó còn Nếu là số thập phân thì lấy 2 số sau dấu phẩy. Không hợp lệ in Not Valid",
+    input: ["2 số nguyên a b"],
+    example: "Input: 10 5\nOutput: 2",
+    initialCode:
+      `function solve(a, b) {
+    // Viết code tại đây\n
+    if (b === 0) return "Not Valid";
+    const res = a / b;
+    
+    if (Number.isInteger(res)) {
+        return res;
+    }
+    
+    return res.toFixed(2);
+}`
+  },
+  "04": {
+    id: "04",
+    title: "Đảo ngược từ trong câu",
+    difficulty: "Dễ",
+    description: "Viết hàm solve(str) để đảo ngược thứ tự các từ trong một câu. Lưu ý: Loại bỏ các khoảng trắng thừa ở đầu, cuối và giữa các từ.",
+    input: ["Một chuỗi ký tự str"],
+    example: "Input: 'Hello World' -> Output: 'World Hello'",
+    initialCode:
+      `function solve(str) {
+    // Viết code tại đây
+    // Gợi ý: dùng split(' '), filter, reverse và join(' ')
+    return str.trim().split(/\\s+/).reverse().join(' ');
+}`
+  },
+  "05": {
+    id: "05",
+    title: "Số lớn thứ hai trong mảng",
+    difficulty: "Trung bình",
+    description: `Viết hàm solve(arr) nhận vào một mảng các số nguyên. 
+    Nhiệm vụ của bạn là tìm và trả về số lớn thứ hai trong mảng đó.
+    
+    Yêu cầu:
+    - Nếu mảng có các số trùng nhau, chỉ tính là một giá trị.
+    - Nếu không tìm thấy số lớn thứ hai (mảng có ít hơn 2 giá trị khác nhau), trả về chuỗi "Not Found".`,
+
+    input: ["Một mảng số nguyên arr (ví dụ: [10, 5, 10, 8])"],
+    example: "Input: [10, 5, 10, 8] -> Output: 8",
+
+    initialCode: `/**
+ * @param {number[]} arr
+ * @return {number|string}
+ */
+function solve(arr) {
+    // 1. Loại bỏ các số trùng nhau bằng Set
+    const uniqueNums = [...new Set(arr)];
+    
+    // 2. Kiểm tra nếu có ít hơn 2 số khác nhau
+    if (uniqueNums.length < 2) {
+        return "Not Found";
+    }
+    
+    // 3. Sắp xếp giảm dần và lấy phần tử thứ 2
+    uniqueNums.sort((a, b) => b - a);
+    return uniqueNums[1];
+}`
+  }
 };
+
+const problemData = problems["05"];
 
 export default function CodeEditorPage() {
   const navigate = useNavigate();
-  const [code, setCode] = useState(defaultCode.javascript)
+  const [code, setCode] = useState(problemData.initialCode || defaultCode.javascript)
   const [result, setResult] = useState(null);
   const [running, setRunning] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-
 
   const [status, setStatus] = useState("Chưa chạy")
   const [summary, setSummary] = useState({ passed: 0, total: 0 })
@@ -80,6 +158,7 @@ export default function CodeEditorPage() {
 
     const formattedResults = testcases.map((tc) => ({
       status_id: tc.status.id,
+      status_description: tc.status.description,
       time: tc.time,
       memory: tc.memory,
       stdout: tc.stdout ? decodeBase64(tc.stdout) : null,
@@ -170,7 +249,6 @@ export default function CodeEditorPage() {
                         <th className="border px-2 py-1">Trạng thái</th>
                         <th className="border px-2 py-1">Time (s)</th>
                         <th className="border px-2 py-1">Memory (KB)</th>
-                        <th className="border px-2 py-1">Output</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -189,21 +267,6 @@ export default function CodeEditorPage() {
                           </td>
                           <td className="border px-2 py-1">
                             {r.memory || "N/A"}
-                          </td>
-                          <td className="border px-2 py-1 text-left whitespace-pre-wrap">
-                            {r.status_id === 3 ? (
-                              <>
-                                {r.stdout
-                                  ? r.stdout
-                                  : r.stderr
-                                    ? r.stderr
-                                    : r.compile_output
-                                      ? r.compile_output
-                                      : "—"}
-                              </>
-                            ) : (
-                              <span>Sai Output</span>
-                            )}
                           </td>
                         </tr>
                       ))}

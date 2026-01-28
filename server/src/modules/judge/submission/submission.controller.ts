@@ -10,29 +10,84 @@ const problems = {
         title: "Chào mừng đến với JavaScript",
         testcases: [
             { stdin: "", expected_output: "Hello World\n" },
-            { stdin: "", expected_output: "Hello World" },
-            { stdin: "", expected_output: "He11o Wor1d" }
+            { stdin: "", expected_output: "Hello World" }
+        ]
+    },
+    "02": {
+        id: "02",
+        title: "Cộng hai số",
+        testcases: [
+            { stdin: "[10, 20, 30]", expected_output: "60\n" },
+            { stdin: "[5, 5, 5]", expected_output: "15\n" },
+            { stdin: "[-1, 1, 0]", expected_output: "0\n" }
+        ]
+    },
+    "03": {
+        id: "03",
+        title: "Chia hai số",
+        testcases: [
+            { stdin: "[10, 2]", expected_output: "5\n" },
+            { stdin: "[10, 4]", expected_output: "2.50\n" },
+            { stdin: "[-6, 3]", expected_output: "-2\n" },
+            { stdin: "[1, 3]", expected_output: "0.33\n" },
+            { stdin: "[10, 0]", expected_output: "Not Valid\n" },
+            { stdin: "[0, 0]", expected_output: "Not Valid\n" }
+        ]
+    },
+    "04": {
+        id: "04",
+        title: "Đảo ngược từ trong câu",
+        description: "Viết hàm solve(str) nhận vào một chuỗi. Hãy đảo ngược thứ tự các từ trong chuỗi đó (các từ cách nhau bởi dấu cách).",
+        testcases: [
+            { stdin: "[\"Hello World\"]", expected_output: "World Hello\n" },
+            { stdin: "[\"JavaScript is fun\"]", expected_output: "fun is JavaScript\n" },
+            { stdin: "[\"Code\"]", expected_output: "Code\n" },
+            { stdin: "[\"  Hanoi  HCMC  \"]", expected_output: "HCMC Hanoi\n" } // Testcase xử lý khoảng trắng thừa
+        ]
+    },
+    "05": {
+        id: "05",
+        title: "Số lớn thứ hai",
+        description: "Viết hàm solve(arr) để tìm số lớn thứ hai trong mảng. Nếu không tìm thấy (mảng có ít hơn 2 số khác nhau), trả về 'Not Found'.",
+        testcases: [
+            { stdin: "[[1, 2, 3, 4, 5]]", expected_output: "4\n" },
+            { stdin: "[[10, 10, 10]]", expected_output: "Not Found\n" },
+            { stdin: "[[5, 2, 8, 8, 7]]", expected_output: "7\n" },
+            { stdin: "[[-10, -5, -20]]", expected_output: "-10\n" },
+            { stdin: "[[1, 100]]", expected_output: "1\n" },
+            { stdin: "[[]]", expected_output: "Not Found\n" },
+            { stdin: "[[7]]", expected_output: "Not Found\n" },
+            { stdin: "[[1, 2, 2, 2]]", expected_output: "1\n" },
+            { stdin: "[[10, 9, 8, 7, 6, 5, 4, 3, 2, 1]]", expected_output: "9\n" },
+            { stdin: "[[0, 0, 1]]", expected_output: "0\n" },
+            { stdin: "[[100, 200, 150, 150]]", expected_output: "150\n" },
+            { stdin: "[[1, 3, 5, 7, 9, 2, 4, 6, 8, 10]]", expected_output: "9\n" },
+            { stdin: "[[42, 42, 41]]", expected_output: "41\n" },
+            { stdin: "[[10, -10, 10, -10]]", expected_output: "-10\n" },
+            { stdin: "[[5, 4, 3, 2, 1, 0]]", expected_output: "4\n" },
+            { stdin: "[[1000, 1000]]", expected_output: "Not Found\n" },
+            { stdin: "[[0, -1, -2]]", expected_output: "-1\n" },
+            { stdin: "[[1.5, 2.5, 3.5]]", expected_output: "2.5\n" },
+            { stdin: "[[10, 20, 30, 40, 50, 60, 70, 80, 90, 100]]", expected_output: "90\n" },
+            { stdin: "[[99, 100, 99]]", expected_output: "99\n" }
         ]
     }
 };
 
-const waitAllFinished = async (tokens: string) => {
-    const MAX_RETRIES = 10; // Thử tối đa 10 lần
-    const INTERVAL = 1500;   // Mỗi lần cách nhau 1.5 giây
+const waitAllFinished = async (tokens) => {
+    const MAX_RETRIES = 10;
+    const INTERVAL = 1500;
 
     for (let i = 0; i < MAX_RETRIES; i++) {
-        // Lấy trạng thái của tất cả tokens
         const response = await axios.get(`${JUDGE0_URL}/submissions/batch?tokens=${tokens}&base64_encoded=true`);
         const submissions = response.data.submissions;
 
-        // Kiểm tra xem tất cả đã xong chưa (status id 1 là In Queue, 2 là Processing)
-        const isAllFinished = submissions.every((s: { status: { id: number; }; }) => s.status.id > 2);
+        const isAllFinished = submissions.every(s => s.status.id > 2);
 
         if (isAllFinished) {
             return submissions;
         }
 
-        // Đợi một khoảng thời gian trước khi thử lại
         await new Promise(resolve => setTimeout(resolve, INTERVAL));
     }
     throw new Error("Hệ thống quá tải, thực thi vượt quá thời gian cho phép.");
@@ -69,10 +124,29 @@ export class SubmissionController {
         const { problemId, code, language_id } = req.body;
         const problem = problems[problemId];
 
-        const submissions = problem.testcases.map((tc: { stdin: any; expected_output: any; }) => ({
+        const finalCode = `
+            const fs = require('fs');
+            const __input = fs.readFileSync(0, 'utf8').trim();
+
+            (() => {
+                ${code}
+                
+                if (__input && typeof solve === 'function') {
+                    try {
+                        const args = JSON.parse(__input);
+                        const result = solve(...args);
+                        if (result !== undefined) process.stdout.write(String(result) + "\\n");
+                    } catch (e) {
+                        process.stderr.write("Input Error: " + e.message);
+                    }
+                }
+            })();
+        `;
+
+        const submissions = problem.testcases.map(tc => ({
             language_id: language_id || 63,
-            source_code: Buffer.from(code).toString('base64'), // Nên dùng base64 để tránh lỗi ký tự
-            stdin: Buffer.from(tc.stdin).toString('base64'),
+            source_code: Buffer.from(finalCode).toString('base64'),
+            stdin: Buffer.from(tc.stdin || "").toString('base64'),
             expected_output: Buffer.from(tc.expected_output).toString('base64')
         }));
 
@@ -81,13 +155,10 @@ export class SubmissionController {
         });
 
         const tokens = postResponse.data.map((s: { token: any; }) => s.token).join(',');
-
         const finalResults = await waitAllFinished(tokens);
 
-        const allPassed = finalResults.every((r: { status: { id: number; }; }) => r.status.id === 3);
-
         res.json({
-            success: allPassed,
+            success: finalResults.every((r: { status: { id: number; }; }) => r.status.id === 3),
             testcases: finalResults
         });
 
