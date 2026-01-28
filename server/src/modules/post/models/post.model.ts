@@ -14,6 +14,7 @@ export interface IForum{
     // Like and save posts count
     likesCount: number;
     savesCount: number;
+    viewsCount: number; // Track unique views
     // New fields for Answer/Comment system
     answersCount: number;
     commentsCount: number; // Semantics: Total comments (post + its answers)
@@ -45,6 +46,7 @@ const ForumSchema = new Schema<IForumDocument>(
         //Like and save posts count
         likesCount: { type: Number, default: 0 },
         savesCount: { type: Number, default: 0 },
+        viewsCount: { type: Number, default: 0 },
         
         // New fields
         answersCount: { type: Number, default: 0 },

@@ -67,7 +67,8 @@ export const useTrendingPosts = (params = { limit: 4, timeRange: 30 }, options =
     queryKey: postKeys.trending(params),
     queryFn: async () => {
       const response = await postService.getTrending(params);
-      return Array.isArray(response) ? response : [];
+      // console.log("🌐(useTrendingPosts) Response:", response);
+      return response?.posts || [];
     },
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 15 * 60 * 1000, // 15 minutes (formerly cacheTime)
@@ -81,7 +82,8 @@ export const useFeaturedPosts = (params = { limit: 4 }, options = {}) => {
     queryKey: postKeys.featured(params),
     queryFn: async () => {
       const response = await postService.getFeatured(params);
-      return Array.isArray(response) ? response : [];
+      // console.log("🌐(useFeaturedPosts) Response:", response);
+      return response?.posts || [];
     },
     staleTime: 15 * 60 * 1000, // 15 minutes
     gcTime: 20 * 60 * 1000, // 20 minutes

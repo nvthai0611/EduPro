@@ -59,15 +59,16 @@ function Home() {
   useEffect(() => {
     const encodedAuth = searchParams.get("auth");
     const error = searchParams.get("error");
-    let encodedDevice = searchParams.get("deviceId");  
+    let encodedDevice = searchParams.get("deviceId");
+    const returnUrl = searchParams.get("returnUrl");
+    
     if (error) {
       handleOAuthError(error);
       return;
     }
 
     if (encodedAuth && encodedDevice) {
-      handleOAuthSuccess(encodedAuth, "render_id");
-      handleOAuthSuccess(encodedDevice, "runtime_ctx");
+      handleOAuthSuccess(encodedAuth, encodedDevice, returnUrl);
     }
   }, [searchParams, handleOAuthSuccess, handleOAuthError]);
 
