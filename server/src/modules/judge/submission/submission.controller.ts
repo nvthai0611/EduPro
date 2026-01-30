@@ -3,77 +3,7 @@ import { SubmissionService } from "./submission.service";
 import axios from "axios";
 import { decryptData, encryptData } from "../../../utils/encryption";
 
-const JUDGE0_URL = "https://ce.judge0.com";
-
-const problems = {
-    "01": {
-        id: "01",
-        title: "Chào mừng đến với JavaScript",
-        testcases: [
-            { stdin: "", expected_output: "Hello World\n" },
-            { stdin: "", expected_output: "Hello World" }
-        ]
-    },
-    "02": {
-        id: "02",
-        title: "Cộng hai số",
-        testcases: [
-            { stdin: "[10, 20, 30]", expected_output: "60\n" },
-            { stdin: "[5, 5, 5]", expected_output: "15\n" },
-            { stdin: "[-1, 1, 0]", expected_output: "0\n" }
-        ]
-    },
-    "03": {
-        id: "03",
-        title: "Chia hai số",
-        testcases: [
-            { stdin: "[10, 2]", expected_output: "5\n" },
-            { stdin: "[10, 4]", expected_output: "2.50\n" },
-            { stdin: "[-6, 3]", expected_output: "-2\n" },
-            { stdin: "[1, 3]", expected_output: "0.33\n" },
-            { stdin: "[10, 0]", expected_output: "Not Valid\n" },
-            { stdin: "[0, 0]", expected_output: "Not Valid\n" }
-        ]
-    },
-    "04": {
-        id: "04",
-        title: "Đảo ngược từ trong câu",
-        description: "Viết hàm solve(str) nhận vào một chuỗi. Hãy đảo ngược thứ tự các từ trong chuỗi đó (các từ cách nhau bởi dấu cách).",
-        testcases: [
-            { stdin: "[\"Hello World\"]", expected_output: "World Hello\n" },
-            { stdin: "[\"JavaScript is fun\"]", expected_output: "fun is JavaScript\n" },
-            { stdin: "[\"Code\"]", expected_output: "Code\n" },
-            { stdin: "[\"  Hanoi  HCMC  \"]", expected_output: "HCMC Hanoi\n" } // Testcase xử lý khoảng trắng thừa
-        ]
-    },
-    "05": {
-        id: "05",
-        title: "Số lớn thứ hai",
-        description: "Viết hàm solve(arr) để tìm số lớn thứ hai trong mảng. Nếu không tìm thấy (mảng có ít hơn 2 số khác nhau), trả về 'Not Found'.",
-        testcases: [
-            { stdin: "[[1, 2, 3, 4, 5]]", expected_output: "4\n" },
-            { stdin: "[[10, 10, 10]]", expected_output: "Not Found\n" },
-            { stdin: "[[5, 2, 8, 8, 7]]", expected_output: "7\n" },
-            { stdin: "[[-10, -5, -20]]", expected_output: "-10\n" },
-            { stdin: "[[1, 100]]", expected_output: "1\n" },
-            { stdin: "[[]]", expected_output: "Not Found\n" },
-            { stdin: "[[7]]", expected_output: "Not Found\n" },
-            { stdin: "[[1, 2, 2, 2]]", expected_output: "1\n" },
-            { stdin: "[[10, 9, 8, 7, 6, 5, 4, 3, 2, 1]]", expected_output: "9\n" },
-            { stdin: "[[0, 0, 1]]", expected_output: "0\n" },
-            { stdin: "[[100, 200, 150, 150]]", expected_output: "150\n" },
-            { stdin: "[[1, 3, 5, 7, 9, 2, 4, 6, 8, 10]]", expected_output: "9\n" },
-            { stdin: "[[42, 42, 41]]", expected_output: "41\n" },
-            { stdin: "[[10, -10, 10, -10]]", expected_output: "-10\n" },
-            { stdin: "[[5, 4, 3, 2, 1, 0]]", expected_output: "4\n" },
-            { stdin: "[[1000, 1000]]", expected_output: "Not Found\n" },
-            { stdin: "[[0, -1, -2]]", expected_output: "-1\n" },
-            { stdin: "[[1.5, 2.5, 3.5]]", expected_output: "2.5\n" },
-            { stdin: "[[10, 20, 30, 40, 50, 60, 70, 80, 90, 100]]", expected_output: "90\n" },
-            { stdin: "[[99, 100, 99]]", expected_output: "99\n" }
-        ]
-    }
-};
+const JUDGE0_URL = process.env.JUDGE0_URL;
 
 const waitAllFinished = async (tokens: any) => {
     const MAX_RETRIES = 10;
