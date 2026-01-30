@@ -728,7 +728,7 @@ export default function CourseLearnDetail() {
       <link rel="preconnect" href="https://i.ytimg.com" />
       <link rel="dns-prefetch" href="https://www.youtube.com" />
 
-      <div className="flex flex-col lg:flex-row w-full min-h-screen bg-gray-100">
+      <div className="flex flex-col lg:flex-row w-full min-h-screen bg-gray-100 mt-[80px]">
         {/* Left - Video Player & Lesson Info */}
         <div className="flex-1 flex flex-col overflow-y-auto">
           {/* Header (Nút Back Desktop) */}
