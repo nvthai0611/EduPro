@@ -5,7 +5,8 @@ export const getAllProblems = async () => {
 };
 
 export const getProblemBySlug = async (slug) => {
-  return await apiClient.get(`/judge/problems/${slug}`);
+  const response = await apiClient.get(`/judge/problems/${slug}`);
+  return response;
 };
 
 export const sendSubmission = async (data) => {

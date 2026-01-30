@@ -82,7 +82,7 @@ const waitAllFinished = async (tokens) => {
         const response = await axios.get(`${JUDGE0_URL}/submissions/batch?tokens=${tokens}&base64_encoded=true`);
         const submissions = response.data.submissions;
 
-        const isAllFinished = submissions.every(s => s.status.id > 2);
+        const isAllFinished = submissions.every((s: { status: { id: number; }; }) => s.status.id > 2);
 
         if (isAllFinished) {
             return submissions;
@@ -116,13 +116,8 @@ export class SubmissionController {
   }
 
   static async submitCode(req: any, res: Response) {
-    // const submission = await SubmissionService.create({
-    //   ...req.body,
-    //   userId: req.user._id, // từ auth middleware
-    // });
     try {
-        const { problemId, code, language_id } = req.body;
-        const problem = problems[problemId];
+        const { code, testCases } = req.body;
 
         const finalCode = `
             const fs = require('fs');
@@ -143,11 +138,11 @@ export class SubmissionController {
             })();
         `;
 
-        const submissions = problem.testcases.map(tc => ({
-            language_id: language_id || 63,
+        const submissions = testCases.map((tc: { input: any; expectedOutput: any; }) => ({
+            language_id: 63,
             source_code: Buffer.from(finalCode).toString('base64'),
-            stdin: Buffer.from(tc.stdin || "").toString('base64'),
-            expected_output: Buffer.from(tc.expected_output).toString('base64')
+            stdin: Buffer.from(tc.input || "").toString('base64'),
+            expected_output: Buffer.from(tc.expectedOutput).toString('base64')
         }));
 
         const postResponse = await axios.post(`${JUDGE0_URL}/submissions/batch?base64_encoded=true`, {
@@ -161,7 +156,6 @@ export class SubmissionController {
             success: finalResults.every((r: { status: { id: number; }; }) => r.status.id === 3),
             testcases: finalResults
         });
-
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

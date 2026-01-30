@@ -52,7 +52,7 @@ const emptyForm = {
   timeLimit: 1,
   memoryLimit: 128000,
 
-  isPublished: false,
+  isPublished: true,
   testCases: [],
 }
 
@@ -63,12 +63,17 @@ export function AddProblemDialog({ initialData, trigger }) {
 
   useEffect(() => {
     if (initialData) {
-      setForm(structuredClone(initialData))
-    } else {
-      setForm(emptyForm)
-    }
-  }, [initialData])
+      const dataForEditing = structuredClone(initialData);
+      dataForEditing.testCases = dataForEditing.testCases.map(tc => ({
+        ...tc,
+        input: tc.input.replace(/^\[|\]$/g, '')
+      }));
 
+      setForm(dataForEditing);
+    } else {
+      setForm(emptyForm);
+    }
+  }, [initialData]);
 
   const queryClient = useQueryClient()
 
@@ -131,7 +136,10 @@ export function AddProblemDialog({ initialData, trigger }) {
       timeLimit: form.timeLimit,
       memoryLimit: form.memoryLimit,
       isPublished: form.isPublished,
-      testCases: form.testCases,
+      testCases: form.testCases.map((tc) => ({
+        ...tc,
+        input: `[${tc.input}]`
+      }))
     }
 
     if (initialData?._id) {
@@ -171,6 +179,7 @@ export function AddProblemDialog({ initialData, trigger }) {
               <Label>Title *</Label>
               <Input
                 value={form.title}
+                placeholder="Tiêu đề bài toán"
                 onChange={(e) =>
                   setForm({ ...form, title: e.target.value })
                 }
@@ -189,7 +198,7 @@ export function AddProblemDialog({ initialData, trigger }) {
                   }
                   modules={quillModules}
                   formats={quillFormats}
-                  placeholder="Mô tả vấn đề..."
+                  placeholder="Mô tả chi tiết về bài toán."
                 />
               </div>
             </div>
@@ -274,7 +283,7 @@ export function AddProblemDialog({ initialData, trigger }) {
                   focus-visible:ring-primary
                   focus-visible:ring-offset-0
                 "
-                placeholder={`1 ≤ n ≤ 10^5\n-10^9 ≤ a[i] ≤ 10^9`}
+                placeholder={`Ràng buộc bài toán`}
                 rows={3}
                 value={form.constraints}
                 onChange={(e) =>
@@ -293,7 +302,7 @@ export function AddProblemDialog({ initialData, trigger }) {
                   focus-visible:ring-offset-0
                 "
                 rows={2}
-                placeholder={`Dòng đầu chứa số nguyên n.\nDòng thứ hai chứa n số nguyên, cách nhau bởi dấu cách.`}
+                placeholder={`Định dạng đầu vào của bài toán.`}
                 value={form.inputFormat}
                 onChange={(e) =>
                   setForm({ ...form, inputFormat: e.target.value })
@@ -311,7 +320,7 @@ export function AddProblemDialog({ initialData, trigger }) {
                   focus-visible:ring-offset-0
                 "
                 rows={2}
-                placeholder={`In ra kết quả theo yêu cầu của đề bài.`}
+                placeholder={`Định dạng đầu ra của bài toán.`}
                 value={form.outputFormat}
                 onChange={(e) =>
                   setForm({ ...form, outputFormat: e.target.value })
