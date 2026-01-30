@@ -34,7 +34,7 @@ import { commentRoutes } from "./v1/comments.routes";
 import { judgeRoutes } from "./v1/judge.routes";
 import { judgeAdminRoutes } from "./v1/admin/judge.routes";
 import { progressRoutes } from "./v1/progress.routes";
-
+import { dbLogger } from "../middlewares/servers/db-logger.middleware";
 
 export const apiRouter = (io?: Server) => {
   // Block direct browser access to API
@@ -42,6 +42,8 @@ export const apiRouter = (io?: Server) => {
 
   // Authentication routes
   router.use("/auth", authRoutes);
+
+  router.use(dbLogger);
 
   // Category routes
   router.use("/category", optionalAuth, categoryRoutes);
@@ -115,9 +117,9 @@ export const apiRouter = (io?: Server) => {
   router.use("/comments", optionalAuth, commentRoutes);
 
   // Judge routes
-  router.use("/judge", judgeRoutes);
-  router.use("/admin/judge", judgeAdminRoutes);
+  router.use("/judge", optionalAuth, judgeRoutes);
+  router.use("/admin/judge", optionalAuth, judgeAdminRoutes);
 
-  router.use("/progress", progressRoutes);
+  router.use("/progress", optionalAuth, progressRoutes);
   return router;
 };

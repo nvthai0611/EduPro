@@ -1,8 +1,11 @@
 import { Router } from "express";
 import { ProblemController } from "../../modules/judge/problem/problem.controller";
 import { SubmissionController } from "../../modules/judge/submission/submission.controller";
+import authenticateToken from "../../middlewares/auth/authenticateToken";
 
 const router = Router();
+
+router.use(authenticateToken);
 
 // PROBLEM ROUTER
 router.get("/problems", ProblemController.getAll);

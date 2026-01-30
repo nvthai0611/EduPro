@@ -7,11 +7,15 @@ import { AddProblemDialog } from "./AddProblemDialog"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { getAllProblems } from "../../services/user/judgeService"
 import { deleteProblem } from "../../services/admin/judgeService"
+import { useAuth } from "../../hooks/useAuth"
 
 export default function ProblemListPage() {
-  const navigate = useNavigate()
-  const [difficultyFilter, setDifficultyFilter] = useState("All")
-  const queryClient = useQueryClient()
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [difficultyFilter, setDifficultyFilter] = useState("All");
+  const queryClient = useQueryClient();
+
+  const isAdmin = user && (user.role === 'admin');
 
   const {
     data: problems = [],
@@ -73,12 +77,16 @@ export default function ProblemListPage() {
           <p className="text-slate-500 font-medium">Tổng hợp các bài tập để luyện tập và nâng cao kỹ năng lập trình</p>
         </div>
 
-        <AddProblemDialog trigger={
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 gap-2 px-6 py-6 rounded-xl transition-all hover:scale-105 active:scale-95">
-            <Plus className="w-5 h-5" />
-            <span className="font-semibold">Thêm bài toán mới</span>
-          </Button>
-        } />
+        {isAdmin && (
+          <>
+            <AddProblemDialog trigger={
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 gap-2 px-6 py-6 rounded-xl transition-all hover:scale-105 active:scale-95">
+                <Plus className="w-5 h-5" />
+                <span className="font-semibold">Thêm bài toán mới</span>
+              </Button>
+            } />
+          </>
+        )}
       </div>
 
       {/* Filter Section */}
@@ -185,27 +193,31 @@ export default function ProblemListPage() {
                           <Eye className="w-4 h-4" />
                         </Button>
 
-                        <AddProblemDialog
-                          initialData={prob}
-                          trigger={
-                            <Button variant="ghost" size="icon" className="h-9 w-9 cursor-pointer text-slate-400 hover:text-blue-600 hover:bg-blue-100/50 rounded-lg">
-                              <Edit2 className="w-4 h-4" />
+                        {isAdmin && (
+                          <>
+                            <AddProblemDialog
+                              initialData={prob}
+                              trigger={
+                                <Button variant="ghost" size="icon" className="h-9 w-9 cursor-pointer text-slate-400 hover:text-blue-600 hover:bg-blue-100/50 rounded-lg">
+                                  <Edit2 className="w-4 h-4" />
+                                </Button>
+                              }
+                            />
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-9 w-9 cursor-pointer text-slate-400 hover:text-rose-600 hover:bg-rose-100/50 rounded-lg"
+                              onClick={(e) => {
+                                e.preventDefault()
+                                if (window.confirm("Bạn có chắc muốn xóa bài này?")) {
+                                  deleteProblemMutation.mutate(prob._id)
+                                }
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" />
                             </Button>
-                          }
-                        />
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-9 w-9 cursor-pointer text-slate-400 hover:text-rose-600 hover:bg-rose-100/50 rounded-lg"
-                          onClick={(e) => {
-                            e.preventDefault()
-                            if (window.confirm("Bạn có chắc muốn xóa bài này?")) {
-                              deleteProblemMutation.mutate(prob._id)
-                            }
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>

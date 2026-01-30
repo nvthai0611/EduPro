@@ -1,7 +1,26 @@
+import { useEffect } from "react";
+import confetti from "canvas-confetti";
+
 import { CheckCircle2, XCircle, Clock, Database, Code2, ArrowLeft, ChevronRight } from "lucide-react";
 
 const SubmissionReport = ({ result, problemTitle, onBackToEditor }) => {
   if (!result) return null;
+
+
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  useEffect(() => {
+    if (result.success) {
+      const frame = () => {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+      };
+
+      frame();
+    }
+  }, [result.success]);
 
   return (
     <div className="min-h-screen bg-[#f8fafc] p-6 lg:p-12 font-sans mt-[60px]">
