@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { SubmissionService } from "./submission.service";
 import axios from "axios";
+import { decryptData, encryptData } from "../../../utils/encryption";
 
 const JUDGE0_URL = "https://ce.judge0.com";
 
@@ -74,7 +75,7 @@ const problems = {
     }
 };
 
-const waitAllFinished = async (tokens) => {
+const waitAllFinished = async (tokens: any) => {
     const MAX_RETRIES = 10;
     const INTERVAL = 1500;
 
@@ -94,32 +95,33 @@ const waitAllFinished = async (tokens) => {
 };
 
 export class SubmissionController {
-  static async runCode(req: any, res: Response) {
-    try {
-        const { code, language_id } = req.body;
+    static async runCode(req: any, res: Response) {
+        try {
+            const { code, language_id } = req.body;
 
-        const response = await axios.post(`${JUDGE0_URL}/submissions?wait=true`, {
-            source_code: code,
-            language_id: language_id || 63,
-            base64_encoded: false,
+            const response = await axios.post(`${JUDGE0_URL}/submissions?wait=true`, {
+                source_code: code,
+                language_id: language_id || 63,
+                base64_encoded: false,
 
-            wall_time_limit: 10,
-            enable_per_process_and_thread_memory_limit: false
-        });
+                wall_time_limit: 10,
+                enable_per_process_and_thread_memory_limit: false
+            });
 
-        res.json(response.data);
-    } catch (err) {
-        console.log(err);
-        
-        res.status(500).json({ error: err.message });
+            res.json(response.data);
+        } catch (err) {
+            console.log(err);
+
+            res.status(500).json({ error: err.message });
+        }
     }
-  }
 
-  static async submitCode(req: any, res: Response) {
-    try {
-        const { code, testCases } = req.body;
+    static async submitCode(req: any, res: Response) {
+        try {
+            const { encryptedData } = req.body;
+            const { code, testCases } = decryptData(encryptedData);
 
-        const finalCode = `
+            const finalCode = `
             const fs = require('fs');
             const __input = fs.readFileSync(0, 'utf8').trim();
 
@@ -138,38 +140,42 @@ export class SubmissionController {
             })();
         `;
 
-        const submissions = testCases.map((tc: { input: any; expectedOutput: any; }) => ({
-            language_id: 63,
-            source_code: Buffer.from(finalCode).toString('base64'),
-            stdin: Buffer.from(tc.input || "").toString('base64'),
-            expected_output: Buffer.from(tc.expectedOutput).toString('base64')
-        }));
+            const submissions = testCases.map((tc: { input: any; expectedOutput: any; }) => ({
+                language_id: 63,
+                source_code: Buffer.from(finalCode).toString('base64'),
+                stdin: Buffer.from(tc.input || "").toString('base64'),
+                expected_output: Buffer.from(tc.expectedOutput).toString('base64')
+            }));
 
-        const postResponse = await axios.post(`${JUDGE0_URL}/submissions/batch?base64_encoded=true`, {
-            submissions
-        });
+            const postResponse = await axios.post(`${JUDGE0_URL}/submissions/batch?base64_encoded=true`, {
+                submissions
+            });
 
-        const tokens = postResponse.data.map((s: { token: any; }) => s.token).join(',');
-        const finalResults = await waitAllFinished(tokens);
+            const tokens = postResponse.data.map((s: { token: any; }) => s.token).join(',');
+            const finalResults = await waitAllFinished(tokens);
 
-        res.json({
-            success: finalResults.every((r: { status: { id: number; }; }) => r.status.id === 3),
-            testcases: finalResults
-        });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+            res.setHeader("x-encrypted", "true");
+            res.status(200).json({
+                success: true, encryptedData: encryptData({
+                    success: finalResults.every((r: { status: { id: number; }; }) => r.status.id === 3),
+                    testcases: finalResults
+                })
+            });
+            
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
     }
-  }
 
-  static async getMySubmissions(req: any, res: Response) {
-    const submissions = await SubmissionService.getByUser(
-      req.user._id
-    );
-    res.json(submissions);
-  }
+    static async getMySubmissions(req: any, res: Response) {
+        const submissions = await SubmissionService.getByUser(
+            req.user._id
+        );
+        res.json(submissions);
+    }
 
-  static async getById(req: Request, res: Response) {
-    const submission = await SubmissionService.getById(req.params.id);
-    res.json(submission);
-  }
+    static async getById(req: Request, res: Response) {
+        const submission = await SubmissionService.getById(req.params.id);
+        res.json(submission);
+    }
 }

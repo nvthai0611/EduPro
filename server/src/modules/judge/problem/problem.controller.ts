@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { ProblemService } from "./problem.service";
+import { encryptData } from "../../../utils/encryption";
 
 export class ProblemController {
   static async create(req: Request, res: Response) {
@@ -13,7 +14,8 @@ export class ProblemController {
 
   static async getAll(req: Request, res: Response) {
     const problems = await ProblemService.getAllPublished();
-    res.json(problems);
+    res.setHeader("x-encrypted", "true");
+    res.status(200).json({ success: true, encryptedData: encryptData(problems) });
   }
 
   static async getBySlug(req: Request, res: Response) {
@@ -21,7 +23,8 @@ export class ProblemController {
     if (!problem) {
       return res.status(404).json({ message: "Problem not found" });
     }
-    res.json(problem);
+    res.setHeader("x-encrypted", "true");
+    res.status(200).json({ success: true, encryptedData: encryptData(problem) });
   }
 
   static async update(req: Request, res: Response) {
