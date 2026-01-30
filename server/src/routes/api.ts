@@ -25,6 +25,7 @@ import { attendanceRoutes } from "./v1/admin/attendance.route";
 import { settingAdminRoutes } from "./v1/admin/setting.routes";
 import { settingRoutes } from "./v1/setting.routes";
 import optionalAuth from "../middlewares/auth/optionalAuth";
+import optionalAuthenticate from "../middlewares/auth/optionalAuthenticate";
 import { reviewRoutes } from "./v1/reviews.routes";
 import { adminForumRoutes } from "./v1/admin/forum.routes";
 import { forumRoutes } from "./v1/forum.routes";
@@ -32,6 +33,7 @@ import { postRoutes } from "./v1/posts.routes";
 import { answerRoutes } from "./v1/answers.routes";
 import { commentRoutes } from "./v1/comments.routes";
 import { progressRoutes } from "./v1/progress.routes";
+import { notificationRoutes } from "./v1/notification.routes";
 
 
 export const apiRouter = (io?: Server) => {
@@ -112,5 +114,7 @@ export const apiRouter = (io?: Server) => {
   router.use("/comments", optionalAuth, commentRoutes);
 
   router.use("/progress", progressRoutes);
+
+  router.use("/notifications", optionalAuthenticate, notificationRoutes);
   return router;
 };
