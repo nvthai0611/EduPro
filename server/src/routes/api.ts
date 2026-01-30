@@ -33,6 +33,7 @@ import { answerRoutes } from "./v1/answers.routes";
 import { commentRoutes } from "./v1/comments.routes";
 import { judgeRoutes } from "./v1/judge.routes";
 import { judgeAdminRoutes } from "./v1/admin/judge.routes";
+import { progressRoutes } from "./v1/progress.routes";
 
 
 export const apiRouter = (io?: Server) => {
@@ -109,7 +110,7 @@ export const apiRouter = (io?: Server) => {
   // Forum routes
   router.use("/admin/forum", adminForumRoutes);
   router.use("/forum", forumRoutes);
-  router.use("/posts", optionalAuth, postRoutes);
+  router.use("/posts", postRoutes);
   router.use("/answers", optionalAuth, answerRoutes);
   router.use("/comments", optionalAuth, commentRoutes);
 
@@ -117,5 +118,6 @@ export const apiRouter = (io?: Server) => {
   router.use("/judge", judgeRoutes);
   router.use("/admin/judge", judgeAdminRoutes);
 
+  router.use("/progress", progressRoutes);
   return router;
 };

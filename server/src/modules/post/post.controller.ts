@@ -1,3 +1,4 @@
+import { encryptData } from "../../utils/encryption";
 import { PostService } from "./post.service";
 
 
@@ -5,38 +6,156 @@ class postController {
   // Controller methods here
   async getAllPosts(req: any, res: any): Promise<void> {
     try {
-      console.log("📥 getAllPosts called");
-      const query = req.query || {};
-      const options = {
-        select: req.query.select || null
-      };
-      console.log("Query options:", options);
-      const posts = await PostService.getAllPosts(query, options);
-      console.log("Posts found:", posts.length);
+      // Parse pagination parameters
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      let sortBy = req.query.sortBy || "createdAt";
+      let sortOrder = req.query.sortOrder || "desc";
+      const select = req.query.select || null;
+      const feed = req.query.feed || "latest";
+
+      // Build query filters
+      const query: any = {};
+      if (req.query.authorId) query.authorId = req.query.authorId;
+      if (req.query.tags) query.tags = { $in: req.query.tags.split(",") };
+      if (req.query.search) {
+        query.$text = { $search: req.query.search };
+      }
+
+      // Feed Mapping Strategy
+      // feed=latest   → default sorting (createdAt desc)
+      // feed=top      → sortBy=likesCount
+      // feed=hot      → sortBy=engagement
+      // feed=for-you  → featured=true
       
-      // Use authorName from DB (already saved when creating)
-      const transformedPosts = posts.map((post: any) => ({
+      let featured = false;
+
+      switch (feed) {
+        case 'top':
+          sortBy = 'likesCount';
+          sortOrder = 'desc';
+          break;
+        case 'hot':
+          sortBy = 'engagement';
+          sortOrder = 'desc';
+          break;
+        case 'for-you':
+          featured = true;
+          break;
+        case 'author':
+          // Temporary: don't use it now
+          break;
+        case 'latest':
+        default:
+          sortBy = 'createdAt';
+          sortOrder = 'desc';
+          break;
+      }
+
+      const options = {
+        page,
+        limit,
+        sortBy,
+        sortOrder,
+        select,
+        featured // Pass featured flag to options
+      };
+      
+      const result = await PostService.getAllPosts(query, options);
+      
+      // Transform posts to include excerpt
+      const transformedPosts = (result.posts || []).map((post: any) => ({
         ...post,
-        authorName: post.authorName || 'Anonymous'
+        authorName: post.authorName || 'Anonymous',
+        excerpt: post.content ? post.content.slice(0, 150).replace(/<\/?[^>]+(>|$)/g, "") + "..." : ""
       }));
       
-      console.log("Transformed posts:", transformedPosts.length);
-      res.status(200).json({ success: true, data: transformedPosts });
+      res.setHeader("x-encrypted", "true");
+      // Return paginated response with metadata
+      res.status(200).json({ 
+        success: true, 
+        encryptedData: encryptData(transformedPosts),
+        pagination: {
+          page: result.page,
+          limit: result.limit,
+          total: result.total,
+          totalPages: result.totalPages,
+          hasNextPage: result.page < result.totalPages,
+          hasPrevPage: result.page > 1
+        }
+      });
     } catch (error) {
       console.error("❌ getAllPosts error:", error);
       res.status(500).json({ success: false, message: "Server Error", error: error.message });
     }
   }
+    
+async getTrendingPosts(req: any, res: any): Promise<void> {
+  try {
+    const limit = parseInt(req.query.limit as string) || 4;
+    const timeRange = parseInt(req.query.timeRange as string) || 30; // days
+    
+    const result = await PostService.getTrendingPosts(limit, timeRange);
+    res.setHeader("x-encrypted", "true");
+    res.status(200).json({
+      success: true,
+      encryptedData: encryptData(result),
+      // data: result
+    });
+  } catch (error) {
+    console.error("Error getting trending posts:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to get trending posts",
+      error: error instanceof Error ? error.message : "Unknown error"
+    });
+  }
+}
+
+async getFeaturedPosts(req: any, res: any): Promise<void> {
+  try {
+    const limit = parseInt(req.query.limit as string) || 4;
+    
+    const result = await PostService.getFeaturedPosts(limit);
+    res.setHeader("x-encrypted", "true");
+    res.status(200).json({
+      success: true,
+      encryptedData: encryptData(result),
+      // data: result
+    });
+  } catch (error) {
+    console.error("Error getting featured posts:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to get featured posts",
+      error: error instanceof Error ? error.message : "Unknown error"
+    });
+  }
+}
   async getPostById(req: any, res: any): Promise<void> {
     try {
-      const post = await PostService.getPostById(req.params.id);
+      let post = await PostService.getPostById(req.params.id);
       if (!post) {
         res.status(404).json({ success: false, message: "Post not found" });
         return;
       }
-      res.status(200).json({ success: true, data: post   });
+      
+      // Check for user reactions if authenticated
+      const userId = req.user?.id || req.user?.userId;
+      if (userId) {
+        const reactions = await PostService.findUserReactions(userId, post._id.toString());
+        post = {
+          ...post,
+          isLiked: reactions.some(r => r.type === "LIKE"),
+          isSaved: reactions.some(r => r.type === "SAVE"),
+          userReactions: reactions
+        };
+      }
+
+      res.setHeader("x-encrypted", "true");
+      res.status(200).json({ success: true, encryptedData: encryptData(post) });
     } catch (error) {
-      res.status(500).json({ success: false, message: "Server Error", error });
+      res.status(500).json({ success: false, message: "Server Error", error: error.message });
     }
   }
   async getMine(req: any, res: any): Promise<void> {
@@ -47,29 +166,44 @@ class postController {
         return;
       }
       const posts = await PostService.getPostsByUser(userId);
-      res.status(200).json({ success: true, data: posts });
+      res.setHeader("x-encrypted", "true");
+      res.status(200).json({ success: true, encryptedData: encryptData(posts) });
     } catch (error) {
-      res.status(500).json({ success: false, message: "Server Error", error });
+      res.status(500).json({ success: false, message: "Server Error", error: error instanceof Error ? error.message : "Unknown error" });
     }
   }
   async getPostsByUser(req: any, res: any): Promise<void> {
     try {
       const posts = await PostService.getPostsByUser(req.params.userId);
-      res.status(200).json({ success: true, data: posts });
+      res.setHeader("x-encrypted", "true");
+      res.status(200).json({ success: true, encryptedData: encryptData(posts) });
     } catch (error) {
       res.status(500).json({ success: false, message: "Server Error", error });
     }
   }
   async getPostsBySlug(req: any, res: any): Promise<void> {
     try {
-      const post = await PostService.getPostBySlug(req.params.slug);
+      let post = await PostService.getPostBySlug(req.params.slug);
       if (!post) {
         res.status(404).json({ success: false, message: "Post not found" });
         return;
       } 
-      res.status(200).json({ success: true, data: post });
+
+      // Check for user reactions if authenticated
+      const userId = req.user?.id || req.user?.userId;
+      if (userId) {
+        const reactions = await PostService.findUserReactions(userId, post._id.toString());
+        post = {
+          ...post,
+          isLiked: reactions.some(r => r.type === "LIKE"),
+          isSaved: reactions.some(r => r.type === "SAVE"),
+          userReactions: reactions
+        };
+      }
+      res.setHeader("x-encrypted", "true");
+      res.status(200).json({ success: true, encryptedData: encryptData(post) });
     } catch (error) {
-      res.status(500).json({ success: false, message: "Server Error", error });
+      res.status(500).json({ success: false, message: "Server Error", error: error.message });
     }
   }
   async createPost(req: any, res: any): Promise<void> {
@@ -94,7 +228,8 @@ class postController {
       // No need to process contentImages
       
       const post = await PostService.createPost(postData);
-      res.status(201).json({ success: true, data: post });
+      res.setHeader("x-encrypted", "true");
+      res.status(201).json({ success: true, encryptedData: encryptData(post) });
     } catch (error) {
       res.status(500).json({ success: false, message: "Server Error", error });
     }
@@ -122,8 +257,18 @@ class postController {
         return;
       }
 
-      const post = await PostService.updatePost(req.params.id, req.body);
-      res.status(200).json({ success: true, data: post });
+      // 3. Prepare update data
+      const updateData = { ...req.body };
+      
+      // Handle uploaded cover image from Cloudinary if new file uploaded
+      if (req.file) {
+        updateData.coverImageUrl = req.file.path;
+      }
+
+      // 4. Update post
+      const post = await PostService.updatePost(req.params.id, updateData);
+      res.setHeader("x-encrypted", "true");
+      res.status(200).json({ success: true, encryptedData: encryptData(post) });
     } catch (error) {
       res.status(500).json({ success: false, message: "Server Error", error: error.message });
     }
@@ -149,6 +294,7 @@ class postController {
       // 3. Extract image URLs for cleanup before deleting from DB
       const imageUrls: string[] = [];
       if (post.coverImageUrl) imageUrls.push(post.coverImageUrl);
+      
       
       // Extract from content
       const imgRegex = /<img[^>]+src="([^">]+)"/g;
@@ -198,6 +344,103 @@ class postController {
     } catch (error) {
       console.error("❌ Upload image error:", error);
       res.status(500).json({ success: false, message: "Server Error", error });
+    }
+  }
+
+  // Post reaction
+  async createPostReaction(req: any, res: any): Promise<void> {
+    try {
+      const { id: postId } = req.params;
+      const { type } = req.body;
+      
+      // Get author ID and name from authenticated user
+      if (!req.user || !req.user.id) {
+        res.status(401).json({ success: false, message: "User not authenticated" });
+        return;
+      }
+
+      const userId = req.user.id;
+      
+      const reaction = await PostService.createPostReaction({
+        userId,
+        postId,
+        type
+      });
+      
+      res.status(201).json({ success: true, data: reaction });
+    } catch (error) {
+      console.error("Error creating post reaction:", error);
+      res.status(500).json({ success: false, message: "Server Error", error: error.message });
+    }
+  }
+
+  async deletePostReaction(req: any, res: any): Promise<void> {
+    try {
+      const { id: postId, reactionId } = req.params;
+      const { type } = req.query; // Allow passing type in query for easier "unlike"
+      
+      const userId = req.user?.id || req.user?.userId;
+
+      let reaction;
+      if (reactionId && reactionId !== "by-type") {
+        reaction = await PostService.deletePostReaction(reactionId);
+      } else if (userId && postId && type) {
+        reaction = await PostService.deleteUserReaction(userId, postId, type as string);
+      } else {
+        res.status(400).json({ success: false, message: "Reaction ID or (Post ID + Type) is required" });
+        return;
+      }
+
+      res.status(200).json({ success: true, data: reaction });
+    } catch (error) {
+      console.error("Error deleting post reaction:", error);
+      res.status(500).json({ success: false, message: "Server Error", error: error.message });
+    }
+  }
+
+  // Track post view (first-view only with deduplication)
+  async trackPostView(req: any, res: any): Promise<void> {
+    try {
+      const { id: postId } = req.params;
+      
+      // Determine viewerId based on authentication status
+      let viewerId: string;
+      
+      if (req.user?.id || req.user?.userId) {
+        // Authenticated user - use userId
+        viewerId = (req.user.id || req.user.userId).toString();
+      } else {
+        // Anonymous user - use sessionId from cookie or generate fingerprint
+        const sessionId = req.cookies?.sessionId;
+        const fingerprint = `${req.ip}_${req.headers['user-agent'] || 'unknown'}`;
+        
+        viewerId = sessionId || fingerprint;
+        
+        // If no sessionId exists, create one and set cookie
+        if (!sessionId) {
+          const newSessionId = `anon_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+          res.cookie('sessionId', newSessionId, { 
+            httpOnly: true, 
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+            sameSite: 'lax'
+          });
+          viewerId = newSessionId;
+        }
+      }
+      
+      const result = await PostService.trackView(postId, viewerId);
+      
+      res.status(200).json({ 
+        success: true, 
+        data: result 
+      });
+    } catch (error) {
+      console.error("Error tracking post view:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Server Error", 
+        error: error.message 
+      });
     }
   }
 }

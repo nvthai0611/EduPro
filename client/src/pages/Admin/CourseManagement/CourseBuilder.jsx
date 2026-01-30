@@ -308,7 +308,8 @@ const CourseBuilder = () => {
         return false;
       });
         
-      // Delete from Lesson collection (for both video and article types)
+      // Delete from Lesson collection first (new articles and videos)
+      // If not found, it will try Articles collection (old articles) via backend
       deleteLessonMutation.mutate(
         {
           id: deleteTarget.id,

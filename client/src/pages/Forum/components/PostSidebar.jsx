@@ -2,9 +2,9 @@ import { Heart, Bookmark, Share2, MessageCircle, Pencil, Trash2 } from "lucide-r
 import { toast } from "react-toastify";
 
 const PostSidebar = ({ post, onLike, onSave, onShare, onEdit, onDelete, isAuthor }) => {
-  const liked = post?.liked || false;
-  const saved = post?.saved || false;
-  const likesCount = post?.likes || 0;
+  const liked = post?.liked || post?.isLiked || false;
+  const saved = post?.saved || post?.isSaved || false;
+  const likesCount = post?.likesCount || 0;
 
   const handleLike = () => {
     const newLiked = !liked;

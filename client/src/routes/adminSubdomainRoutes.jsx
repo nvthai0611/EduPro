@@ -7,7 +7,6 @@ import LearningPlatformDashboard from "../pages/Admin/LearningDashboard/Learning
 import PageUserManagement from "../pages/Admin/User/Page";
 import CourseManagement from "../pages/Admin/CourseManagement/CourseManagement";
 import CourseBuilder from "../pages/Admin/CourseManagement/CourseBuilder";
-import StudentProgress from "../pages/Admin/StudentProgress/StudentProgress";
 import CourseApprover from "../pages/Admin/CourseManagement/CourseApprover";
 import CourseAssign from "../pages/Admin/CourseManagement/AssignCoursePage";
 import StudentQuestion from "../pages/Admin/StudentQuestion/QuestionPage";
@@ -39,7 +38,6 @@ export const adminSubdomainRoutes = (
       <Route path="manager-user" element={<PageUserManagement />} />
       <Route path="manager-courses" element={<CourseManagement />} />
       <Route path="courses/:slug/builder" element={<CourseBuilder />} />
-      <Route path="student-progress" element={<StudentProgress />} />
       <Route path="approve-courses" element={<CourseApprover />} />
       <Route path="assign-course" element={<CourseAssign />} />
       <Route path="student-question" element={<StudentQuestion />} />

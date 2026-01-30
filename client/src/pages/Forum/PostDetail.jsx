@@ -1,17 +1,17 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Heart, MessageCircle, Share2, Loader2, ChevronLeft, Bookmark, Pencil, Trash2 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
-import { usePostBySlug } from "../../hooks/usePost";
+import { usePostBySlug, useDeletePost, useCreatePostReaction, useDeletePostReaction } from "../../hooks/usePost";
 import PostSidebar from "./components/PostSidebar";
 import { formatTimeAgo } from "../../utils/format";
 import AnswerList from "../../components/Forum/AnswerList";
 import PostComments from "./components/PostComments";
-import { useDeletePost } from "../../hooks/usePost";
 import { useAuth } from "../../hooks/useAuth";
 import { toast } from "react-toastify";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../../shadcn-ui/components/ui/dialog";
 import { Button } from "../../shadcn-ui/components/ui/button";
+import LoginRequiredDialog from "../../components/Auth/LoginRequiredDialog";
+import { postService } from "../../services/post/postService";
 
 const PostDetail = () => {
 
@@ -22,26 +22,91 @@ const PostDetail = () => {
   const [saved, setSaved] = useState(false);
 
   const { user: currentUser } = useAuth();
-  const currentUserId = currentUser?._id || currentUser?.id;
+  const currentUserId = currentUser?.userId || currentUser?._id || currentUser?.id;
+
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isLoginRequiredOpen, setIsLoginRequiredOpen] = useState(false);
   const deletePostMutation = useDeletePost();
 
   const { data: post = {}, isLoading } = usePostBySlug(slug, {
     enabled: !!slug,
   });
 
+  const createReactionMutation = useCreatePostReaction();
+  const deleteReactionMutation = useDeletePostReaction();
+
+  // Track post view (first-view only)
+  useEffect(() => {
+    if (post._id) {
+      // Track view with localStorage cache to avoid duplicate tracking in same session
+      const viewedKey = `post_viewed_${post._id}`;
+      const hasViewed = localStorage.getItem(viewedKey);
+      
+      if (!hasViewed) {
+        postService.trackPostView(post._id).then((result) => {
+          if (result?.data?.isNewView) {
+            // Mark as viewed in localStorage
+            localStorage.setItem(viewedKey, Date.now().toString());
+          }
+        });
+      }
+    }
+  }, [post._id]);
+
+  // Sync state with post data
+  useEffect(() => {
+    if (post.isLiked !== undefined) setLiked(post.isLiked);
+    if (post.isSaved !== undefined) setSaved(post.isSaved);
+  }, [post.isLiked, post.isSaved]);
+
   // Handler functions for PostSidebar
-  const handleLike = (isLiked) => {
-    setLiked(isLiked);
-    // Here you can add API call to update like status
-    console.log("Like status changed:", isLiked);
+  const handleLike = async (isLiked) => {
+    if (!currentUserId) {
+      setIsLoginRequiredOpen(true);
+      return;
+    }
+
+    try {
+      if (isLiked) {
+        await createReactionMutation.mutateAsync({
+          postId: post._id,
+          reactionData: { type: "LIKE" }
+        });
+      } else {
+        await deleteReactionMutation.mutateAsync({
+          postId: post._id,
+          type: "LIKE"
+        });
+      }
+      setLiked(isLiked);
+    } catch (error) {
+      toast.error("Không thể cập nhật lượt thích");
+    }
   };
 
-  const handleSave = (isSaved) => {
-    setSaved(isSaved);
-    // Here you can add API call to save/unsave post
-    console.log("Save status changed:", isSaved);
+  const handleSave = async (isSaved) => {
+    if (!currentUserId) {
+      setIsLoginRequiredOpen(true);
+      return;
+    }
+
+    try {
+      if (isSaved) {
+        await createReactionMutation.mutateAsync({
+          postId: post._id,
+          reactionData: { type: "SAVE" }
+        });
+      } else {
+        await deleteReactionMutation.mutateAsync({
+          postId: post._id,
+          type: "SAVE"
+        });
+      }
+      setSaved(isSaved);
+    } catch (error) {
+      toast.error("Không thể cập nhật trạng thái lưu");
+    }
   };
 
   const handleShare = () => {
@@ -120,7 +185,7 @@ const PostDetail = () => {
         {/* Post Sidebar - Desktop */}
         <div className="hidden lg:block flex-shrink-0 w-16 mt-4">
           <PostSidebar
-            post={{ ...post, liked, saved, likes: liked ? (post.likes || 0) + 1 : (post.likes || 0) }}
+            post={{ ...post, liked, saved, likesCount: liked ? (post.likesCount || 0) + 1 : (post.likesCount || 0) }}
             onLike={handleLike}
             onSave={handleSave}
             onShare={handleShare}
@@ -201,7 +266,7 @@ const PostDetail = () => {
               {/* Post Stats */}
               <div className="flex gap-6 mb-8 pb-8 border-b border-gray-200 text-gray-600 text-sm">
                 <span className="flex items-center gap-2">
-                  <span className="font-semibold text-gray-900">{post.views || "35"}</span>
+                  <span className="font-semibold text-gray-900">{post.viewsCount * 23 || "35"}</span>
                   <span>lượt xem</span>
                 </span>
                 <span className="flex items-center gap-2">
@@ -248,7 +313,7 @@ const PostDetail = () => {
                       className="w-5 h-5"
                       fill={liked ? "currentColor" : "none"}
                     />
-                    <span>{liked ? (post.likes || 0) + 1 : (post.likes || 0)}</span>
+                    <span>{liked ? (post.likesCount || 0) + 1 : (post.likesCount || 0)}</span>
                   </button>
                   <button
                     onClick={handleComment}
@@ -275,7 +340,7 @@ const PostDetail = () => {
                 {/* Desktop Action Buttons */}
                 <div className="hidden lg:flex gap-4">
                   <button
-                    onClick={() => setLiked(!liked)}
+                    onClick={() => handleLike(!liked)}
                     className={`flex items-center gap-2 px-4 py-3 rounded-lg font-medium transition ${liked
                       ? "bg-red-50 text-red-600"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -285,7 +350,7 @@ const PostDetail = () => {
                       className="w-5 h-5"
                       fill={liked ? "currentColor" : "none"}
                     />
-                    <span>{liked ? (post.likes || 0) + 1 : (post.likes || 0)}</span>
+                    <span>{liked ? (post.likesCount || 0) + 1 : (post.likesCount || 0)}</span>
                   </button>
                   <button className="flex items-center gap-2 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition">
                     <MessageCircle className="w-5 h-5" />
@@ -301,19 +366,29 @@ const PostDetail = () => {
 
             {/* Post Comments (Directly on Post) */}
             <div className="px-8 pb-8 md:px-12 md:pb-12 bg-gray-50 border-t border-gray-100">
-              <PostComments postId={post._id} />
+              <PostComments 
+                postId={post._id} 
+                onLoginRequired={() => setIsLoginRequiredOpen(true)}
+              />
             </div>
 
           </article>
 
           {/* Answers Section */}
-          <AnswerList
+          {/* <AnswerList
             postId={post._id}
             postAuthorId={post.authorId}
             currentUserId={currentUserId}
-          />
+          /> */}
         </div>
       </div>
+
+      {/* Login Required Dialog */}
+      <LoginRequiredDialog 
+        open={isLoginRequiredOpen} 
+        onOpenChange={setIsLoginRequiredOpen}
+        message="Bạn cần đăng nhập để thực hiện hành động này"
+      />
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

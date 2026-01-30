@@ -98,7 +98,7 @@ const CommentSection = ({
   };
 
   const renderComment = (comment, isReply = false) => {
-    const isOwner = currentUser?.id === comment.user?._id;
+    const isOwner = (currentUser?.userId || currentUser?.id || currentUser?._id) === comment.user?._id;
     
     return (
       <div key={comment._id} className={isReply ? "ml-8 mt-3" : ""}>

@@ -3,8 +3,10 @@ import { commentService } from "../../../services/forum/commentService";
 import CommentItem from "../../../components/Forum/CommentItem";
 import CreateComment from "../../../components/Forum/CreateComment";
 import { Loader2 } from "lucide-react";
+import { useAuth } from "../../../hooks/useAuth";
 
-const PostComments = ({ postId }) => {
+const PostComments = ({ postId, onLoginRequired }) => {
+    const { user: currentUser } = useAuth();
     const [comments, setComments] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -28,6 +30,11 @@ const PostComments = ({ postId }) => {
     }, [postId, fetchComments]);
 
     const handleCreateComment = async (content) => {
+        if (!currentUser) {
+            onLoginRequired?.();
+            return;
+        }
+        
         setIsRefreshing(true);
         try {
             await commentService.createPostComment(postId, content);
@@ -41,6 +48,11 @@ const PostComments = ({ postId }) => {
     };
 
     const handleReply = async (parentId, content) => {
+        if (!currentUser) {
+            onLoginRequired?.();
+            return;
+        }
+        
         // For replies, we can also refetch or just append if we want to be faster. 
         // User asked specifically for "when comment, press send, it loads and fetches".
         // Applying same logic for consistency.
@@ -70,24 +82,41 @@ const PostComments = ({ postId }) => {
 
             {/* List */}
             <div className={`space-y-2 transition-opacity ${isRefreshing ? 'opacity-50 pointer-events-none' : ''}`}>
-                {rootComments.map(comment => (
-                    <div key={comment._id}>
-                        <CommentItem comment={comment} onReply={handleReply} />
-                        {/* Render Replies */}
-                        <div className="pl-12 border-l-2 border-gray-100 ml-4">
-                            {getReplies(comment._id).map(reply => (
-                                <CommentItem key={reply._id} comment={reply} onReply={handleReply} />
-                            ))}
-                        </div>
-                    </div>
-                ))}
+                {rootComments.map(comment => {
+                    const renderCommentWithReplies = (parentComment, depth = 0, rootId = null) => {
+                        const replies = getReplies(parentComment._id);
+                        const currentRootId = rootId || parentComment._id;
+                        return (
+                            <div key={parentComment._id}>
+                                <CommentItem 
+                                    comment={parentComment} 
+                                    onReply={handleReply}
+                                    rootCommentId={currentRootId}
+                                />
+                                {/* Render Replies recursively */}
+                                {replies.length > 0 && (
+                                    <div className="pl-12 border-l-2 border-gray-100 ml-4">
+                                        {replies.map(reply => renderCommentWithReplies(reply, depth + 1, currentRootId))}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    };
+                    
+                    return renderCommentWithReplies(comment);
+                })}
                 {rootComments.length === 0 && (
                     <p className="text-gray-400 text-sm italic">Chưa có bình luận nào.</p>
                 )}
             </div>
 
             {/* Main Create Input */}
-            <CreateComment onSubmit={handleCreateComment} placeholder="Thêm bình luận..." />
+            <CreateComment 
+                onSubmit={handleCreateComment} 
+                placeholder="Thêm bình luận..." 
+                targetId={postId}
+                targetType="post"
+            />
         </div>
     );
 };

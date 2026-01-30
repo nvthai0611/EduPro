@@ -18,13 +18,9 @@ import {
   Loader2,
   Trash2,
   Pencil,
-  ChevronDown,
-  ChevronUp,
-  Video,
-  FileText,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
-import { useCourseBySlug, useSectionsWithMinimalLessons } from "../../hooks/useCourseQueries";
+import { useCourseBySlug, useSectionsWithMinimalLessonsPaginated } from "../../hooks/useCourseQueries";
 import * as orderService from "../../services/user/orderService";
 import { useParams } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
@@ -34,6 +30,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getUserProfile } from "../../services/user/userService";
 import courseReviewService from "../../services/courseReviewService";
+import CourseCurriculum from "./components/CourseCurriculum";
 
 const CourseDetail = () => {
   const { slug } = useParams();
@@ -43,6 +40,9 @@ const CourseDetail = () => {
   const [averageRating, setAverageRating] = useState(null);
   const [expandedSections, setExpandedSections] = useState({});
   const isAdmin = user && (user.role === 'admin');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [allSections, setAllSections] = useState([]);
+  const sectionsPerPage = 5;
 
   const navigate = useNavigate();
 
@@ -54,13 +54,29 @@ const CourseDetail = () => {
 
   const courseId = course?._id;
 
-  // Fetch minimal sections và lessons data (chỉ title, duration, type)
-  // const {
-  //   data: sections = [],
-  //   isLoading: sectionsLoading,
-  // } = useSectionsWithMinimalLessons(courseId, {
-  //   enabled: !!courseId,
-  // });
+  // Fetch minimal sections với pagination (riêng cho CourseDetail)
+  const {
+    data: sectionsData,
+    isLoading: sectionsLoading,
+    isFetching: sectionsFetching,
+  } = useSectionsWithMinimalLessonsPaginated(courseId, currentPage, sectionsPerPage, {
+    enabled: !!courseId,
+  });
+
+  // Accumulate sections khi load more
+  useEffect(() => {
+    if (sectionsData?.sections) {
+      if (currentPage === 1) {
+        setAllSections(sectionsData.sections);
+      } else {
+        setAllSections(prev => [...prev, ...sectionsData.sections]);
+      }
+    }
+  }, [sectionsData, currentPage]);
+
+  const sections = allSections;
+  const hasMoreSections = sectionsData?.pagination?.hasNextPage;
+  const totalSections = sectionsData?.pagination?.total || 0;
 
   const { data: infoUser } = useQuery({
     queryKey: ["user-profile", user?.userId],
@@ -162,25 +178,14 @@ const CourseDetail = () => {
     }));
   };
 
-  // Mở tất cả sections mặc định khi load
-  // useEffect(() => {
-  //   if (sections.length > 0) {
-  //     const initialExpanded = {};
-  //     sections.forEach(section => {
-  //       initialExpanded[section._id] = true;
-  //     });
-  //     setExpandedSections(initialExpanded);
-  //   }
-  // }, [sections]);
-
   // Tính tổng số lessons và duration
-  // const totalLessons = sections.reduce((acc, section) => acc + (section.lessons?.length || 0), 0);
-  // const totalDuration = sections.reduce((acc, section) => {
-  //   const sectionDuration = section.lessons?.reduce((sum, lesson) => {
-  //     return sum + (lesson.videoDuration || lesson.readingTime * 60 || 0);
-  //   }, 0) || 0;
-  //   return acc + sectionDuration;
-  // }, 0);
+  const totalLessons = sections.reduce((acc, section) => acc + (section.lessons?.length || 0), 0);
+  const totalDuration = sections.reduce((acc, section) => {
+    const sectionDuration = section.lessons?.reduce((sum, lesson) => {
+      return sum + (lesson.videoDuration || lesson.readingTime * 60 || 0);
+    }, 0) || 0;
+    return acc + sectionDuration;
+  }, 0);
 
   // Format duration helper
   const formatLessonDuration = (seconds) => {
@@ -297,7 +302,7 @@ const CourseDetail = () => {
                 <div className="flex items-center space-x-2">
                   <Clock className="w-5 h-5" />
                   <span className="text-lg">
-                    {formatDuration(course.totalDuration || 0)}
+                    {formatDuration(totalDuration)}
                   </span>
                 </div>
               </div>
@@ -459,12 +464,46 @@ const CourseDetail = () => {
                 <CardHeader>
                   <h3 className="text-xl font-semibold">Nội dung khóa học</h3>
                   <div className="flex items-center gap-4 text-sm text-gray-600 mt-2">
-                    
+                    <span>{totalSections} chương</span>
+                    <span>•</span>
+                    <span>{totalLessons} bài học</span>
+                    <span>•</span>
+                    <span>{formatDuration(totalDuration)}</span>
                   </div>
                 </CardHeader>
                 <CardContent>
-                 
-                 </CardContent>
+                  <CourseCurriculum
+                    sections={sections}
+                    sectionsLoading={sectionsLoading}
+                    expandedSections={expandedSections}
+                    toggleSection={toggleSection}
+                    formatLessonDuration={formatLessonDuration}
+                  />
+                  
+                  {/* Load More Button */}
+                  {hasMoreSections && (
+                    <div className="mt-6 text-center">
+                      <Button
+                        variant="outline"
+                        onClick={() => setCurrentPage(prev => prev + 1)}
+                        disabled={sectionsFetching}
+                        className="min-w-[200px]"
+                      >
+                        {sectionsFetching ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Đang tải...
+                          </>
+                        ) : (
+                          <>
+                            <BookOpen className="w-4 h-4 mr-2" />
+                            Xem thêm chương 
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
               </Card>
             )}
 
@@ -504,7 +543,7 @@ const CourseDetail = () => {
                             className="flex items-start space-x-4 border-b pb-4"
                           >
                             <img
-                              src={review.userId.image}
+                              src={review.userId.image || `https://i.pravatar.cc/150?u=${review.userId._id}`}
                               alt={review.userId.fullName}
                               className="w-12 h-12 rounded-full object-cover"
                             ></img>

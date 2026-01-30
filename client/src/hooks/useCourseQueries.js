@@ -4,6 +4,7 @@ import adminSectionService from '../services/admin/sectionService';
 import userSectionService from '../services/user/sectionService';
 import adminLessonService from '../services/admin/lessonService';
 import lessonService from '../services/lessonService';
+import adminArticleService from '../services/admin/articleService';
 import { articleService } from '../services/articleService';
 import { toast } from 'react-toastify';
 
@@ -276,6 +277,7 @@ export const useSectionsWithLessons = (courseId, options = {}) => {
 /**
  * Hook to fetch sections with MINIMAL lesson data (for list view - lightweight)
  * Chỉ load title, type, duration - KHÔNG load content, assignments, etc.
+ * KHÔNG có pagination - load tất cả (dùng cho CourseLearnDetail)
  */
 export const useSectionsWithMinimalLessons = (courseId, options = {}) => {
   return useQuery({
@@ -289,6 +291,26 @@ export const useSectionsWithMinimalLessons = (courseId, options = {}) => {
     gcTime: 1000 * 60 * 30, // 30 minutes cache
     refetchOnWindowFocus: false,
     select: (data) => Array.isArray(data) ? data : [],
+    ...options,
+  });
+};
+
+/**
+ * Hook to fetch sections with MINIMAL lesson data + PAGINATION
+ * Dùng cho CourseDetail page với Load More button
+ */
+export const useSectionsWithMinimalLessonsPaginated = (courseId, page = 1, limit = 10, options = {}) => {
+  return useQuery({
+    queryKey: [...sectionKeys.withLessons(courseId), 'minimal', 'paginated', page, limit],
+    queryFn: async () => {
+      const response = await userSectionService.getSectionsWithMinimalLessonsPaginated(courseId, page, limit);
+      return response?.data || response;
+    },
+    enabled: !!courseId,
+    staleTime: 1000 * 60 * 10, // 10 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes cache
+    refetchOnWindowFocus: false,
+    placeholderData: (previousData) => previousData, // Keep previous data while loading
     ...options,
   });
 };
@@ -720,7 +742,7 @@ export const useCreateArticle = () => {
 
   return useMutation({
     mutationFn: async (articleData) => {
-      const response = await articleService.createArticle(articleData);
+      const response = await adminArticleService.createArticle(articleData);
       return response?.data || response;
     },
     onSuccess: (data, variables) => {
@@ -753,7 +775,7 @@ export const useUpdateArticle = () => {
 
   return useMutation({
     mutationFn: async ({ id, data }) => {
-      const response = await articleService.updateArticle(id, data);
+      const response = await adminArticleService.updateArticle(id, data);
       return response?.data || response;
     },
     onSuccess: (data, variables) => {
@@ -787,7 +809,7 @@ export const useDeleteArticle = () => {
 
   return useMutation({
     mutationFn: async ({ id, courseId, sectionId }) => {
-      const response = await articleService.deleteArticle(id);
+      const response = await adminArticleService.deleteArticle(id);
       return { ...response, courseId, sectionId };
     },
     onSuccess: (data) => {
@@ -808,6 +830,36 @@ export const useDeleteArticle = () => {
     onError: (error) => {
       console.error('Error deleting article:', error);
       toast.error(error?.message || 'Không thể xóa bài viết!');
+    },
+  });
+};
+
+/**
+ * Hook to reorder articles within a section
+ */
+export const useReorderArticles = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ sectionId, articleIds, courseId }) => {
+      const response = await adminArticleService.reorderArticles(sectionId, articleIds);
+      return { ...response, sectionId, courseId };
+    },
+    onSuccess: (data) => {
+      const { sectionId, courseId } = data;
+      
+      if (sectionId) {
+        queryClient.invalidateQueries({ queryKey: articleKeys.bySection(sectionId) });
+        queryClient.invalidateQueries({ queryKey: sectionKeys.detail(sectionId) });
+      }
+      if (courseId) {
+        queryClient.invalidateQueries({ queryKey: sectionKeys.withLessons(courseId) });
+      }
+      toast.success('Sắp xếp bài viết thành công!');
+    },
+    onError: (error) => {
+      console.error('Error reordering articles:', error);
+      toast.error(error?.message || 'Không thể sắp xếp bài viết!');
     },
   });
 };
