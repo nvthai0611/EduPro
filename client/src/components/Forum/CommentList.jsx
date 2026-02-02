@@ -3,8 +3,10 @@ import { commentService } from "../../services/forum/commentService";
 import CommentItem from "./CommentItem";
 import CreateComment from "./CreateComment";
 import { Loader2 } from "lucide-react";
+import { useAuth } from "../../hooks/useAuth";
 
-const CommentList = ({ targetType, targetId }) => {
+const CommentList = ({ targetType, targetId, onLoginRequired }) => {
+    const { user: currentUser } = useAuth();
     const [comments, setComments] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -27,6 +29,11 @@ const CommentList = ({ targetType, targetId }) => {
     }, [targetId, targetType]);
 
     const handleCreateComment = async (content) => {
+        if (!currentUser) {
+            onLoginRequired?.();
+            return;
+        }
+        
         // Create root comment
         let result;
         if (targetType === 'post') {
@@ -42,6 +49,11 @@ const CommentList = ({ targetType, targetId }) => {
     };
 
     const handleReply = async (parentId, content) => {
+        if (!currentUser) {
+            onLoginRequired?.();
+            return;
+        }
+        
         let result;
         if (targetType === 'post') {
             result = await commentService.createPostComment(targetId, content, parentId);
@@ -83,7 +95,12 @@ const CommentList = ({ targetType, targetId }) => {
             </div>
 
             {/* Main Create Input */}
-            <CreateComment onSubmit={handleCreateComment} placeholder="Thêm bình luận..." />
+            <CreateComment 
+                onSubmit={handleCreateComment} 
+                placeholder="Thêm bình luận..." 
+                targetId={targetId}
+                targetType={targetType}
+            />
         </div>
     );
 };

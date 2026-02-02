@@ -10,8 +10,20 @@ const optionalAuth = async (
   next: NextFunction
 ) => {
   try {
-    const authHeader = req.headers.authorization;
+    const fetchMode = req.headers["sec-fetch-mode"];
+    const accept = req.headers["accept"] || "";
+    const origin = req.headers["origin"];
 
+    // Tab mới / navigate request
+    if (
+      fetchMode === "navigate" ||
+      accept.includes("text/html") ||
+      !origin
+    ) {
+      return errorResponse(res, {}, 403, "Access denied");
+    }
+
+    const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return next();
     }
@@ -40,7 +52,7 @@ const optionalAuth = async (
       session.isValid = false;
       await session.save();
 
-      await UserService.updateUser(decoded.userId, {status: false});
+      await UserService.updateUser(decoded.userId, { status: false });
       return errorResponse(res, {}, 401, "Thiết bị không hợp lệ");
     }
 

@@ -14,6 +14,7 @@ export const postService = {
       if (params.search) queryParams.append('search', params.search);
       if (params.tags) queryParams.append('tags', params.tags);
       if (params.authorId) queryParams.append('authorId', params.authorId);
+      if (params.feed) queryParams.append('feed', params.feed);
       
       const url = `/posts${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
       // console.log("🌐 Fetching URL:", url);
@@ -60,10 +61,12 @@ getTrending: async (params = {}) => {
     const response = await apiClient.get(url);
     
     if (response.success) {
+      // console.log("🌐(postService) Returning (from response):", response.data);
       return response.data;
     }
     
     if (response.data?.success) {
+      // console.log("🌐(postService) Returning (from response.data):", response.data.data);
       return response.data.data;
     }
     
@@ -84,10 +87,12 @@ getFeatured: async (params = {}) => {
     const response = await apiClient.get(url);
     
     if (response.success) {
+      // console.log("🌐(postService) Returning (from response):", response.data);
       return response.data;
     }
     
     if (response.data?.success) {
+      // console.log("🌐(postService) Returning (from response.data):", response.data.data);
       return response.data.data;
     }
     
@@ -182,7 +187,7 @@ getFeatured: async (params = {}) => {
   // Delete a post
   deletePost: async (postId) => {
     try {
-      const response = await apiClient.delete(`/posts/${postId}`);
+      const response = await apiClient.delete(`/posts/id/${postId}`);
       return response.data;
     } catch (error) {
       console.error('Error deleting post:', error);
@@ -228,6 +233,18 @@ getFeatured: async (params = {}) => {
     } catch (error) {
       console.error('Error deleting post reaction:', error);
       throw error;
+    }
+  },
+
+  // Track post view (first-view only)
+  trackPostView: async (postId) => {
+    try {
+      const response = await apiClient.post(`/posts/${postId}/view`);
+      return response.data;
+    } catch (error) {
+      // Silently fail - view tracking is not critical
+      console.debug('View tracking failed:', error);
+      return null;
     }
   },
 };

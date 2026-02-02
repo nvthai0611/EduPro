@@ -6,16 +6,20 @@ class postService {
   async getAllPosts(query: any = {}, options: any = {}): Promise<any> {
     return PostRepository.findAllPosts(query, options);
   }
-  async getTrendingPosts(limit: number, timeRange: number): Promise<any[]> {
-  const dateThreshold = new Date();
-  dateThreshold.setDate(dateThreshold.getDate() - timeRange);
-  
-  return await PostRepository.findTrendingPosts(dateThreshold, limit);
-}
+  async getTrendingPosts(
+    limit: number,
+    timeRange: number,
+    page: number = 1
+  ): Promise<any> {
+    const dateThreshold = new Date();
+    dateThreshold.setDate(dateThreshold.getDate() - timeRange);
 
-async getFeaturedPosts(limit: number): Promise<any[]> {
-  return await PostRepository.findFeaturedPosts(limit);
-}
+    return await PostRepository.findTrendingPosts(dateThreshold, page, limit);
+  }
+
+  async getFeaturedPosts(limit: number, page: number = 1): Promise<any> {
+    return await PostRepository.findFeaturedPosts(page, limit);
+  }
 
   async getPostById(id: string): Promise<any> {
     return PostRepository.findPostById(id);
@@ -54,6 +58,26 @@ async getFeaturedPosts(limit: number): Promise<any[]> {
   }
   async deleteUserReaction(userId: string, postId: string, type: string): Promise<any> {
     return PostRepository.deleteUserReaction(userId, postId, type);
+  }
+
+  // Post view tracking
+  async trackView(postId: string, viewerId: string): Promise<{ success: boolean; isNewView: boolean; message?: string }> {
+    try {
+      // Try to create a new view record
+      const view = await PostRepository.createPostView(postId, viewerId);
+      
+      if (view) {
+        // New view - increment the counter
+        await PostRepository.incrementViewCount(postId);
+        return { success: true, isNewView: true };
+      } else {
+        // View already exists (duplicate)
+        return { success: true, isNewView: false, message: "Already viewed" };
+      }
+    } catch (error: any) {
+      console.error("❌ trackView error:", error);
+      throw error;
+    }
   }
 }
 

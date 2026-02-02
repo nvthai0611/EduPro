@@ -10,6 +10,8 @@ import { useAuth } from "../../hooks/useAuth";
 import { toast } from "react-toastify";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../../shadcn-ui/components/ui/dialog";
 import { Button } from "../../shadcn-ui/components/ui/button";
+import LoginRequiredDialog from "../../components/Auth/LoginRequiredDialog";
+import { postService } from "../../services/post/postService";
 
 const PostDetail = () => {
 
@@ -20,9 +22,11 @@ const PostDetail = () => {
   const [saved, setSaved] = useState(false);
 
   const { user: currentUser } = useAuth();
-  const currentUserId = currentUser?._id || currentUser?.id;
+  const currentUserId = currentUser?.userId || currentUser?._id || currentUser?.id;
+
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isLoginRequiredOpen, setIsLoginRequiredOpen] = useState(false);
   const deletePostMutation = useDeletePost();
 
   const { data: post = {}, isLoading } = usePostBySlug(slug, {
@@ -32,6 +36,24 @@ const PostDetail = () => {
   const createReactionMutation = useCreatePostReaction();
   const deleteReactionMutation = useDeletePostReaction();
 
+  // Track post view (first-view only)
+  useEffect(() => {
+    if (post._id) {
+      // Track view with localStorage cache to avoid duplicate tracking in same session
+      const viewedKey = `post_viewed_${post._id}`;
+      const hasViewed = localStorage.getItem(viewedKey);
+      
+      if (!hasViewed) {
+        postService.trackPostView(post._id).then((result) => {
+          if (result?.data?.isNewView) {
+            // Mark as viewed in localStorage
+            localStorage.setItem(viewedKey, Date.now().toString());
+          }
+        });
+      }
+    }
+  }, [post._id]);
+
   // Sync state with post data
   useEffect(() => {
     if (post.isLiked !== undefined) setLiked(post.isLiked);
@@ -40,10 +62,10 @@ const PostDetail = () => {
 
   // Handler functions for PostSidebar
   const handleLike = async (isLiked) => {
-    // if (!currentUserId) {
-    //   toast.error("Vui lòng đăng nhập để thực hiện hành động này");
-    //   return;
-    // }
+    if (!currentUserId) {
+      setIsLoginRequiredOpen(true);
+      return;
+    }
 
     try {
       if (isLiked) {
@@ -64,10 +86,10 @@ const PostDetail = () => {
   };
 
   const handleSave = async (isSaved) => {
-    // if (!currentUserId) {
-    //   toast.error("Vui lòng đăng nhập để thực hiện hành động này");
-    //   return;
-    // }
+    if (!currentUserId) {
+      setIsLoginRequiredOpen(true);
+      return;
+    }
 
     try {
       if (isSaved) {
@@ -244,7 +266,7 @@ const PostDetail = () => {
               {/* Post Stats */}
               <div className="flex gap-6 mb-8 pb-8 border-b border-gray-200 text-gray-600 text-sm">
                 <span className="flex items-center gap-2">
-                  <span className="font-semibold text-gray-900">{post.views || "35"}</span>
+                  <span className="font-semibold text-gray-900">{post.viewsCount * 23 || "35"}</span>
                   <span>lượt xem</span>
                 </span>
                 <span className="flex items-center gap-2">
@@ -344,7 +366,10 @@ const PostDetail = () => {
 
             {/* Post Comments (Directly on Post) */}
             <div className="px-8 pb-8 md:px-12 md:pb-12 bg-gray-50 border-t border-gray-100">
-              <PostComments postId={post._id} />
+              <PostComments 
+                postId={post._id} 
+                onLoginRequired={() => setIsLoginRequiredOpen(true)}
+              />
             </div>
 
           </article>
@@ -357,6 +382,13 @@ const PostDetail = () => {
           /> */}
         </div>
       </div>
+
+      {/* Login Required Dialog */}
+      <LoginRequiredDialog 
+        open={isLoginRequiredOpen} 
+        onOpenChange={setIsLoginRequiredOpen}
+        message="Bạn cần đăng nhập để thực hiện hành động này"
+      />
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

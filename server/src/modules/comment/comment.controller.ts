@@ -1,3 +1,4 @@
+import { encryptData } from "../../utils/encryption";
 import { CommentService } from "./comment.service";
 
 class CommentController {
@@ -74,7 +75,8 @@ class CommentController {
           }
 
           const comments = await CommentService.getComments(targetType, targetId);
-          res.status(200).json({ success: true, data: comments });
+          res.setHeader("x-encrypted", "true");
+          res.status(200).json({ success: true, encryptedData: encryptData(comments) });
       } catch (error) {
             res.status(500).json({ success: false, message: error.message });
       }

@@ -2,8 +2,6 @@ import { apiClient } from '../../utils/clientAxios';
 
 export const lessonService = {
 
-  // ==================== CRUD Operations ====================
-  
   // Tạo lesson mới
   createLesson: async (lessonData) => {
     try {

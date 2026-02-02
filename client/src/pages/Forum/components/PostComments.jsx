@@ -3,8 +3,10 @@ import { commentService } from "../../../services/forum/commentService";
 import CommentItem from "../../../components/Forum/CommentItem";
 import CreateComment from "../../../components/Forum/CreateComment";
 import { Loader2 } from "lucide-react";
+import { useAuth } from "../../../hooks/useAuth";
 
-const PostComments = ({ postId }) => {
+const PostComments = ({ postId, onLoginRequired }) => {
+    const { user: currentUser } = useAuth();
     const [comments, setComments] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -28,6 +30,11 @@ const PostComments = ({ postId }) => {
     }, [postId, fetchComments]);
 
     const handleCreateComment = async (content) => {
+        if (!currentUser) {
+            onLoginRequired?.();
+            return;
+        }
+        
         setIsRefreshing(true);
         try {
             await commentService.createPostComment(postId, content);
@@ -41,6 +48,11 @@ const PostComments = ({ postId }) => {
     };
 
     const handleReply = async (parentId, content) => {
+        if (!currentUser) {
+            onLoginRequired?.();
+            return;
+        }
+        
         // For replies, we can also refetch or just append if we want to be faster. 
         // User asked specifically for "when comment, press send, it loads and fetches".
         // Applying same logic for consistency.
@@ -99,7 +111,12 @@ const PostComments = ({ postId }) => {
             </div>
 
             {/* Main Create Input */}
-            <CreateComment onSubmit={handleCreateComment} placeholder="Thêm bình luận..." />
+            <CreateComment 
+                onSubmit={handleCreateComment} 
+                placeholder="Thêm bình luận..." 
+                targetId={postId}
+                targetType="post"
+            />
         </div>
     );
 };

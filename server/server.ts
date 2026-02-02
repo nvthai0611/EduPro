@@ -25,7 +25,6 @@ import "./src/passports/passport.google";
 import { apiRouter } from "./src/routes/api";
 import { limitRequestsMiddleware } from "./src/middlewares/auth/limitRequest.middleware";
 import { attachUser } from "./src/middlewares/servers/attachUser";
-import { dbLogger } from "./src/middlewares/servers/db-logger.middleware";
 
 // // Cron
 // require("./src/utils/cron/cronUser");
@@ -107,7 +106,6 @@ app.use(cookieParser());
 
 app.use(attachUser); 
 app.use(morgan("dev"));
-app.use(dbLogger); 
 
 app.use("/uploads", express.static("uploads"));
 app.use(
