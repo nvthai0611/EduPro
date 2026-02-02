@@ -32,9 +32,12 @@ import { forumRoutes } from "./v1/forum.routes";
 import { postRoutes } from "./v1/posts.routes";
 import { answerRoutes } from "./v1/answers.routes";
 import { commentRoutes } from "./v1/comments.routes";
+import { judgeRoutes } from "./v1/judge.routes";
+import { judgeAdminRoutes } from "./v1/admin/judge.routes";
 import { progressRoutes } from "./v1/progress.routes";
 import { notificationRoutes } from "./v1/notification.routes";
 
+import { dbLogger } from "../middlewares/servers/db-logger.middleware";
 
 export const apiRouter = (io?: Server) => {
   // Block direct browser access to API
@@ -42,6 +45,8 @@ export const apiRouter = (io?: Server) => {
 
   // Authentication routes
   router.use("/auth", authRoutes);
+
+  router.use(dbLogger);
 
   // Category routes
   router.use("/category", optionalAuth, categoryRoutes);
@@ -107,14 +112,18 @@ export const apiRouter = (io?: Server) => {
   router.use("/admin/setting", optionalAuth, settingAdminRoutes);
   router.use("/setting", optionalAuth, settingRoutes);
 
+  // Forum routes
   router.use("/admin/forum", adminForumRoutes);
   router.use("/forum", forumRoutes);
   router.use("/posts", postRoutes);
   router.use("/answers", optionalAuth, answerRoutes);
   router.use("/comments", optionalAuth, commentRoutes);
 
-  router.use("/progress", progressRoutes);
-
   router.use("/notifications", optionalAuthenticate, notificationRoutes);
+  // Judge routes
+  router.use("/judge", optionalAuth, judgeRoutes);
+  router.use("/admin/judge", optionalAuth, judgeAdminRoutes);
+
+  router.use("/progress", optionalAuth, progressRoutes);
   return router;
 };

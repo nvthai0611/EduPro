@@ -138,7 +138,7 @@ export const setBaseUrl = (url) => {
 };
 
 // --- ENCRYPTION & DECRYPTION ---
-const encryptData = (data) => {
+export const encryptData = (data) => {
   try {
     if (!data) return data;
     const dataString = JSON.stringify(data);
@@ -153,7 +153,7 @@ const encryptData = (data) => {
   }
 };
 
-const decryptData = (encryptedData) => {
+export const decryptData = (encryptedData) => {
   try {
     if (!encryptedData) return encryptedData;
     const bytes = CryptoJS.AES.decrypt(encryptedData, ENCRYPTION_KEY);
