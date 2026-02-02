@@ -61,7 +61,7 @@ const PostCard = ({
             {/* Author Info */}
             <div className="flex items-center gap-3">
               <Avatar className="w-8 h-8">
-                <AvatarImage src={post.author?.image} alt={post.author?.name} />
+                <AvatarImage src={post.author?.image || '../../../public/avatar.png'} alt={post.author?.name} />
                 <AvatarFallback className="bg-gray-200 text-gray-600 text-xs">
                   {post.author?.name?.charAt(0).toUpperCase()}
                 </AvatarFallback>

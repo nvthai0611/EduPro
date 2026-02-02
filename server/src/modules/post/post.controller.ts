@@ -96,6 +96,7 @@ async getTrendingPosts(req: any, res: any): Promise<void> {
     const timeRange = parseInt(req.query.timeRange as string) || 30; // days
     
     const result = await PostService.getTrendingPosts(limit, timeRange);
+    console.log("Trending Posts Result:", result);
     res.setHeader("x-encrypted", "true");
     res.status(200).json({
       success: true,

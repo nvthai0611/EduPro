@@ -14,7 +14,16 @@ class postService {
     const dateThreshold = new Date();
     dateThreshold.setDate(dateThreshold.getDate() - timeRange);
 
-    return await PostRepository.findTrendingPosts(dateThreshold, page, limit);
+    const result = await PostRepository.findTrendingPosts(dateThreshold, page, limit);
+    
+    // If no trending posts found in the specified timeRange, fallback to last 30 days
+    if (result.posts.length === 0 && timeRange < 30) {
+      const extendedThreshold = new Date();
+      extendedThreshold.setDate(extendedThreshold.getDate() - 30);
+      return await PostRepository.findTrendingPosts(extendedThreshold, page, limit);
+    }
+    
+    return result;
   }
 
   async getFeaturedPosts(limit: number, page: number = 1): Promise<any> {
