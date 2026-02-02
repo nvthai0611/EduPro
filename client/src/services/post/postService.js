@@ -15,13 +15,9 @@ export const postService = {
       if (params.tags) queryParams.append('tags', params.tags);
       if (params.authorId) queryParams.append('authorId', params.authorId);
       if (params.feed) queryParams.append('feed', params.feed);
-      
+      console.log(params.image)
       const url = `/posts${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-      // console.log("🌐 Fetching URL:", url);
-      const response = await apiClient.get(url);
-      
-      // console.log("🌐 Raw Axios Response:", response);
-      // console.log("🌐 Response.data:", response.data);
+     const response = await apiClient.get(url);
       
       // Check if response itself has success flag (interceptor already unwrapped)
       if (response.success) {
@@ -29,7 +25,6 @@ export const postService = {
           posts: response.data || [],
           pagination: response.pagination || {}
         };
-        // console.log("🌐 Returning (from response):", result);
         return result;
       }
       
@@ -39,11 +34,9 @@ export const postService = {
           posts: response.data.data || [],
           pagination: response.data.pagination || {}
         };
-        // console.log("🌐 Returning (from response.data):", result);
-        return result;
+       return result;
       }
       
-      // console.log("🌐 Response doesn't have success flag, using fallback");
       return { posts: Array.isArray(response.data) ? response.data : [], pagination: {} };
     } catch (error) {
       console.error('Error fetching posts:', error);
@@ -61,13 +54,11 @@ getTrending: async (params = {}) => {
     const response = await apiClient.get(url);
     
     if (response.success) {
-      // console.log("🌐(postService) Returning (from response):", response.data);
       return response.data;
     }
     
     if (response.data?.success) {
-      // console.log("🌐(postService) Returning (from response.data):", response.data.data);
-      return response.data.data;
+       return response.data.data;
     }
     
     return Array.isArray(response.data) ? response.data : [];

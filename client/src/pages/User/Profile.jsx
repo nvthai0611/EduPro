@@ -1,15 +1,14 @@
-import { User, Mail, Phone, Save } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { getUserProfile } from '../../services/user/userService';
 import { useQuery } from '@tanstack/react-query';
+import ProfileCard from '../../components/Profile/ProfileCard';
+import TabNavigation from '../../components/Profile/TabNavigation';
+import PostCard from '../../components/Profile/PostCard';
 
 const Profile = () => {
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState('posts');
 
   const { data: infoUser } = useQuery({
     queryKey: ["user-profile", user?.userId],
@@ -20,106 +19,109 @@ const Profile = () => {
     enabled: !!user,
   });
 
-  // Hàm format ngày
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Thành viên';
-    const date = new Date(dateString);
-    return `Thành viên từ ${date.toLocaleDateString('vi-VN')}`;
+  // Mock data cho demo
+  const mockStats = {
+    followers: 1234,
+    following: 567,
+    posts: 89,
+  };
+
+  const mockPosts = [
+    {
+      id: 1,
+      title: 'Kinh nghiệm học lập trình web từ con số 0',
+      description: 'Chia sẻ hành trình từ một người không biết gì về lập trình đến khi trở thành Full-stack Developer...',
+      thumbnail: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800',
+      author: {
+        name: infoUser?.fullName || 'User',
+        image: infoUser?.image,
+      },
+      views: 1520,
+      comments: 45,
+      publishedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      readTime: 8,
+    },
+    {
+      id: 2,
+      title: 'Top 10 VS Code Extensions cho Developer năm 2026',
+      description: 'Những extension không thể thiếu giúp tăng năng suất làm việc gấp 10 lần...',
+      thumbnail: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800',
+      author: {
+        name: infoUser?.fullName || 'User',
+        image: infoUser?.image,
+      },
+      views: 2340,
+      comments: 67,
+      publishedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      readTime: 6,
+    },
+    {
+      id: 3,
+      title: 'React 19 - Những tính năng mới đáng chú ý',
+      description: 'Tổng hợp các tính năng mới trong React 19 và cách áp dụng vào dự án thực tế...',
+      thumbnail: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800',
+      author: {
+        name: infoUser?.fullName || 'User',
+        image: infoUser?.image,
+      },
+      views: 3450,
+      comments: 123,
+      publishedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      readTime: 12,
+    },
+  ];
+
+  // Render content dựa trên active tab
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'posts':
+        return (
+          <div className="space-y-4">
+            {mockPosts.map((post) => (
+              <PostCard key={post.id} post={post} />
+            ))}
+          </div>
+        );
+      case 'series':
+        return (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+            <p className="text-gray-500">Chưa có series nào</p>
+          </div>
+        );
+      case 'saved':
+        return (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+            <p className="text-gray-500">Chưa có bài viết đã lưu</p>
+          </div>
+        );
+      default:
+        return null;
+    }
   };
 
   return (
-    <div className="min-h-screen bg-white from-slate-50 via-white to-blue-50 p-6 mt-20">
-      <div className="max-w-4xl mx-auto">
-        {/* Header Profile */}
-        <div className="flex items-center gap-6 mb-8 animate-fade-in">
-          <div className="relative group">
-            <Avatar className="w-24 h-24 border-4 border-gradient-to-r from-blue-500 to-purple-600 shadow-lg">
-              <AvatarImage src={infoUser?.image || "/placeholder.svg"} alt="Profile" />
-              <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white text-2xl">
-                {infoUser?.fullName}
-              </AvatarFallback>
-            </Avatar>
+    <div className="min-h-screen bg-gray-50 pt-24 pb-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Sidebar - Profile Card */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-24">
+              <ProfileCard user={infoUser} stats={mockStats} />
+            </div>
           </div>
 
-          <div className="flex-1">
-            <h1 className="text-xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              {infoUser?.fullName}
-            </h1>
-            <p className="text-sm text-gray-500 mt-1">{formatDate(infoUser?.createdAt)}</p>
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Tab Navigation */}
+            <TabNavigation 
+              activeTab={activeTab} 
+              onTabChange={setActiveTab} 
+            />
+
+            {/* Content Area */}
+            {renderContent()}
           </div>
         </div>
-
-        {/* Card Profile */}
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 via-white to-purple-50">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-gray-800 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Thông tin cá nhân
-              </h3>
-            </div>
-
-            <div className="space-y-4">
-              {/* Name */}
-              <div>
-                <Label className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                  <User className="w-4 h-4 mr-2 text-blue-500" />
-                  Họ và Tên
-                </Label>
-                <Input
-                  type="text"
-                  value={infoUser?.fullName ?? ""}
-                  disabled
-                  className="border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-200 rounded-lg text-sm"
-                  placeholder="Nhập họ và tên"
-                />
-              </div>
-
-              {/* Email */}
-              <div>
-                <Label className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                  <Mail className="w-4 h-4 mr-2 text-green-500" />
-                  Email
-                </Label>
-                <Input
-                  type="email"
-                  value={infoUser?.email ?? ""}
-                  disabled
-                  className="border border-gray-200 focus:border-green-500 focus:ring-1 focus:ring-green-200 rounded-lg text-sm"
-                  placeholder="user@example.com"
-                />
-                <p className="text-xs text-gray-400 mt-1">
-                </p>
-              </div>
-
-              {/* Phone */}
-              <div>
-                <Label className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                  <Phone className="w-4 h-4 mr-2 text-purple-500" />
-                  Số Điện Thoại
-                </Label>
-                <Input
-                  type="tel"
-                  value={infoUser?.phone ?? ""}
-                  disabled
-                  placeholder="Chưa có số điện thoại"
-                  className="border border-gray-200 focus:border-purple-500 focus:ring-1 focus:ring-purple-200 rounded-lg text-sm"
-                />
-                <p className="text-xs text-gray-400 mt-1">
-                </p>
-              </div>
-
-              {/* Save Button */}
-              <div className="pt-4">
-                <Button
-                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:opacity-50 text-white font-medium transition-all duration-300 rounded-lg text-sm h-10"
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  Lưu Thay Đổi
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
