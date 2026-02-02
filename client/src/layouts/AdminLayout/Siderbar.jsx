@@ -41,10 +41,22 @@ export default function DashboardSidebar() {
       <ToastContainer />
       <SidebarHeader>
         <div className="flex items-center gap-2 px-4 py-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <LayoutDashboard className="h-4 w-4" />
+          <div
+            className="
+              font-semibold text-lg
+              group-data-[collapsible=icon]/sidebar:opacity-0
+              group-data-[collapsible=icon]/sidebar:scale-0
+              group-data-[collapsible=icon]/sidebar:w-0
+              overflow-hidden
+              flex gap-5 items-center justify-center
+            "
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
+              <LayoutDashboard className="h-4 w-4" />
+            </div>
+            Admin Portal
           </div>
-          <div className="font-semibold text-lg">Admin Portal</div>
+
         </div>
       </SidebarHeader>
       <SidebarSeparator />

@@ -1,3 +1,4 @@
+import { encryptData } from "../../utils/encryption";
 import { PostService } from "./post.service";
 
 
@@ -5,14 +6,13 @@ class postController {
   // Controller methods here
   async getAllPosts(req: any, res: any): Promise<void> {
     try {
-      console.log("📥 getAllPosts called");
-      
       // Parse pagination parameters
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
-      const sortBy = req.query.sortBy || "createdAt";
-      const sortOrder = req.query.sortOrder || "desc";
+      let sortBy = req.query.sortBy || "createdAt";
+      let sortOrder = req.query.sortOrder || "desc";
       const select = req.query.select || null;
+      const feed = req.query.feed || "latest";
 
       // Build query filters
       const query: any = {};
@@ -22,33 +22,59 @@ class postController {
         query.$text = { $search: req.query.search };
       }
 
+      // Feed Mapping Strategy
+      // feed=latest   → default sorting (createdAt desc)
+      // feed=top      → sortBy=likesCount
+      // feed=hot      → sortBy=engagement
+      // feed=for-you  → featured=true
+      
+      let featured = false;
+
+      switch (feed) {
+        case 'top':
+          sortBy = 'likesCount';
+          sortOrder = 'desc';
+          break;
+        case 'hot':
+          sortBy = 'engagement';
+          sortOrder = 'desc';
+          break;
+        case 'for-you':
+          featured = true;
+          break;
+        case 'author':
+          // Temporary: don't use it now
+          break;
+        case 'latest':
+        default:
+          sortBy = 'createdAt';
+          sortOrder = 'desc';
+          break;
+      }
+
       const options = {
         page,
         limit,
         sortBy,
         sortOrder,
-        select
+        select,
+        featured // Pass featured flag to options
       };
-
-      console.log("Query options:", options);
       
       const result = await PostService.getAllPosts(query, options);
       
-      console.log("Posts found:", result.posts.length);
-      
       // Transform posts to include excerpt
-      const transformedPosts = result.posts.map((post: any) => ({
+      const transformedPosts = (result.posts || []).map((post: any) => ({
         ...post,
         authorName: post.authorName || 'Anonymous',
         excerpt: post.content ? post.content.slice(0, 150).replace(/<\/?[^>]+(>|$)/g, "") + "..." : ""
       }));
       
-      console.log("Transformed posts:", transformedPosts.length);
-      
+      res.setHeader("x-encrypted", "true");
       // Return paginated response with metadata
       res.status(200).json({ 
         success: true, 
-        data: transformedPosts,
+        encryptedData: encryptData(transformedPosts),
         pagination: {
           page: result.page,
           limit: result.limit,
@@ -70,10 +96,11 @@ async getTrendingPosts(req: any, res: any): Promise<void> {
     const timeRange = parseInt(req.query.timeRange as string) || 30; // days
     
     const result = await PostService.getTrendingPosts(limit, timeRange);
-    
+    res.setHeader("x-encrypted", "true");
     res.status(200).json({
       success: true,
-      data: result
+      encryptedData: encryptData(result),
+      // data: result
     });
   } catch (error) {
     console.error("Error getting trending posts:", error);
@@ -90,10 +117,11 @@ async getFeaturedPosts(req: any, res: any): Promise<void> {
     const limit = parseInt(req.query.limit as string) || 4;
     
     const result = await PostService.getFeaturedPosts(limit);
-    
+    res.setHeader("x-encrypted", "true");
     res.status(200).json({
       success: true,
-      data: result
+      encryptedData: encryptData(result),
+      // data: result
     });
   } catch (error) {
     console.error("Error getting featured posts:", error);
@@ -124,7 +152,8 @@ async getFeaturedPosts(req: any, res: any): Promise<void> {
         };
       }
 
-      res.status(200).json({ success: true, data: post   });
+      res.setHeader("x-encrypted", "true");
+      res.status(200).json({ success: true, encryptedData: encryptData(post) });
     } catch (error) {
       res.status(500).json({ success: false, message: "Server Error", error: error.message });
     }
@@ -137,15 +166,17 @@ async getFeaturedPosts(req: any, res: any): Promise<void> {
         return;
       }
       const posts = await PostService.getPostsByUser(userId);
-      res.status(200).json({ success: true, data: posts });
+      res.setHeader("x-encrypted", "true");
+      res.status(200).json({ success: true, encryptedData: encryptData(posts) });
     } catch (error) {
-      res.status(500).json({ success: false, message: "Server Error", error });
+      res.status(500).json({ success: false, message: "Server Error", error: error instanceof Error ? error.message : "Unknown error" });
     }
   }
   async getPostsByUser(req: any, res: any): Promise<void> {
     try {
       const posts = await PostService.getPostsByUser(req.params.userId);
-      res.status(200).json({ success: true, data: posts });
+      res.setHeader("x-encrypted", "true");
+      res.status(200).json({ success: true, encryptedData: encryptData(posts) });
     } catch (error) {
       res.status(500).json({ success: false, message: "Server Error", error });
     }
@@ -169,8 +200,8 @@ async getFeaturedPosts(req: any, res: any): Promise<void> {
           userReactions: reactions
         };
       }
-
-      res.status(200).json({ success: true, data: post });
+      res.setHeader("x-encrypted", "true");
+      res.status(200).json({ success: true, encryptedData: encryptData(post) });
     } catch (error) {
       res.status(500).json({ success: false, message: "Server Error", error: error.message });
     }
@@ -197,7 +228,8 @@ async getFeaturedPosts(req: any, res: any): Promise<void> {
       // No need to process contentImages
       
       const post = await PostService.createPost(postData);
-      res.status(201).json({ success: true, data: post });
+      res.setHeader("x-encrypted", "true");
+      res.status(201).json({ success: true, encryptedData: encryptData(post) });
     } catch (error) {
       res.status(500).json({ success: false, message: "Server Error", error });
     }
@@ -235,7 +267,8 @@ async getFeaturedPosts(req: any, res: any): Promise<void> {
 
       // 4. Update post
       const post = await PostService.updatePost(req.params.id, updateData);
-      res.status(200).json({ success: true, data: post });
+      res.setHeader("x-encrypted", "true");
+      res.status(200).json({ success: true, encryptedData: encryptData(post) });
     } catch (error) {
       res.status(500).json({ success: false, message: "Server Error", error: error.message });
     }
@@ -362,6 +395,52 @@ async getFeaturedPosts(req: any, res: any): Promise<void> {
     } catch (error) {
       console.error("Error deleting post reaction:", error);
       res.status(500).json({ success: false, message: "Server Error", error: error.message });
+    }
+  }
+
+  // Track post view (first-view only with deduplication)
+  async trackPostView(req: any, res: any): Promise<void> {
+    try {
+      const { id: postId } = req.params;
+      
+      // Determine viewerId based on authentication status
+      let viewerId: string;
+      
+      if (req.user?.id || req.user?.userId) {
+        // Authenticated user - use userId
+        viewerId = (req.user.id || req.user.userId).toString();
+      } else {
+        // Anonymous user - use sessionId from cookie or generate fingerprint
+        const sessionId = req.cookies?.sessionId;
+        const fingerprint = `${req.ip}_${req.headers['user-agent'] || 'unknown'}`;
+        
+        viewerId = sessionId || fingerprint;
+        
+        // If no sessionId exists, create one and set cookie
+        if (!sessionId) {
+          const newSessionId = `anon_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+          res.cookie('sessionId', newSessionId, { 
+            httpOnly: true, 
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+            sameSite: 'lax'
+          });
+          viewerId = newSessionId;
+        }
+      }
+      
+      const result = await PostService.trackView(postId, viewerId);
+      
+      res.status(200).json({ 
+        success: true, 
+        data: result 
+      });
+    } catch (error) {
+      console.error("Error tracking post view:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Server Error", 
+        error: error.message 
+      });
     }
   }
 }

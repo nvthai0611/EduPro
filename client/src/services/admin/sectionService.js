@@ -7,8 +7,7 @@ export const sectionService = {
       const response = await apiClient.post('/admin/sections', sectionData);
       return response.data;
     } catch (error) {
-    //   console.error('Error creating section:', error);
-      throw error;
+      console.error('Error creating section:', error);
     }
   },
 
@@ -17,8 +16,7 @@ export const sectionService = {
       const response = await apiClient.get(`/admin/sections/course/${courseId}`);
       return response.data;
     } catch (error) {
-    //   console.error('Error fetching sections:', error);
-      throw error;
+      console.error('Error fetching sections:', error);
     }
   },
 
@@ -28,8 +26,7 @@ export const sectionService = {
       const response = await apiClient.get(`/admin/sections/course/${courseId}/with-lessons`);
       return response;
     } catch (error) {
-    //   console.error('Error fetching sections with lessons:', error);
-      throw error;
+      console.error('Error fetching sections with lessons:', error);
     }
   },
 
@@ -39,8 +36,7 @@ export const sectionService = {
       const response = await apiClient.get(`/admin/sections/${sectionId}`);
       return response.data;
     } catch (error) {
-    //   console.error('Error fetching section:', error);
-      throw error;
+      console.error('Error fetching section:', error);
     }
   },
 
@@ -50,8 +46,7 @@ export const sectionService = {
       const response = await apiClient.patch(`/admin/sections/${sectionId}`, sectionData);
       return response.data;
     } catch (error) {
-    //   console.error('Error updating section:', error);
-      throw error;
+      console.error('Error updating section:', error);
     }
   },
 
@@ -61,8 +56,7 @@ export const sectionService = {
       const response = await apiClient.delete(`/admin/sections/${sectionId}`);
       return response.data;
     } catch (error) {
-    //   console.error('Error deleting section:', error);
-      throw error;
+      console.error('Error deleting section:', error);
     }
   },
 
@@ -76,8 +70,7 @@ export const sectionService = {
       });
       return response.data;
     } catch (error) {
-    //   console.error('Error adding lesson to section:', error);
-      throw error;
+      console.error('Error adding lesson to section:', error);
     }
   },
 
@@ -89,8 +82,7 @@ export const sectionService = {
       });
       return response.data;
     } catch (error) {
-    //   console.error('Error removing lesson from section:', error);
-      throw error;
+      console.error('Error removing lesson from section:', error);
     }
   },
 
@@ -104,8 +96,7 @@ export const sectionService = {
       });
       return response.data;
     } catch (error) {
-    //   console.error('Error reordering sections:', error);
-      throw error;
+      console.error('Error reordering sections:', error);
     }
   },
 

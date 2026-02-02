@@ -44,6 +44,9 @@ router.post("/:id/reactions", authenticateToken, postController.createPostReacti
 // Delete post reaction - Protected route (login user)
 router.delete("/:id/reactions/:reactionId", authenticateToken, postController.deletePostReaction);
 
+// Track post view - Optional auth (works for both logged-in and anonymous users)
+router.post("/:id/view", optionalAuthenticate, postController.trackPostView);
+
 // router.get("/:id/answers", answerController.getAnswersByPostId);
 
 // // Create answer for a post

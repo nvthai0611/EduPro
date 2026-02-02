@@ -26,12 +26,7 @@ const authenticateToken = async (
     }
 
     if (!accessToken) {
-      return errorResponse(
-        res,
-        {},
-        401,
-        "Token không hợp lệ hoặc không được cung cấp"
-      );
+      return errorResponse(res, {}, 401, "Token không hợp lệ hoặc không được cung cấp");
     }
 
     const blacklisted = await isTokenBlacklisted(accessToken);

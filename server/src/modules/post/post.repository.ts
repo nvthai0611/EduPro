@@ -1,5 +1,6 @@
 import PostReactions from "./models/post-reactions.model";
 import Posts from "./models/post.model";
+import PostViews from "./models/post-views.model";
 
 class postRepository {
   // Repository methods here
@@ -18,32 +19,108 @@ class postRepository {
       limit = 10,
       sortBy = "createdAt",
       sortOrder = "desc",
-      select,
-      populate,
+      featured = false
     } = options;
 
     const skip = (page - 1) * limit;
-    const sort: any = {};
-    sort[sortBy] = sortOrder === "asc" ? 1 : -1;
 
-    // Build the query
-    const queryBuilder = Posts.find(query);
-
-    // Apply select if provided
-    if (select) {
-      queryBuilder.select(select);
+    // Determine sort based on options
+    let sortStage: any = {};
+    if (featured) {
+      sortStage = { featuredScore: -1 };
+    } else if (sortBy === 'engagement') {
+      sortStage = { engagementScore: sortOrder === 'asc' ? 1 : -1 };
+    } else {
+      sortStage = { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
     }
 
-    // Apply populate if provided
-    if (populate) {
-      queryBuilder.populate(populate);
-    }
+    const pipeline: any[] = [
+      { $match: query },
+      {
+        $addFields: {
+          engagementScore: {
+            $add: [
+              { $multiply: [{ $ifNull: ["$likesCount", 0] }, 0.5] },
+              { $multiply: [{ $ifNull: ["$commentsCount", 0] }, 10] },
+              { $multiply: [{ $ifNull: ["$viewsCount", 0] }, 0.05] },
+            ],
+          },
+          // Calculate featured score regardless (so we can sort by it if needed)
+          featuredScore: {
+               $add: [
+                  { $multiply: [{ $ifNull: ["$likesCount", 0] }, 3] },
+                  { $multiply: [{ $ifNull: ["$commentsCount", 0] }, 5] },
+                  { $multiply: [{ $ifNull: ["$viewsCount", 0] }, 0.2] },
+                  {
+                    $multiply: [
+                       {
+                        $divide: [
+                          { $subtract: [new Date(), "$createdAt"] },
+                          86400000 
+                        ]
+                       },
+                       -10
+                    ]
+                  }
+               ]
+          }
+        },
+      },
+      { $sort: sortStage },
+      // Pagination with $facet to get count and data in one go
+      {
+        $facet: {
+          metadata: [{ $count: "total" }],
+          data: [
+            { $skip: skip },
+            { $limit: limit },
+            {
+               $lookup: {
+                 from: "users",
+                 localField: "authorId",
+                 foreignField: "_id",
+                 as: "author"
+               }
+            },
+            {
+               $unwind: {
+                 path: "$author",
+                 preserveNullAndEmptyArrays: true
+               }
+            },
+            {
+              $project: {
+                _id: 1,
+                title: 1,
+                slug: 1,
+                content: 1,
+                coverImageUrl: 1,
+                authorId: 1,
+                authorName: 1,
+                likesCount: 1,
+                commentsCount: 1,
+                viewsCount: 1,
+                tags: 1,
+                createdAt: 1,
+                answersCount: 1,
+                savesCount: 1,
+                engagementScore: 1,
+                featuredScore: 1,
+                "author.username": 1,
+                "author.avatar": 1,
+                "author.fullName": 1
+              }
+            }
+          ]
+        }
+      }
+    ];
 
-    // Execute query with pagination
-    const posts = await queryBuilder.sort(sort).skip(skip).limit(limit).lean();
-
-    // Get total count for pagination metadata
-    const total = await Posts.countDocuments(query);
+    const result = await Posts.aggregate(pipeline);
+    
+    const metadata = result[0].metadata[0];
+    const total = metadata ? metadata.total : 0;
+    const posts = result[0].data;
     const totalPages = Math.ceil(total / limit);
 
     return {
@@ -91,8 +168,20 @@ class postRepository {
     );
   }
 
-  async findTrendingPosts(dateThreshold: Date, limit: number): Promise<any[]> {
-    return await Posts.aggregate([
+  async findTrendingPosts(
+    dateThreshold: Date,
+    page: number = 1,
+    limit: number = 10
+  ): Promise<{
+    posts: any[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const skip = (page - 1) * limit;
+
+    const pipeline: any[] = [
       {
         $match: {
           createdAt: { $gte: dateThreshold },
@@ -100,12 +189,12 @@ class postRepository {
       },
       {
         $addFields: {
-          // Calculate engagement score: likes + (comments * 2) + (views * 0.1)
+   
           engagementScore: {
             $add: [
-              { $ifNull: ["$likesCount", 0] },
-              { $multiply: [{ $ifNull: ["$commentsCount", 0] }, 2] },
-              { $multiply: [{ $ifNull: ["$viewsCount", 0] }, 0.1] },
+              { $multiply: [{ $ifNull: ["$likesCount", 0] }, 0.5] },
+              { $multiply: [{ $ifNull: ["$commentsCount", 0] }, 10] },
+              { $multiply: [{ $ifNull: ["$viewsCount", 0] }, 0.05] },
             ],
           },
         },
@@ -113,9 +202,18 @@ class postRepository {
       {
         $sort: { engagementScore: -1 },
       },
-      {
-        $limit: limit,
-      },
+    ];
+
+    // Get total count
+    const countResult = await Posts.aggregate([...pipeline, { $count: "total" }]);
+    const total = countResult.length > 0 ? countResult[0].total : 0;
+    const totalPages = Math.ceil(total / limit);
+
+    // Get paginated data
+    const posts = await Posts.aggregate([
+      ...pipeline,
+      { $skip: skip },
+      { $limit: limit },
       {
         $lookup: {
           from: "users",
@@ -150,10 +248,29 @@ class postRepository {
         },
       },
     ]);
+
+    return {
+      posts,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
   }
 
-  async findFeaturedPosts(limit: number): Promise<any[]> {
-    return await Posts.aggregate([
+  async findFeaturedPosts(
+    page: number = 1,
+    limit: number = 10
+  ): Promise<{
+    posts: any[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const skip = (page - 1) * limit;
+
+    const pipeline: any[] = [
       {
         $addFields: {
           // Featured score: higher weight on recent posts with good engagement
@@ -181,9 +298,18 @@ class postRepository {
       {
         $sort: { featuredScore: -1 },
       },
-      {
-        $limit: limit,
-      },
+    ];
+
+    // Get total count
+    const countResult = await Posts.aggregate([...pipeline, { $count: "total" }]);
+    const total = countResult.length > 0 ? countResult[0].total : 0;
+    const totalPages = Math.ceil(total / limit);
+
+    // Get paginated data
+    const posts = await Posts.aggregate([
+      ...pipeline,
+      { $skip: skip },
+      { $limit: limit },
       {
         $lookup: {
           from: "users",
@@ -218,6 +344,14 @@ class postRepository {
         },
       },
     ]);
+
+    return {
+      posts,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
   }
 
   // Post reaction
@@ -261,6 +395,38 @@ class postRepository {
     }
     return reaction;
   }
+
+  // Post view tracking methods
+  async findExistingView(postId: string, viewerId: string) {
+    return PostViews.findOne({ postId, viewerId }).lean();
+  }
+
+  async createPostView(postId: string, viewerId: string) {
+    try {
+      const view = await PostViews.create({
+        postId,
+        viewerId,
+        viewedAt: new Date(),
+      });
+      return view;
+    } catch (error: any) {
+      // Duplicate key error (code 11000) means view already exists
+      if (error.code === 11000) {
+        return null; // Already viewed
+      }
+      throw error;
+    }
+  }
+
+  async incrementViewCount(postId: string) {
+    return Posts.findByIdAndUpdate(
+      postId,
+      { $inc: { viewsCount: 1 } },
+      { new: true }
+    );
+  }
+
+  
 }
 
 export const PostRepository = new postRepository();

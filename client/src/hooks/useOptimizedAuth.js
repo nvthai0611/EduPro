@@ -9,20 +9,20 @@ import { toast } from 'react-toastify';
 export const useOptimizedAuth = () => {
   const navigate = useNavigate();
 
-  const handleOAuthSuccess = useCallback((encodedAuth, key) => {
+  const handleOAuthSuccess = useCallback((encodedAuth, encodedDevice, returnUrl) => {
     try {
-      // Lưu cookie ngay lập tức
+      // Lưu cả 2 cookies ngay lập tức
       const isProduction = import.meta.env.VITE_PROD === "production";
       const cookieOptions = `path=/; max-age=86400; ${
         isProduction ? "secure; samesite=none" : "samesite=lax"
       }`;
-      document.cookie = `${key}=${encodedAuth}; ${cookieOptions}`;
       
-      // Log thành công
-      // console.log("🍪 Cookie saved successfully");
+      document.cookie = `render_id=${encodedAuth}; ${cookieOptions}`;
+      document.cookie = `runtime_ctx=${encodedDevice}; ${cookieOptions}`;
       
-      // Navigate ngay lập tức mà không delay
-      window.location.href = "/";
+      // Navigate đến returnUrl nếu có, không thì về trang chủ
+      const redirectTo = returnUrl || "/";
+      window.location.href = redirectTo;
       
       // Show toast sau khi navigate để không block UI
       setTimeout(() => {

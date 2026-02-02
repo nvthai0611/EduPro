@@ -392,30 +392,98 @@ export default function UserManagement() {
           </div>
 
           {/* Pagination */}
-          <div className="mt-4 flex justify-between">
+          <div className="mt-4 flex justify-between items-center">
             <div className="text-sm block w-[100px]">
-              Hiển thị <b>{paginatedUsers.length}</b> / <b>{users.length}</b>
+              Hiển thị <b>{paginatedUsers.length}</b> / <b>{filteredUsers.length}</b>
             </div>
 
             <Pagination>
               <PaginationContent>
                 <PaginationItem>
-                  <PaginationPrevious onClick={() => setCurrentPage(currentPage - 1)} />
+                  <PaginationPrevious 
+                    onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
                 </PaginationItem>
 
-                {Array.from({ length: totalPages }).map((_, i) => (
-                  <PaginationItem key={i}>
-                    <PaginationLink
-                      onClick={() => setCurrentPage(i + 1)}
-                      className={currentPage === i + 1 ? "bg-primary text-white" : ""}
-                    >
-                      {i + 1}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
+                {totalPages <= 7 ? (
+                  Array.from({ length: totalPages }).map((_, i) => (
+                    <PaginationItem key={i}>
+                      <PaginationLink
+                        onClick={() => setCurrentPage(i + 1)}
+                        isActive={currentPage === i + 1}
+                      >
+                        {i + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))
+                ) : (
+                  <>
+                    {Array.from({ length: Math.min(3, totalPages) }).map((_, i) => (
+                      <PaginationItem key={i}>
+                        <PaginationLink
+                          onClick={() => setCurrentPage(i + 1)}
+                          isActive={currentPage === i + 1}
+                        >
+                          {i + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+
+                    {currentPage > 4 && (
+                      <PaginationItem>
+                        <span className="px-1.5 py-2">...</span>
+                      </PaginationItem>
+                    )}
+
+                    {Array.from({ 
+                      length: Math.min(
+                        3, 
+                        totalPages - Math.max(3, currentPage - 1)
+                      )
+                    }).map((_, i) => {
+                      const pageNum = Math.max(currentPage - 1, 4) + i
+                      if (pageNum > totalPages - 3) return null
+                      return (
+                        <PaginationItem key={`mid-${i}`}>
+                          <PaginationLink
+                            onClick={() => setCurrentPage(pageNum)}
+                            isActive={currentPage === pageNum}
+                          >
+                            {pageNum}
+                          </PaginationLink>
+                        </PaginationItem>
+                      )
+                    })}
+
+                    {currentPage < totalPages - 3 && (
+                      <PaginationItem>
+                        <span className="px-1.5 py-2">...</span>
+                      </PaginationItem>
+                    )}
+
+                    {Array.from({ length: Math.min(3, totalPages) }).map((_, i) => {
+                      const pageNum = totalPages - 2 + i
+                      if (pageNum <= Math.max(3, currentPage - 1)) return null
+                      return (
+                        <PaginationItem key={`end-${i}`}>
+                          <PaginationLink
+                            onClick={() => setCurrentPage(pageNum)}
+                            isActive={currentPage === pageNum}
+                          >
+                            {pageNum}
+                          </PaginationLink>
+                        </PaginationItem>
+                      )
+                    })}
+                  </>
+                )}
 
                 <PaginationItem>
-                  <PaginationNext onClick={() => setCurrentPage(currentPage + 1)} />
+                  <PaginationNext 
+                    onClick={() => currentPage < totalPages && setCurrentPage(currentPage + 1)}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
                 </PaginationItem>
               </PaginationContent>
             </Pagination>
