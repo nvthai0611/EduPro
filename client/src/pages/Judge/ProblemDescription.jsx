@@ -1,9 +1,6 @@
 import { ChevronLeft, Info, Code2, ScrollText } from "lucide-react";
 
 const ProblemDescription = ({ problem }) => {
-  if (!problem) {
-    return <div className="text-slate-400">Đang tải đề bài...</div>;
-  }
 
   const { title, difficulty, description, inputFormat, outputFormat, constraints, testCases } = problem;
 
@@ -28,8 +25,8 @@ const ProblemDescription = ({ problem }) => {
           <div className="flex items-center gap-3 mb-2">
             <h1 className="text-2xl font-bold text-gray-900 leading-tight">{title}</h1>
             <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${difficulty === 'Easy' ? 'bg-green-50 border-green-500 text-green-700' :
-                difficulty === 'Medium' ? 'bg-yellow-50 border-yellow-500 text-yellow-700' :
-                  'bg-red-50 border-red-500 text-red-700'
+              difficulty === 'Medium' ? 'bg-yellow-50 border-yellow-500 text-yellow-700' :
+                'bg-red-50 border-red-500 text-red-700'
               }`}>
               {difficulty}
             </span>
@@ -84,16 +81,18 @@ const ProblemDescription = ({ problem }) => {
                   <div className="bg-gray-50 px-4 py-2 border-b border-gray-200 flex justify-between items-center">
                     <span className="text-[10px] font-bold text-gray-500 uppercase">Ví dụ {index + 1}</span>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 bg-white">
-                    <div className="p-4 border-r border-gray-100">
+                  <div>
+                    <div className="p-4 pb-0 border-r border-gray-100">
                       <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Input</p>
-                      <pre className="font-mono text-sm text-gray-800 bg-gray-50 p-2 rounded leading-snug">
+                      <pre className="font-mono text-sm text-gray-800 p-2 rounded leading-snug
+               whitespace-pre-wrap break-words">
                         {tc.input.slice(1, -1) ? tc.input.slice(1, -1) : "No Input"}
                       </pre>
                     </div>
                     <div className="p-4">
                       <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Output</p>
-                      <pre className="font-mono text-sm text-blue-700 bg-blue-50/30 p-2 rounded leading-snug">
+                      <pre className="font-mono text-sm text-blue-700 p-2 rounded leading-snug
+               whitespace-pre-wrap break-words">
                         {tc.expectedOutput}
                       </pre>
                     </div>

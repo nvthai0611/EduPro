@@ -42,12 +42,6 @@ const About = () => {
         <section className="py-20 bg-gray-50">
           <div className="container mx-auto px-6">
             <div className="flex items-start gap-8">
-              {/* Sidebar - sticky on large screens */}
-              {/* <aside className="hidden lg:block w-28 flex-shrink-0">
-              <div className="sticky top-20">
-                <SideBar />
-              </div>
-            </aside> */}
 
               {/* Main content */}
               <div className="flex-1">

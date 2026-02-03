@@ -3,9 +3,8 @@ import confetti from "canvas-confetti";
 
 import { CheckCircle2, XCircle, Clock, Database, Code2, ArrowLeft, ChevronRight } from "lucide-react";
 
-const SubmissionReport = ({ result, problemTitle, onBackToEditor }) => {
+const SubmissionReport = ({ result, problemData, onBackToEditor }) => {
   if (!result) return null;
-
 
   // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
@@ -24,7 +23,7 @@ const SubmissionReport = ({ result, problemTitle, onBackToEditor }) => {
 
   return (
     <div className="min-h-screen bg-[#f8fafc] p-6 lg:p-12 font-sans mt-[60px]">
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-7xl mx-auto">
 
         {/* Thanh điều hướng nhanh */}
         <div className="flex items-center justify-between mb-8">
@@ -47,7 +46,7 @@ const SubmissionReport = ({ result, problemTitle, onBackToEditor }) => {
                 {result.success ? "ACCEPTED" : "WRONG ANSWER"}
               </h1>
               <p className="text-white/80 font-medium flex items-center gap-2">
-                <Code2 className="w-4 h-4" /> {problemTitle}
+                <Code2 className="w-4 h-4" /> {problemData.title}
               </p>
             </div>
             <div className="flex gap-4">
@@ -101,7 +100,18 @@ const SubmissionReport = ({ result, problemTitle, onBackToEditor }) => {
                   <td className="px-6 py-4 text-center font-mono text-slate-600">{tc.memory || 0} KB</td>
                   <td className="px-6 py-4 text-right">
                     {tc.status.id !== 3 && (
-                      <button className="text-[11px] font-bold text-blue-600 hover:underline">Xem Log</button>
+                      <button
+                        onClick={() => {
+                          if (tc.status.id === 4) {
+                            window.alert(`Input\n ${problemData.testCases[idx].input.replace(/^\[|\]$/g, '')}\n\nExpected Output\n ${problemData.testCases[idx].expectedOutput}\n\nYour Output\n ${atob(tc.stdout || "")}`);
+                          } else {
+                            window.alert(`Error : ${tc.status.description}`);
+                          }
+
+                        }}
+                        className="text-[11px] font-bold text-blue-600 hover:underline">
+                        Xem Log
+                      </button>
                     )}
                     {tc.status.id === 3 && <ChevronRight className="w-4 h-4 text-slate-300 ml-auto" />}
                   </td>
@@ -121,7 +131,7 @@ const SubmissionReport = ({ result, problemTitle, onBackToEditor }) => {
               </h4>
 
               <div className="relative group">
-                <pre className="text-red-600 bg-red-50/50 p-4 rounded-2xl font-mono text-xs leading-relaxed overflow-x-auto whitespace-pre-wrap border border-red-100/50">
+                <pre className="text-red-600 bg-red-50/50 p-4 rounded-2xl font-mono text-xs leading-relaxed overflow-x-auto whitespace-pre-wrap border border-red-100/50 max-h-60 overflow-y-auto scrollbar-hide [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {atob(result.testcases.find(t => t.status.id !== 3)?.stdout || "") || "Không có dữ liệu đầu ra lỗi."}
                 </pre>
               </div>
