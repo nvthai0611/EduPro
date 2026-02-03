@@ -86,7 +86,17 @@ const Navbar = () => {
           <ToastContainer />
 
           {/* Search Bar - Desktop */}
-          {isForum ? null :
+          {isForum ? 
+          // Viết bài button
+          <div className="hidden md:flex items-center flex-1 max-w-2xl justify-end">
+            <Link
+              to="/forum/create"
+              className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
+            >
+              Viết bài mới
+            </Link>
+          </div>
+          :
             <div className="hidden md:flex items-center flex-1 max-w-2xl">
               <SearchBar />
             </div>}

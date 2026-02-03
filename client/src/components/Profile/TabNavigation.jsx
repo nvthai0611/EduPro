@@ -1,4 +1,4 @@
-import { FileText, BookOpen, Bookmark } from 'lucide-react';
+import { FileText, Bookmark } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const TabNavigation = ({ activeTab, onTabChange }) => {
@@ -7,11 +7,6 @@ const TabNavigation = ({ activeTab, onTabChange }) => {
       id: 'posts',
       label: 'Bài viết',
       icon: FileText,
-    },
-    {
-      id: 'series',
-      label: 'Series',
-      icon: BookOpen,
     },
     {
       id: 'saved',
