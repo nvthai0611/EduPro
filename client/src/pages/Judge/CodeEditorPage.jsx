@@ -52,12 +52,29 @@ export default function CodeEditorPage() {
 
   const {
     data: problemData,
+    isLoading,
+    isError,
   } = useQuery({
     queryKey: ["problem", slug],
     queryFn: () => getProblemBySlug(slug),
     enabled: !!slug,
     staleTime: 5 * 60 * 1000, // cache 5 phút
   })
+
+  // Đang loading → show loading
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Đang tải bài toán...
+      </div>
+    );
+  }
+
+  // Lỗi hoặc không tìm thấy bài
+  if (isError || !problemData) {
+    window.location.href = "/problems";
+    return null;
+  }
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -66,6 +83,8 @@ export default function CodeEditorPage() {
       problemId: problemData.id,
       code,
       language_id: 63,
+      cpu_time_limit: problemData.timeLimit,
+      memory_limit: problemData.memoryLimit,
       testCases: problemData.testCases
     }
 
@@ -81,7 +100,9 @@ export default function CodeEditorPage() {
     const finalData = {
       problemId: problemData.id,
       code: code,
-      language_id: 63
+      language_id: 63,
+      cpu_time_limit: problemData.timeLimit,
+      memory_limit: problemData.memoryLimit,
     }
 
     const response = await runCode(finalData);
@@ -93,125 +114,127 @@ export default function CodeEditorPage() {
 
   return (
     <>
-      {view === 'editor' ? (
-        <div className="min-h-screen w-full bg-slate-50 text-slate-900 flex flex-col lg:grid lg:grid-cols-12 mt-[70px] mb-5">
-          {/* LEFT - Problem */}
-          <div className="w-full lg:col-span-4 bg-white overflow-y-auto border-b lg:border-b-0 lg:border-r border-slate-200 max-h-[50vh] lg:max-h-none">
-            <Card className="rounded-none border-none bg-white">
-              <CardContent className="p-0 space-y-6 text-sm leading-relaxed">
-                {/* Problem */}
-                <ProblemDescription problem={problemData} />
-
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* RIGHT */}
-          <div className="w-full flex flex-col lg:col-span-8 min-h-[50vh] bg-white lg:min-h-screen">
-            {/* TOP BAR */}
-            <div className="flex flex-wrap gap-2 items-center justify-between px-4 py-2 border-b border-slate-200 bg-white">
-
-              <div className="flex items-center gap-2 rounded-md border bg-slate-50 px-3 py-1.5 text-sm">
-                <Code2 className="h-4 w-4 text-yellow-500" />
-                <span className="font-medium text-slate-700">JavaScript</span>
-              </div>
-
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleRunCode}
-                  disabled={running}
-                  className={`${running ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald-500 hover:bg-emerald-600'} text-white px-6 py-2 rounded-xl font-bold text-sm`}
-                >
-                  <Play className="w-4 h-4 mr-2" />
-                  {running ? "Đang chạy..." : "Chạy thử"}
-                </Button>
-
-                <Button
-                  onClick={handleSubmit}
-                  disabled={submitting}
-                  className={`${submitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'} text-white px-6 py-2 rounded-xl font-bold text-sm`}
-                >
-                  <Send className="w-4 h-4 mr-2" />
-                  {submitting ? "Running..." : "Submit"}
-                </Button>
-
-              </div>
-            </div>
-
-            {/* EDITOR */}
-            <div className="flex-[3] min-h-[400px]">
-              <Editor
-                height="100%"
-                language="javascript"
-                value={code}
-                theme="hackerrank-light"
-                beforeMount={handleEditorWillMount}
-                onChange={(val) => setCode(val || "")}
-                options={{
-                  fontSize: 14,
-                  fontFamily: "JetBrains Mono, monospace",
-                  minimap: { enabled: false },
-                  automaticLayout: true,
-                  scrollBeyondLastLine: false,
-                  padding: { top: 12 },
-                }}
-              />
-            </div>
-
-            <div className="flex-[2] bg-white border-t border-slate-100 p-4 text-slate-700 font-mono text-sm relative max-h-[300px]">
-              {/* Header */}
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="text-xs font-semibold text-slate-500">
-                  ▶ Console Output
-                </h3>
-              </div>
-
-              {/* Content */}
-              {result && result.stdout ? (
-                <div className="space-y-2 max-h-60 overflow-auto p-2 border border-slate-200 rounded-md">
-                  {result.stdout && (
-                    <pre className="bg-white text-gray rounded-md p-2 whitespace-pre-wrap">
-                      {result.stdout}
-                    </pre>
-                  )}
-
-                  {result.stderr && (
-                    <pre className="bg-red-50/60 text-red-600 rounded-md p-2 whitespace-pre-wrap">
-                      {result.stderr}
-                    </pre>
-                  )}
-
-                  {result.compile_output && (
-                    <pre className="bg-amber-50/60 text-amber-700 rounded-md p-2 whitespace-pre-wrap">
-                      {result.compile_output}
-                    </pre>
-                  )}
-
-                  {result.message && (
-                    <pre className="text-slate-400 italic text-xs">
-                      {result.message}
-                    </pre>
-                  )}
-                </div>
-              ) : (
-                <div className="flex items-center justify-center h-full text-slate-400 text-xs">
-                  {running ? "Đang chạy chương trình..." : "Chưa có output"}
-                </div>
-              )}
-            </div>
-
-          </div>
-        </div>
-      ) : (
+      {problemData && (
         <>
-          <SubmissionReport
-            result={testResults}
-            problemTitle={problemData.title}
-            onBackToEditor={() => setView('editor')}
-          />
+          {view === 'editor' ? (
+            <div className="min-h-screen w-full bg-slate-50 text-slate-900 flex flex-col lg:grid lg:grid-cols-12 mt-[70px] mb-5">
+              {/* LEFT - Problem */}
+              <div className="w-full lg:col-span-4 bg-white overflow-y-auto border-b lg:border-b-0 lg:border-r border-slate-200 max-h-[50vh] lg:max-h-none">
+                <Card className="rounded-none border-none bg-white">
+                  <CardContent className="p-0 space-y-6 text-sm leading-relaxed">
+                    {/* Problem */}
+                    <ProblemDescription problem={problemData} />
+
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* RIGHT */}
+              <div className="w-full flex flex-col lg:col-span-8 min-h-[50vh] bg-white lg:min-h-screen">
+                {/* TOP BAR */}
+                <div className="flex flex-wrap gap-2 items-center justify-between px-4 py-2 border-b border-slate-200 bg-white">
+
+                  <div className="flex items-center gap-2 rounded-md border bg-slate-50 px-3 py-1.5 text-sm">
+                    <Code2 className="h-4 w-4 text-yellow-500" />
+                    <span className="font-medium text-slate-700">JavaScript</span>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleRunCode}
+                      disabled={running}
+                      className={`${running ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald-500 hover:bg-emerald-600'} text-white px-6 py-2 rounded-xl font-bold text-sm`}
+                    >
+                      <Play className="w-4 h-4 mr-2" />
+                      {running ? "Đang chạy..." : "Chạy thử"}
+                    </Button>
+
+                    <Button
+                      onClick={handleSubmit}
+                      disabled={submitting}
+                      className={`${submitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'} text-white px-6 py-2 rounded-xl font-bold text-sm`}
+                    >
+                      <Send className="w-4 h-4 mr-2" />
+                      {submitting ? "Running..." : "Submit"}
+                    </Button>
+
+                  </div>
+                </div>
+
+                {/* EDITOR */}
+                <div className="flex-[3] min-h-[400px]">
+                  <Editor
+                    height="100%"
+                    language="javascript"
+                    value={code}
+                    theme="hackerrank-light"
+                    beforeMount={handleEditorWillMount}
+                    onChange={(val) => setCode(val || "")}
+                    options={{
+                      fontSize: 14,
+                      fontFamily: "JetBrains Mono, monospace",
+                      minimap: { enabled: false },
+                      automaticLayout: true,
+                      scrollBeyondLastLine: false,
+                      padding: { top: 12 },
+                    }}
+                  />
+                </div>
+
+                <div className="flex-[2] bg-white border-t border-slate-100 p-4 text-slate-700 font-mono text-sm relative max-h-[300px]">
+                  {/* Header */}
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-xs font-semibold text-slate-500">
+                      ▶ Console Output
+                    </h3>
+                  </div>
+
+                  {/* Content */}
+                  {result ? (
+                    <div className="space-y-2 max-h-60 overflow-auto p-2 rounded-md">
+                      {result.stdout && (
+                        <pre className="bg-white text-gray rounded-md p-2 whitespace-pre-wrap">
+                          {result.stdout}
+                        </pre>
+                      )}
+
+                      {result.stderr && (
+                        <pre className="bg-red-50/60 text-red-600 rounded-md p-2 whitespace-pre-wrap">
+                          {result.stderr}
+                        </pre>
+                      )}
+
+                      {result.compile_output && (
+                        <pre className="bg-amber-50/60 text-amber-700 rounded-md p-2 whitespace-pre-wrap">
+                          {result.compile_output}
+                        </pre>
+                      )}
+
+                      {result.message && (
+                        <pre className="bg-white text-gray rounded-md p-2 whitespace-pre-wrap">
+                          {result.message}
+                        </pre>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-slate-400 text-xs">
+                      {running ? "Đang chạy chương trình..." : "Chưa có output"}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              <SubmissionReport
+                result={testResults}
+                problemData={problemData}
+                onBackToEditor={() => setView('editor')}
+              />
+            </>
+          )}
         </>
       )}
     </>
-
   )
 }

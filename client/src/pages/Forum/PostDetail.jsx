@@ -181,7 +181,7 @@ const PostDetail = () => {
       {/* Header Spacer */}
       <div className="h-[4rem] mt-4" />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-[2rem] flex gap-8">
+      <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-[2rem] flex gap-8">
         {/* Post Sidebar - Desktop */}
         <div className="hidden lg:block flex-shrink-0 w-16 mt-4">
           <PostSidebar
@@ -196,7 +196,7 @@ const PostDetail = () => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 min-w-0 max-w-none">
+        <div className="flex-1 min-w-0 max-w-full">
           {/* Back Button */}
           <button
             onClick={() => navigate(-1)}

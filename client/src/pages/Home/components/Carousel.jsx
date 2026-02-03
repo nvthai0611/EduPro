@@ -111,7 +111,7 @@ const Carousel = () => {
   if (isLoading) {
     return (
       <div className="z-40 w-full px-2 sm:px-4 py-4 sm:py-6 md:py-8">
-        <div className="relative max-w-7xl mx-auto">
+        <div className="relative max-w-full mx-auto">
           <div className="h-48 sm:h-64 md:h-72 lg:h-80 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse" />
         </div>
       </div>
@@ -136,7 +136,7 @@ const Carousel = () => {
   }
   return (
     <div className="z-40 w-full px-2 sm:px-4 py-4 sm:py-6 md:py-8">
-      <div className="relative max-w-7xl mx-auto group">
+      <div className="relative max-w-full mx-auto group">
         {/* Main Carousel Container */}
         <div
           ref={emblaRef}
