@@ -16,7 +16,8 @@ export const useNotifications = (params = {}, options = {}) => {
       const res = await notificationService.getNotifications(params);
       return res?.data?.data || res?.data || res;
     },
-    staleTime: 30000, // 30 seconds
+    staleTime: 10000, // 10 seconds
+    refetchInterval: 20000, // Refetch every 20 seconds when dropdown is open
     refetchOnWindowFocus: true,
     ...options,
   });
@@ -32,9 +33,10 @@ export const useUnreadCount = (options = {}) => {
     //   console.log('[useUnreadCount] Response:', res?.data, 'Parsed count:', count);
       return count;
     },
-    staleTime: 30000, // 30 seconds
-    refetchInterval: 60000, // Refetch every 60 seconds
+    staleTime: 10000, // 10 seconds
+    refetchInterval: 15000, // Refetch every 15 seconds for real-time updates
     refetchOnWindowFocus: true,
+    refetchIntervalInBackground: true, // Continue polling even when tab is not focused
     ...options,
   });
 };

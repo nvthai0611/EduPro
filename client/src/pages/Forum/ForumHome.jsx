@@ -3,7 +3,7 @@ import { Loader2 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import PostCard from "./components/PostCard";
 import Sidebar from "./components/Sidebar";
-import WritePostButton from "./components/WritePostButton";
+// import WritePostButton from "./components/WritePostButton";
 import SideBar from "../Home/components/SideBar";
 import FeedTabs from "./components/FeedTabs";
 import { FeedType } from "../../utils/constants";
@@ -225,7 +225,7 @@ const ForumHome = () => {
           </aside>
         </div>
       </div>
-      <WritePostButton />
+      {/* <WritePostButton /> */}
     </div>
   );
 };

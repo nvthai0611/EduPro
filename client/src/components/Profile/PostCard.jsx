@@ -12,9 +12,9 @@ const PostCard = ({
     comments: 0,
     publishedAt: '',
     readTime: 5
-  }
+  },
 }) => {
-  // Format date
+
   const formatDate = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -68,7 +68,7 @@ const PostCard = ({
               </Avatar>
               <div>
                 <p className="text-sm font-medium text-gray-900">
-                  {post.author?.name}
+                  {post.author?.authorName || 'Người dùng'}
                 </p>
                 <p className="text-xs text-gray-500">
                   {formatDate(post.publishedAt)}

@@ -10,16 +10,13 @@ import { useAuth } from "../../hooks/useAuth";
 const MyPosts = () => {
     const navigate = useNavigate();
     const { user, isLoading: isAuthLoading } = useAuth();
+    console.log("👤 Current user in MyPosts:", user);
 
     const { data: posts = [], isLoading: isPostsLoading } = useMyPosts({
         enabled: !isAuthLoading && !!user,
     });
 
     const isLoading = isAuthLoading || isPostsLoading;
-
-    // For trending sidebar (we can still show global trending or user trending)
-    // Let's just show an empty array or fetch global ones if needed.
-    // For now, let's keep it simple.
 
     return (
         <div className="min-h-screen bg-gray-50 flex">

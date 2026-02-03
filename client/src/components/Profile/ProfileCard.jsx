@@ -1,8 +1,8 @@
-import { Edit2, Users, UserPlus, Activity } from 'lucide-react';
+import { Edit2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 
-const ProfileCard = ({ user, stats = { followers: 0, following: 0, posts: 0 } }) => {
+const ProfileCard = ({ user }) => {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       {/* Cover Image */}
@@ -34,30 +34,7 @@ const ProfileCard = ({ user, stats = { followers: 0, following: 0, posts: 0 } })
         </div>
 
         {/* Stats */}
-        <div className="flex items-center gap-6 mb-4 pb-4 border-b border-gray-100">
-          <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-gray-400" />
-            <span className="text-sm">
-              <span className="font-semibold text-gray-900">{stats.followers}</span>
-              <span className="text-gray-500 ml-1">Followers</span>
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <UserPlus className="w-4 h-4 text-gray-400" />
-            <span className="text-sm">
-              <span className="font-semibold text-gray-900">{stats.following}</span>
-              <span className="text-gray-500 ml-1">Following</span>
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Activity className="w-4 h-4 text-gray-400" />
-            <span className="text-sm">
-              <span className="font-semibold text-gray-900">{stats.posts}</span>
-              <span className="text-gray-500 ml-1">Bài viết</span>
-            </span>
-          </div>
-        </div>
-
+      
         {/* Edit Button */}
         <Button 
           className="w-full bg-gray-900 hover:bg-gray-800 text-white rounded-lg h-10 font-medium"
