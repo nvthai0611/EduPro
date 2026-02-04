@@ -105,6 +105,8 @@ class AuthService {
         url = "/auth/login/manager";
       }
       const response = await apiClient.post(url, credentials);
+      response.image = response.data?.image || "../../../public/avatar.png";
+      console.log(response.image);
       const res = response.data;
 
       if (response.success && res.accessToken) {

@@ -25,6 +25,7 @@ import { attendanceRoutes } from "./v1/admin/attendance.route";
 import { settingAdminRoutes } from "./v1/admin/setting.routes";
 import { settingRoutes } from "./v1/setting.routes";
 import optionalAuth from "../middlewares/auth/optionalAuth";
+import optionalAuthenticate from "../middlewares/auth/optionalAuthenticate";
 import { reviewRoutes } from "./v1/reviews.routes";
 import { adminForumRoutes } from "./v1/admin/forum.routes";
 import { forumRoutes } from "./v1/forum.routes";
@@ -34,6 +35,8 @@ import { commentRoutes } from "./v1/comments.routes";
 import { judgeRoutes } from "./v1/judge.routes";
 import { judgeAdminRoutes } from "./v1/admin/judge.routes";
 import { progressRoutes } from "./v1/progress.routes";
+import { notificationRoutes } from "./v1/notification.routes";
+
 import { dbLogger } from "../middlewares/servers/db-logger.middleware";
 
 export const apiRouter = (io?: Server) => {
@@ -116,6 +119,7 @@ export const apiRouter = (io?: Server) => {
   router.use("/answers", optionalAuth, answerRoutes);
   router.use("/comments", optionalAuth, commentRoutes);
 
+  router.use("/notifications", optionalAuthenticate, notificationRoutes);
   // Judge routes
   router.use("/judge", optionalAuth, judgeRoutes);
   router.use("/admin/judge", optionalAuth, judgeAdminRoutes);

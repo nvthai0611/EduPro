@@ -27,12 +27,14 @@ const waitAllFinished = async (tokens: any) => {
 export class SubmissionController {
     static async runCode(req: any, res: Response) {
         try {
-            const { code, language_id } = req.body;
+            const { code, language_id, cpu_time_limit, memory_limit } = req.body;
 
             const response = await axios.post(`${JUDGE0_URL}/submissions?wait=true`, {
                 source_code: code,
                 language_id: language_id || 63,
                 base64_encoded: false,
+                cpu_time_limit: cpu_time_limit || 1,
+                memory_limit: memory_limit || 128000,
 
                 wall_time_limit: 10,
                 enable_per_process_and_thread_memory_limit: false
@@ -49,7 +51,7 @@ export class SubmissionController {
     static async submitCode(req: any, res: Response) {
         try {
             const { encryptedData } = req.body;
-            const { code, testCases } = decryptData(encryptedData);
+            const { code, testCases, cpu_time_limit, memory_limit } = decryptData(encryptedData);
 
             const finalCode = `
             const fs = require('fs');
@@ -74,7 +76,9 @@ export class SubmissionController {
                 language_id: 63,
                 source_code: Buffer.from(finalCode).toString('base64'),
                 stdin: Buffer.from(tc.input || "").toString('base64'),
-                expected_output: Buffer.from(tc.expectedOutput).toString('base64')
+                expected_output: Buffer.from(tc.expectedOutput).toString('base64'),
+                cpu_time_limit: cpu_time_limit || 1,
+                memory_limit: memory_limit || 128000,
             }));
 
             const postResponse = await axios.post(`${JUDGE0_URL}/submissions/batch?base64_encoded=true`, {
@@ -91,7 +95,7 @@ export class SubmissionController {
                     testcases: finalResults
                 })
             });
-            
+
         } catch (err) {
             res.status(500).json({ error: err.message });
         }

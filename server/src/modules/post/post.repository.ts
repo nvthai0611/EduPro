@@ -244,7 +244,7 @@ class postRepository {
           createdAt: 1,
           engagementScore: 1,
           "author.username": 1,
-          "author.avatar": 1,
+          "author.image": 1,
         },
       },
     ]);
@@ -340,7 +340,7 @@ class postRepository {
           createdAt: 1,
           featuredScore: 1,
           "author.username": 1,
-          "author.avatar": 1,
+          "author.image": 1,
         },
       },
     ]);

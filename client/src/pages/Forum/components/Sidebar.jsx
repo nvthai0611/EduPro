@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { TrendingUp, Calendar, Users, Search } from "lucide-react";
+import { TrendingUp, Calendar, Users, Search, Loader2 } from "lucide-react";
 import PostCard from "./PostCard";
 
 const Sidebar = ({ trendingPosts = [], isLoading = false }) => {
@@ -24,15 +24,28 @@ const Sidebar = ({ trendingPosts = [], isLoading = false }) => {
             <h3 className="text-lg font-bold text-gray-900">Đang thịnh hành</h3>
           </div>
           <div className="space-y-1">
-            {trendingPosts.length > 0 ? (
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-blue-600 mb-2" />
+                <p className="text-xs text-gray-500">Đang tải...</p>
+              </div>
+            ) : trendingPosts.length > 0 ? (
               trendingPosts.map((post, index) => (
                 <PostCard key={post._id || index} post={post} variant="compact" />
                 
               ))
             ) : (
-              <p className="text-sm text-gray-500 py-4 text-center">
-                Chưa có bài viết nào
-              </p>
+              <div className="py-6 text-center">
+                <div className="mb-2">
+                  <TrendingUp className="w-10 h-10 text-gray-300 mx-auto" />
+                </div>
+                <p className="text-sm font-medium text-gray-600 mb-1">
+                  Chưa có bài viết thịnh hành
+                </p>
+                <p className="text-xs text-gray-500">
+                  Không có bài viết nào trong 7 ngày qua
+                </p>
+              </div>
             )}
           </div>
         </div>

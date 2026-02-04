@@ -281,7 +281,7 @@ export default function CourseList() {
       {/* Main Content */}
       <div className="flex-1 w-full pt-10 lg:pt-12 pb-16 lg:pb-20 lg:px-8 mt-5">
         <Carousel />
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
+        <div className="max-w-full mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6 text-gray-800 px-1">
             Danh sách khóa học
           </h2>

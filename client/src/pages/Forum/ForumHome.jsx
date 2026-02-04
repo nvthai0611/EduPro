@@ -3,7 +3,7 @@ import { Loader2 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import PostCard from "./components/PostCard";
 import Sidebar from "./components/Sidebar";
-import WritePostButton from "./components/WritePostButton";
+// import WritePostButton from "./components/WritePostButton";
 import SideBar from "../Home/components/SideBar";
 import FeedTabs from "./components/FeedTabs";
 import { FeedType } from "../../utils/constants";
@@ -37,14 +37,12 @@ const ForumHome = () => {
   const posts = useMemo(() => data?.posts || [], [data?.posts]);
   const pagination = useMemo(() => data?.pagination || {}, [data?.pagination]);
   const { data: featuredPosts = [], isLoading: isFeaturedLoading } = useFeaturedPosts({ limit: 4 });
-  // console.log("🌐(ForumHome) Featured Posts:", featuredPosts);
-
+ 
   // Fetch trending posts (for sidebar)
   const { data: trendingPosts = [], isLoading: isTrendingLoading } = useTrendingPosts({
     limit: 5,
     timeRange: 7 // Last 7 days
   });
-  // console.log("🌐(ForumHome) Trending Posts:", trendingPosts);
   // Handle feed tab change
   const handleFeedChange = (feed) => {
     setSearchParams({ feed, page: "1" });
@@ -88,7 +86,7 @@ const ForumHome = () => {
         <SideBar />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-[4rem] w-full">
+      <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-[4rem]">
         {/* Featured Posts Carousel */}
         <div className="bg-white rounded-lg mb-8 p-6">
           <div className="flex items-center justify-between mb-4">
@@ -127,8 +125,8 @@ const ForumHome = () => {
                       </h3>
                       <div className="flex items-center gap-2">
                         <img
-                          src={post.author?.avatar || "https://i.pravatar.cc/32"}
-                          alt={post.authorName}
+                          src={post.author?.image || "https://static.vecteezy.com/system/resources/previews/024/766/958/non_2x/default-male-avatar-profile-icon-social-media-user-free-vector.jpg"}
+                             alt={post.authorName}
                           className="w-6 h-6 rounded-full"
                         />
                         <span className="text-xs text-gray-600">
@@ -227,7 +225,7 @@ const ForumHome = () => {
           </aside>
         </div>
       </div>
-      <WritePostButton />
+      {/* <WritePostButton /> */}
     </div>
   );
 };

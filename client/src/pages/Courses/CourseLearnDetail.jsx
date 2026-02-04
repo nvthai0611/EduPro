@@ -19,38 +19,33 @@ import parse from 'html-react-parser';
 const LessonItem = ({ item, isCurrent, onClick, onMarkCompleted }) => {
   return (
     <div
-      className={`p-3 cursor-pointer border-b transition ${
-        item.isCompleted 
-          ? "bg-green-50 opacity-75" 
+      className={`p-3 cursor-pointer border-b transition ${item.isCompleted
+          ? "bg-green-50 opacity-75"
           : isCurrent
-          ? "bg-orange-100"
-          : "hover:bg-gray-50"
-      } ${isCurrent && !item.isCompleted ? "text-orange-600 font-semibold" : ""} ${
-        item.isCompleted ? "text-gray-500" : "text-gray-700"
-      }`}
+            ? "bg-orange-100"
+            : "hover:bg-gray-50"
+        } ${isCurrent && !item.isCompleted ? "text-orange-600 font-semibold" : ""} ${item.isCompleted ? "text-gray-500" : "text-gray-700"
+        }`}
       onClick={() => onClick(item)}
     >
       <div className="flex items-center justify-between gap-3">
         <span
-          className={`flex items-center text-sm gap-2 flex-1 ${
-            item.isCompleted ? "line-through text-gray-400" : ""
-          }`}
+          className={`flex items-center text-sm gap-2 flex-1 ${item.isCompleted ? "line-through text-gray-400" : ""
+            }`}
         >
           {item.type === "video" ? (
             <span className={`inline-flex items-center gap-2 px-3 py-1.5
-              rounded-full border mr-2 ${
-                item.isCompleted
-                  ? "bg-gray-100 text-gray-400 border-gray-200"
-                  : "bg-blue-50 text-blue-600 border-blue-200"
+              rounded-full border mr-2 ${item.isCompleted
+                ? "bg-gray-100 text-gray-400 border-gray-200"
+                : "bg-blue-50 text-blue-600 border-blue-200"
               }`}>
               <Video className="w-4 h-4" />
             </span>
           ) : (
             <span className={`inline-flex items-center gap-2 px-3 py-1.5
-              rounded-full border mr-2 ${
-                item.isCompleted
-                  ? "bg-gray-100 text-gray-400 border-gray-200"
-                  : "bg-green-50 text-green-600 border-green-200"
+              rounded-full border mr-2 ${item.isCompleted
+                ? "bg-gray-100 text-gray-400 border-gray-200"
+                : "bg-green-50 text-green-600 border-green-200"
               }`}>
               <BookOpen className="w-4 h-4" />
             </span>
@@ -158,7 +153,7 @@ export default function CourseLearnDetail() {
   });
 
   const courseId = course?._id;
-  
+
   // SỬ DỤNG MINIMAL DATA CHO LIST - Chỉ load title, type, duration
   const { data: sections = [], isLoading: sectionsLoading, error: sectionsError } = useSectionsWithMinimalLessons(courseId);
 
@@ -179,10 +174,10 @@ export default function CourseLearnDetail() {
 
   // State để quản lý video hiện tại đang phát (chỉ minimal data từ list)
   const [currentPlayingVideo, setCurrentPlayingVideo] = useState(null);
-  
+
   // Fetch FULL lesson detail khi cần (lazy load) - CHỈ khi type là video
   const currentLessonId = currentPlayingVideo?._id;
-  const { data: fullLessonData, isLoading: lessonDetailLoading} = useLesson(
+  const { data: fullLessonData, isLoading: lessonDetailLoading } = useLesson(
     currentPlayingVideo?.type === 'video' ? currentLessonId : null,
     { enabled: !!currentLessonId && currentPlayingVideo?.type === 'video' }
   );
@@ -200,15 +195,15 @@ export default function CourseLearnDetail() {
     let foundCurrent = false;
     for (const section of sections) {
       if (!section.lessons || section.lessons.length === 0) continue;
-      
+
       for (let i = 0; i < section.lessons.length; i++) {
         const lesson = section.lessons[i];
-        
+
         if (foundCurrent) {
           // Trả về bài học đầu tiên sau bài hiện tại
           return lesson;
         }
-        
+
         if (lesson._id === currentPlayingVideo._id) {
           foundCurrent = true;
           // Nếu không phải bài cuối trong section, trả về bài kế tiếp
@@ -219,7 +214,7 @@ export default function CourseLearnDetail() {
         }
       }
     }
-    
+
     return null;
   }, [currentPlayingVideo, sections]);
 
@@ -270,12 +265,12 @@ export default function CourseLearnDetail() {
   // Helper function to extract YouTube video ID from URL - đặt trước useMemo
   const extractVideoId = useCallback((url) => {
     if (!url) return null;
-    
+
     const patterns = [
       /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
       /^([a-zA-Z0-9_-]{11})$/ // Direct video ID
     ];
-    
+
     for (const pattern of patterns) {
       const match = url.match(pattern);
       if (match && match[1]) {
@@ -286,9 +281,9 @@ export default function CourseLearnDetail() {
   }, []);
 
   // Get videoId from minimal data, or extract from full data's videoUrl - di chuyển lên trước
-  const videoId = currentPlayingVideo?.videoId || 
-                  (fullLessonData?.videoUrl ? extractVideoId(fullLessonData.videoUrl) : null);
-  
+  const videoId = currentPlayingVideo?.videoId ||
+    (fullLessonData?.videoUrl ? extractVideoId(fullLessonData.videoUrl) : null);
+
   // Dùng embed URL với các tham số tối ưu cho loading nhanh hơn
   const videoEmbedUrl = useMemo(() => {
     if (!videoId) return "";
@@ -299,7 +294,7 @@ export default function CourseLearnDetail() {
 
   // Content - sử dụng full data khi đã load, fallback về minimal data
   const finalContent = useMemo(() => {
-    return currentPlayingVideo?.type === 'article' 
+    return currentPlayingVideo?.type === 'article'
       ? (fullArticleData?.content || currentPlayingVideo?.content)
       : (fullLessonData?.content || currentPlayingVideo?.content);
   }, [currentPlayingVideo?.type, fullArticleData?.content, fullLessonData?.content, currentPlayingVideo?.content]);
@@ -369,13 +364,13 @@ export default function CourseLearnDetail() {
   // Helper function để fetch progress - PHẢI định nghĩa trước useEffect dùng nó
   const fetchProgress = useCallback(async () => {
     if (!courseId) return;
-    
+
     try {
       const response = await progressService.getProgress(courseId);
       if (response) {
         const progressInfo = response.data || response;
         setProgressData(progressInfo || { completedLessons: [] });
-        
+
         // Lưu lastAccessedLesson từ response
         if (progressInfo?.lastAccessedLesson) {
           setLastAccessedLessonId(progressInfo.lastAccessedLesson);
@@ -399,9 +394,9 @@ export default function CourseLearnDetail() {
 
     const updatedSections = sections.map(section => {
       if (!section.lessons) return section;
-      
+
       const completedLessons = progressData?.completedLessons || [];
-      
+
       const updatedLessons = section.lessons.map(lesson => ({
         ...lesson,
         isCompleted: completedLessons.includes(lesson._id) || false
@@ -420,12 +415,12 @@ export default function CourseLearnDetail() {
   useEffect(() => {
     if (!sections || sections.length === 0) return;
     if (!progressData) return;
-    
+
     const updatedSections = sections.map(section => {
       if (!section.lessons) return section;
-      
+
       const completedLessons = progressData?.completedLessons || [];
-      
+
       const updatedLessons = section.lessons.map(lesson => ({
         ...lesson,
         isCompleted: completedLessons.includes(lesson._id) || false
@@ -542,7 +537,7 @@ export default function CourseLearnDetail() {
       videoDuration: item.videoDuration,
       readingTime: item.readingTime
     });
-    
+
     // Lưu lastAccessedLesson
     setLastAccessedLessonId(item._id);
   }, []);
@@ -550,7 +545,7 @@ export default function CourseLearnDetail() {
   // Hàm xử lý checkbox - Đánh dấu bài học hoàn thành
   const handleMarkCompleted = useCallback(async (e, item) => {
     e.stopPropagation();
-    
+
     if (!courseId || !item._id) return;
 
     try {
@@ -560,9 +555,9 @@ export default function CourseLearnDetail() {
         if (!prev) {
           prev = { completedLessons: [] };
         }
-        
+
         const completedLessons = [...(prev.completedLessons || [])];
-        
+
         if (!item.isCompleted) {
           // Thêm vào completed list
           if (!completedLessons.includes(item._id)) {
@@ -575,7 +570,7 @@ export default function CourseLearnDetail() {
             completedLessons.splice(index, 1);
           }
         }
-        
+
         return {
           ...prev,
           completedLessons
@@ -687,9 +682,11 @@ export default function CourseLearnDetail() {
   // Loading và error handling
   if (courseLoading || sectionsLoading) {
     return (
-      <div className="flex justify-center items-center py-20">
+      <div className="flex justify-center items-center min-h-screen">
         <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
-        <span className="ml-2 text-gray-600">Đang tải khóa học...</span>
+        <span className="ml-3 text-gray-600 text-lg">
+          Đang tải khóa học...
+        </span>
       </div>
     );
   }
@@ -978,24 +975,24 @@ export default function CourseLearnDetail() {
           <div className="h-[1100px] overflow-y-auto scrollbar-hide">
             {
               displaySections && displaySections.length > 0
-              ? displaySections.map((section) => (
-                <CourseSection
-                  key={section._id}
-                  section={section}
-                  currentPlayingVideo={currentPlayingVideo}
-                  onLessonClick={handleLessonClick}
-                  onMarkCompleted={handleMarkCompleted}
-                />
-              ))
-              : sections && sections.map((section) => (
-                <CourseSection
-                  key={section._id}
-                  section={section}
-                  currentPlayingVideo={currentPlayingVideo}
-                  onLessonClick={handleLessonClick}
-                  onMarkCompleted={handleMarkCompleted}
-                />
-              ))
+                ? displaySections.map((section) => (
+                  <CourseSection
+                    key={section._id}
+                    section={section}
+                    currentPlayingVideo={currentPlayingVideo}
+                    onLessonClick={handleLessonClick}
+                    onMarkCompleted={handleMarkCompleted}
+                  />
+                ))
+                : sections && sections.map((section) => (
+                  <CourseSection
+                    key={section._id}
+                    section={section}
+                    currentPlayingVideo={currentPlayingVideo}
+                    onLessonClick={handleLessonClick}
+                    onMarkCompleted={handleMarkCompleted}
+                  />
+                ))
             }
           </div>
         </div >

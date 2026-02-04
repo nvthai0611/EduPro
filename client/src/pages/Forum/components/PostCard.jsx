@@ -111,11 +111,12 @@ const PostCard = ({ post, variant = "default", canEdit = false }) => {
           {/* Meta Info */}
           <div className="flex items-center justify-between pt-2 border-t border-gray-100">
             <div className="flex items-center gap-2">
-              <img
-                src={post.author?.avatar || "https://i.pravatar.cc/40"}
-                alt={post.authorName}
-                className="w-6 h-6 rounded-full"
-              />
+            
+                    <img
+                      src={post.author?.image || "https://static.vecteezy.com/system/resources/previews/024/766/958/non_2x/default-male-avatar-profile-icon-social-media-user-free-vector.jpg"}
+                      alt={post.authorName}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
               <div>
                 <p className="text-xs font-medium text-gray-900">
                   {post.authorName || "Anonymous"}
