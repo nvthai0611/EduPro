@@ -25,7 +25,6 @@ const AccessLogSchema = new Schema<IAccessLog>(
     createdAt: {
       type: Date,
       default: Date.now,
-      index: true,
     },
   },
   { versionKey: false, collection: "AccessLogs" },

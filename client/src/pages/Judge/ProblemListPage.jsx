@@ -2,7 +2,7 @@ import { useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { BrainCircuit, Clock, Code2, Edit2, Eye, Plus, Trash2 } from "lucide-react"
+import { BrainCircuit, CheckCircle, Clock, Code2, Edit2, Eye, Plus, Trash2 } from "lucide-react"
 import { AddProblemDialog } from "./AddProblemDialog"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { getAllProblems } from "../../services/user/judgeService"
@@ -115,10 +115,12 @@ export default function ProblemListPage() {
         </div>
 
         {/* Stats Overview (Optional) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {[
             { label: 'Tổng số bài', value: filteredProblems.length, icon: Code2, color: 'text-blue-600' },
-            { label: 'Testcases', value: filteredProblems.reduce((acc, p) => acc + (p.testCases?.length || 0), 0), icon: Clock, color: 'text-amber-600' },
+            { label: 'Chưa làm', value: filteredProblems.length, icon: Clock, color: 'text-yellow-600' },
+            { label: 'Đã làm', value: filteredProblems.length, icon: CheckCircle, color: 'text-green-600' },
+            // { label: 'Testcases', value: filteredProblems.reduce((acc, p) => acc + (p.testCases?.length || 0), 0), icon: Clock, color: 'text-amber-600' },
           ].map((stat, i) => (
             <div key={i} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
               <div className={`p-3 rounded-xl bg-slate-50 ${stat.color}`}>
@@ -149,8 +151,9 @@ export default function ProblemListPage() {
                   <tr className="bg-slate-50/80 border-b border-slate-100">
                     <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Thông tin bài toán</th>
                     <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Độ khó</th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Tài nguyên</th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Thao tác</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Thông tin</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Trạng thái</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -163,7 +166,7 @@ export default function ProblemListPage() {
                             className="text-sm text-slate-500 mt-1 font-normal opacity-80 max-w-[400px] sm:max-w-[500px]"
                           >
                             <div
-                              className="line-clamp-1 leading-relaxed"
+                              className="line-clamp-1 overflow-hidden text-ellipsis leading-relaxed"
                               dangerouslySetInnerHTML={{ __html: prob.description }}
                             />
                           </div>
@@ -188,8 +191,15 @@ export default function ProblemListPage() {
                           </span>
                         </div>
                       </td>
-                      <td className="px-6 py-5 text-right">
-                        <div className="flex justify-end gap-1">
+                      <td className="px-6 py-5">
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
+                            Chưa làm
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5 text-center">
+                        <div className="flex justify-center gap-1">
                           <Button
                             variant="ghost"
                             size="icon"

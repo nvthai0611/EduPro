@@ -101,6 +101,11 @@ export class SubmissionController {
         }
     }
 
+    static async saveSubmission(req: any, res: Response) {
+        const submission = await SubmissionService.create(req.body);
+        res.json(submission);
+    }
+
     static async getMySubmissions(req: any, res: Response) {
         const submissions = await SubmissionService.getByUser(
             req.user._id
@@ -110,6 +115,12 @@ export class SubmissionController {
 
     static async getById(req: Request, res: Response) {
         const submission = await SubmissionService.getById(req.params.id);
+        res.json(submission);
+    }
+
+    static async getByUserAndProblem(req: Request, res: Response) {
+        const { userId, problemId } = req.params;
+        const submission = await SubmissionService.getByUserAndProblem(userId, problemId);
         res.json(submission);
     }
 }

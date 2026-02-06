@@ -1,25 +1,40 @@
-import { useEffect } from "react";
 import confetti from "canvas-confetti";
-
 import { CheckCircle2, XCircle, Clock, Database, Code2, ArrowLeft, ChevronRight } from "lucide-react";
+import { saveSubmission } from "../../services/user/judgeService";
+import { useEffect, useRef } from "react";
 
-const SubmissionReport = ({ result, problemData, onBackToEditor }) => {
-  if (!result) return null;
+const frame = () => {
+  confetti({
+    particleCount: 100,
+    spread: 70,
+    origin: { y: 0.6 }
+  });
+};
 
-  // eslint-disable-next-line react-hooks/rules-of-hooks
+const SubmissionReport = ({ result, problemData, sourceCode, user, onBackToEditor }) => {
+  const savedRef = useRef(false); // tránh gọi API nhiều lần
+
   useEffect(() => {
-    if (result.success) {
-      const frame = () => {
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 }
-        });
-      };
+    if (!result?.success) return;
+    if (savedRef.current) return;
 
-      frame();
-    }
-  }, [result.success]);
+    const payload = {
+      userId: user.userId,
+      problemId: problemData._id,
+      languageId: 63,
+      sourceCode,
+      status: "Accepted",
+      results: result.testcases,
+    };
+
+    saveSubmission(payload)
+      .then(() => frame())
+      .catch(console.error);
+
+    savedRef.current = true;
+  }, [result, problemData, sourceCode, user]);
+
+  if (!result) return null;
 
   return (
     <div className="min-h-screen bg-[#f8fafc] p-6 lg:p-12 font-sans mt-[60px]">

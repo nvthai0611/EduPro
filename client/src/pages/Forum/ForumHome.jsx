@@ -86,7 +86,7 @@ const ForumHome = () => {
         <SideBar />
       </div>
 
-      <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-[4rem]">
+      <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-[4rem]">
         {/* Featured Posts Carousel */}
         <div className="bg-white rounded-lg mb-8 p-6">
           <div className="flex items-center justify-between mb-4">
