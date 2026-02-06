@@ -108,7 +108,7 @@ export class SubmissionController {
 
     static async getMySubmissions(req: any, res: Response) {
         const submissions = await SubmissionService.getByUser(
-            req.user._id
+            req.user.userId
         );
         res.json(submissions);
     }
