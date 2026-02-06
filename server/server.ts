@@ -4,6 +4,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import { Server } from "socket.io";
 import SocketService from "./src/utils/socket/socket";
+import socketManager from "./src/utils/socket/socketManager";
 import PayOS from "@payos/node";
 import axios from "axios";
 import dotenv from "dotenv";
@@ -219,6 +220,10 @@ const io = new Server(server, { cors: corsOptions });
 
 const socketService = new SocketService(io);
 socketService.listen();
+
+// Register socket service globally
+socketManager.setSocketService(socketService);
+console.log('✅ Socket service registered globally');
 
 // ================= API Routes =================
 app.use("/api/v1", limitRequestsMiddleware, apiRouter(io));

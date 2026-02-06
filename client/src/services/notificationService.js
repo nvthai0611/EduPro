@@ -40,12 +40,22 @@ const createTestNotification = async (payload) => {
   return await apiClient.post('/notifications/test', payload);
 };
 
+const deleteNotification = async (notificationId) => {
+  return await apiClient.delete(`/notifications/${notificationId}`);
+};
+
+const clearReadNotifications = async () => {
+  return await apiClient.delete('/notifications/clear-read');
+};
+
 export const notificationService = {
   getNotifications,
   getUnreadCount,
   markAsRead,
   markAllAsRead,
   createTestNotification,
+  deleteNotification,
+  clearReadNotifications,
 };
 
 export default notificationService;
