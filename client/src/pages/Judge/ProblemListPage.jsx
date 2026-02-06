@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { BrainCircuit, CheckCircle, Clock, Code2, Edit2, Eye, Plus, Trash2 } from "lucide-react"
+import { BrainCircuit, CheckCircle, Clock, Code2, Edit2, Eye, Plus, Trash2, ChevronLeft, ChevronRight } from "lucide-react"
 import { AddProblemDialog } from "./AddProblemDialog"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { getAllMySubmissions, getAllProblems } from "../../services/user/judgeService"
@@ -15,6 +15,8 @@ export default function ProblemListPage() {
   const { user } = useAuth();
   const [difficultyFilter, setDifficultyFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const queryClient = useQueryClient();
 
   const isAdmin = user && (user.role === 'admin');
@@ -72,6 +74,16 @@ export default function ProblemListPage() {
     })
   }, [problems, difficultyFilter, isProblemsCompleted, statusFilter])
 
+  const totalPages = Math.ceil(filteredProblems.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedProblems = filteredProblems.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  useMemo(() => {
+    setCurrentPage(1);
+  }, []);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-slate-500">
@@ -96,25 +108,25 @@ export default function ProblemListPage() {
 
       <div className="flex-1 p-8 max-w-full mx-auto min-h-screen bg-white mt-[100px]">
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <BrainCircuit className="w-8 h-8 text-blue-600" />
-              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Thư viện bài toán</h1>
+        <div className="flex flex-col space-y-4 mb-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <BrainCircuit className="w-8 h-8 text-blue-600" />
+                <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Thư viện bài toán</h1>
+              </div>
+              <p className="text-slate-500 font-medium">Tổng hợp các bài tập để luyện tập và nâng cao kỹ năng lập trình</p>
             </div>
-            <p className="text-slate-500 font-medium">Tổng hợp các bài tập để luyện tập và nâng cao kỹ năng lập trình</p>
-          </div>
 
-          {isAdmin && (
-            <>
+            {isAdmin && (
               <AddProblemDialog trigger={
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 gap-2 px-6 py-6 rounded-xl transition-all hover:scale-105 active:scale-95">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 gap-2 px-6 py-6 rounded-xl transition-all hover:scale-105 active:scale-95 w-full md:w-auto">
                   <Plus className="w-5 h-5" />
                   <span className="font-semibold">Thêm bài toán mới</span>
                 </Button>
               } />
-            </>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Filter Section */}
@@ -215,7 +227,7 @@ export default function ProblemListPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {filteredProblems.map((prob) => (
+                  {paginatedProblems.map((prob) => (
                     <tr key={prob._id} className="group hover:bg-blue-50/30 transition-colors">
                       <td className="px-6 py-5">
                         <div className="block group-hover:translate-x-1 transition-transform">
@@ -309,6 +321,56 @@ export default function ProblemListPage() {
             </div>
           )}
         </div>
+
+        {/* Pagination Controls */}
+        {filteredProblems.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8">
+            <div className="text-sm text-slate-600 font-medium">
+              Tổng: <span className="font-bold text-slate-900">{filteredProblems.length}</span> bài toán
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="gap-1"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Trước
+              </Button>
+
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }).map((_, index) => {
+                  const pageNum = index + 1;
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={currentPage === pageNum ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={currentPage === pageNum ? "bg-blue-600 hover:bg-blue-700" : ""}
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="gap-1"
+              >
+                Sau
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
