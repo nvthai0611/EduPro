@@ -17,8 +17,12 @@ router.post("/submissions/run", SubmissionController.runCode);
 
 router.post("/submissions/submit", SubmissionController.submitCode);
 
+router.post("/submissions/save", SubmissionController.saveSubmission);
+
 router.get("/submissions/me", SubmissionController.getMySubmissions);
 
 router.get("/submissions/:id", SubmissionController.getById);
+
+router.get("/submissions/user/:userId/problem/:problemId", SubmissionController.getByUserAndProblem);
 
 export const judgeRoutes: Router = router;

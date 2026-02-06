@@ -85,7 +85,6 @@ NotificationSchema.index({
   isRead: 1, 
   createdAt: -1 
 });
-NotificationSchema.index({ createdAt: -1 });
 
 NotificationSchema.methods = {
   async markAsRead(): Promise<INotification> {

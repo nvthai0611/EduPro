@@ -3,10 +3,7 @@ import { ISubmission } from "./submission.model";
 
 export class SubmissionService {
   static create(data: Partial<ISubmission>) {
-    return SubmissionRepository.create({
-      ...data,
-      status: "In Queue",
-    });
+    return SubmissionRepository.create(data);
   }
 
   static getById(id: string) {
@@ -21,15 +18,7 @@ export class SubmissionService {
     return SubmissionRepository.findByProblem(problemId);
   }
 
-  static updateResult(
-    submissionId: string,
-    status: string,
-    results: any
-  ) {
-    return SubmissionRepository.updateResult(
-      submissionId,
-      status,
-      results
-    );
+  static getByUserAndProblem(userId: string, problemId: string) {
+    return SubmissionRepository.findByUserAndProblem(userId, problemId);
   }
 }

@@ -6,12 +6,10 @@ import mongoose, { Schema, Document, Types } from "mongoose";
 export interface ISubmission extends Document {
   problemId: Types.ObjectId;
   userId: Types.ObjectId;
-  connectionId?: string;
   sourceCode: string;
   languageId: number;
   status: string;
   results: any;
-  createdAt: Date;
 }
 
 /**
@@ -29,9 +27,6 @@ const submissionSchema = new Schema<ISubmission>(
       ref: "User",
       required: true,
     },
-    connectionId: {
-      type: String,
-    },
     sourceCode: {
       type: String,
       required: true,
@@ -42,7 +37,7 @@ const submissionSchema = new Schema<ISubmission>(
     },
     status: {
       type: String,
-      default: "In Queue",
+      default: "Accepted",
     },
     results: {
       type: Array,

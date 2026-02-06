@@ -24,7 +24,6 @@ const PostViewSchema = new Schema<IPostView>(
     viewedAt: {
       type: Date,
       default: Date.now,
-      index: true,
     },
   },
   {
