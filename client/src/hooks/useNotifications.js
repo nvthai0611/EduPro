@@ -16,9 +16,9 @@ export const useNotifications = (params = {}, options = {}) => {
       const res = await notificationService.getNotifications(params);
       return res?.data?.data || res?.data || res;
     },
-    staleTime: 10000, // 10 seconds
-    refetchInterval: 20000, // Refetch every 20 seconds when dropdown is open
-    refetchOnWindowFocus: true,
+    staleTime: 30000, 
+    refetchInterval: false, 
+    refetchOnWindowFocus: false, 
     ...options,
   });
 };
@@ -30,13 +30,12 @@ export const useUnreadCount = (options = {}) => {
       const res = await notificationService.getUnreadCount();
       // Handle both res.data.data.count and res.data.count
       const count = res?.data?.data?.count ?? res?.data?.count ?? 0;
-    //   console.log('[useUnreadCount] Response:', res?.data, 'Parsed count:', count);
       return count;
     },
-    staleTime: 10000, // 10 seconds
-    refetchInterval: 15000, // Refetch every 15 seconds for real-time updates
-    refetchOnWindowFocus: true,
-    refetchIntervalInBackground: true, // Continue polling even when tab is not focused
+    staleTime: Infinity, // Cache forever - Socket.IO will update
+    refetchInterval: false, // Disabled - using Socket.IO for real-time updates
+    refetchOnWindowFocus: false, // Disabled - socket handles updates
+    refetchIntervalInBackground: false, // No background polling needed
     ...options,
   });
 };
@@ -120,10 +119,71 @@ export const useCreateTestNotification = () => {
   });
 };
 
+export const useDeleteNotification = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (notificationId) => {
+      const res = await notificationService.deleteNotification(notificationId);
+      return res?.data || res;
+    },
+    onSuccess: () => {
+      // Invalidate and refetch notifications and count
+      queryClient.invalidateQueries({ queryKey: notificationKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: notificationKeys.unreadCount() });
+      toast.success('Đã xóa thông báo');
+    },
+    onError: (err) => {
+      console.error('Error deleting notification:', err);
+      toast.error(
+        err?.response?.data?.message || 
+        err?.message || 
+        'Không thể xóa thông báo'
+      );
+    },
+  });
+};
+
+export const useClearReadNotifications = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async () => {
+      const res = await notificationService.clearReadNotifications();
+      return res?.data || res;
+    },
+    onSuccess: (data) => {
+      // Invalidate and refetch notifications and count
+      queryClient.invalidateQueries({ queryKey: notificationKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: notificationKeys.unreadCount() });
+      
+      const count = data?.data?.deletedCount || 0;
+      if (count > 0) {
+        toast.success(`Đã xóa ${count} thông báo đã đọc`);
+      } else {
+        toast.info('Không có thông báo đã đọc nào để xóa');
+      }
+    },
+    onError: (err) => {
+      console.error('Error clearing read notifications:', err);
+      toast.error(
+        err?.response?.data?.message || 
+        err?.message || 
+        'Không thể xóa thông báo đã đọc'
+      );
+    },
+  });
+};
+
+// Export socket hook
+export { useNotificationSocket } from './useNotificationSocket';
+
 export default {
   useNotifications,
   useUnreadCount,
   useMarkAsRead,
   useMarkAllAsRead,
   useCreateTestNotification,
+  useDeleteNotification,
+  useClearReadNotifications,
 };

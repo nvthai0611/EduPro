@@ -14,6 +14,13 @@ router.patch('/read-all', notificationController.markAllAsRead.bind(notification
 
 
 router.patch('/:id/read', notificationController.markAsRead.bind(notificationController));
+
+
+router.delete('/clear-read', notificationController.clearReadNotifications.bind(notificationController));
+
+
+router.delete('/:id', notificationController.deleteNotification.bind(notificationController));
+
 router.post('/test', notificationController.createTestNotification.bind(notificationController));
 
 export const notificationRoutes : Router = router;

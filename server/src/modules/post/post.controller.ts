@@ -96,7 +96,6 @@ async getTrendingPosts(req: any, res: any): Promise<void> {
     const timeRange = parseInt(req.query.timeRange as string) || 30; // days
     
     const result = await PostService.getTrendingPosts(limit, timeRange);
-    console.log("Trending Posts Result:", result);
     res.setHeader("x-encrypted", "true");
     res.status(200).json({
       success: true,
@@ -248,7 +247,6 @@ async getFeaturedPosts(req: any, res: any): Promise<void> {
       const authId = existingPost.authorId?._id ? existingPost.authorId._id.toString() : existingPost.authorId.toString();
       const userId = req.user.userId?.toString() || req.user.id?.toString(); // Handle different user object structures
 
-      console.log(`🔒 Update Auth Check: PostAuthor=${authId}, Requester=${userId}`);
 
       const isAuthor = authId === userId;
       
@@ -324,9 +322,7 @@ async getFeaturedPosts(req: any, res: any): Promise<void> {
   
   async uploadImage(req: any, res: any): Promise<void> {
     try {
-      console.log("📥 Upload image request received");
-      console.log("User:", req.user);
-      console.log("File:", req.file);
+
       
       if (!req.file) {
         console.log("❌ No file uploaded");

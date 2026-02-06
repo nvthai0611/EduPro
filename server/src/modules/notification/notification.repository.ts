@@ -110,6 +110,13 @@ class NotificationRepository {
     return Notification.insertMany(notifications);
   }
 
+  async deleteOne(
+    query: Partial<FindNotificationsQuery>
+  ): Promise<{ deletedCount: number }> {
+    const result = await Notification.deleteOne(query);
+    return { deletedCount: result.deletedCount };
+  }
+
   async deleteMany(
     query: Partial<FindNotificationsQuery>
   ): Promise<{ deletedCount: number }> {

@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { BookOpen, User, Menu, X, ChevronDown, LogOut, FileText } from "lucide-react";
 import LearningPlatformLogo from "../Logo/LearningPlatformLogo";
 import { useAuth } from "../../hooks/useAuth";
+import { useNotificationSocket } from "../../hooks/useNotificationSocket";
 import { Button } from "@/components/ui/button";
 import SearchBar from "./components/SearchBar";
 import NotificationDropdown from "./components/NotificationDropdown";
@@ -15,6 +16,8 @@ const Navbar = () => {
   // const [searchQuery, setSearchQuery] = useState("");
   const userMenuRef = useRef(null);
   const { user } = useAuth();
+
+  useNotificationSocket(user?.userId);
 
   const userMenuItems = [
     {

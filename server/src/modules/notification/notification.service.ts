@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { INotification, NotificationType } from './notification.model';
 import notificationRepository from './notification.repository';
+import socketManager from '../../utils/socket/socketManager';
 
 export interface CreateNotificationDTO {
   recipientId: mongoose.Types.ObjectId | string;
@@ -18,7 +19,6 @@ export interface GetNotificationsOptions {
   limit?: number;
   skip?: number;
 }
-
 
 export interface GetNotificationsResult {
   items: INotification[];
@@ -90,6 +90,15 @@ class NotificationService {
       message,
       isRead: false,
     });
+
+    // Emit socket event for real-time notification
+    if (notification) {
+      socketManager.notifyNewNotification(recipientId.toString(), notification);
+      
+      // Also update unread count
+      const unreadCount = await this.getUnreadCount(recipientId);
+      socketManager.notifyUnreadCount(recipientId.toString(), unreadCount);
+    }
 
     return notification;
   }
@@ -179,30 +188,59 @@ class NotificationService {
   }
 
 
-  async markAsRead(
-    notificationId: mongoose.Types.ObjectId | string,
-    userId: mongoose.Types.ObjectId | string
-  ): Promise<INotification | null> {
-    return notificationRepository.updateOne(
-      {
-        _id: this.toObjectId(notificationId),
-        recipientId: this.toObjectId(userId),
-      },
-      { isRead: true }
+async markAsRead(
+  notificationId: mongoose.Types.ObjectId | string,
+  userId: mongoose.Types.ObjectId | string
+): Promise<INotification | null> {
+  const notification = await notificationRepository.updateOne(
+    {
+      _id: this.toObjectId(notificationId),
+      recipientId: this.toObjectId(userId),
+    },
+    { isRead: true }
+  );
+
+  if (notification) {
+    const userIdStr = userId.toString();
+
+    socketManager.notifyNotificationRead(
+      userIdStr,
+      notificationId.toString()
     );
+
+    const unreadCount = await this.getUnreadCount(userId);
+    socketManager.notifyUnreadCount(userIdStr, unreadCount);
   }
 
+  return notification;
+}
+
+
   async markAllAsRead(
-    userId: mongoose.Types.ObjectId | string
-  ): Promise<{ modifiedCount: number }> {
-    return notificationRepository.updateMany(
-      {
-        recipientId: this.toObjectId(userId),
-        isRead: false,
-      },
-      { isRead: true }
+  userId: mongoose.Types.ObjectId | string
+): Promise<{ modifiedCount: number }> {
+  const result = await notificationRepository.updateMany(
+    {
+      recipientId: this.toObjectId(userId),
+      isRead: false,
+    },
+    { isRead: true }
+  );
+
+  if (result.modifiedCount > 0) {
+    const userIdStr = userId.toString();
+
+    socketManager.notifyAllNotificationsRead(
+      userIdStr,
+      result.modifiedCount
     );
+
+    socketManager.notifyUnreadCount(userIdStr, 0);
   }
+
+  return result;
+}
+
 
 
   async getUnreadCount(
@@ -213,6 +251,53 @@ class NotificationService {
       isRead: false,
     });
   }
+
+  async deleteNotification(
+  notificationId: mongoose.Types.ObjectId | string,
+  userId: mongoose.Types.ObjectId | string
+): Promise<boolean> {
+  const result = await notificationRepository.deleteOne({
+    _id: this.toObjectId(notificationId),
+    recipientId: this.toObjectId(userId),
+  });
+
+  if (result.deletedCount > 0) {
+    const userIdStr = userId.toString();
+
+    socketManager.notifyNotificationDeleted(
+      userIdStr,
+      notificationId.toString()
+    );
+
+    const unreadCount = await this.getUnreadCount(userId);
+    socketManager.notifyUnreadCount(userIdStr, unreadCount);
+  }
+
+  return result.deletedCount > 0;
+}
+
+  /**
+   * Clear all read notifications for a user
+   * 
+   * @param userId - User ID
+   * @returns Number of deleted notifications
+   */
+ async clearReadNotifications(
+  userId: mongoose.Types.ObjectId | string
+): Promise<{ deletedCount: number }> {
+  const result = await notificationRepository.deleteMany({
+    recipientId: this.toObjectId(userId),
+    isRead: true,
+  });
+
+  if (result.deletedCount > 0) {
+    const userIdStr = userId.toString();
+    socketManager.notifyNotificationDeleted(userIdStr, 'bulk-read');
+  }
+
+  return result;
+}
+
 
   async createDailyDigests(): Promise<number> {
     const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
