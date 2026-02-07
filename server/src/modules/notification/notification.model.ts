@@ -85,6 +85,7 @@ NotificationSchema.index({
   isRead: 1, 
   createdAt: -1 
 });
+// Note: createdAt index is covered by the compound index above
 
 NotificationSchema.methods = {
   async markAsRead(): Promise<INotification> {

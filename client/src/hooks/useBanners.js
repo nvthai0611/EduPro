@@ -78,8 +78,7 @@ export const useUpdateBanner = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, bannerData }) => {
-      console.log('[useUpdateBanner] Mutation called with:', { id, bannerData })
-      return bannersService.updateBanner(id, bannerData)
+     return bannersService.updateBanner(id, bannerData)
     },
     onSuccess: () => {
       // console.log('[useUpdateBanner] Success:', data)

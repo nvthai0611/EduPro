@@ -3,286 +3,302 @@ import Setting, { ISetting } from "./setting.model";
 import cloudinary from "../../config/cloudinary";
 
 class SettingService {
+  // Get all settings
+  async getAllSettings(filter?: any) {
+    return await settingRepository.getAllSettings(filter);
+  }
 
-    // Get all settings
-    async getAllSettings(filter?: any) {
-        return await settingRepository.getAllSettings(filter);
+  // Get setting by key
+  async getSetting(key: string) {
+    let setting = await settingRepository.getSettingByKey(key);
+    if (!setting) {
+      // Create default setting if it doesn't exist
+      setting = await settingRepository.createSetting({
+        key: key,
+        name: key.charAt(0).toUpperCase() + key.slice(1),
+        category: key === "homepage" ? "homepage" : "general",
+        enabled: true,
+        banners: [],
+      } as unknown as Partial<ISetting>);
+    }
+    return setting;
+  }
+
+  // Get setting by ID
+  async getSettingById(id: string) {
+    const setting = await settingRepository.getSettingById(id);
+    if (!setting) {
+      throw new Error("Setting not found");
+    }
+    return setting;
+  }
+
+  // Create new setting
+  async createSetting(data: Partial<ISetting>) {
+    // Check if key already exists
+    const existingKey = await settingRepository.keyExists(data.key!);
+    if (existingKey) {
+      throw new Error(`Setting with key "${data.key}" already exists`);
     }
 
-    // Get setting by key
-    async getSetting(key: string) {
-        let setting = await settingRepository.getSettingByKey(key);
-        if (!setting) {
-            // Create default setting if it doesn't exist
-            setting = await settingRepository.createSetting({
-                key: key,
-                name: key.charAt(0).toUpperCase() + key.slice(1),
-                category: key === 'homepage' ? 'homepage' : 'general',
-                enabled: true,
-                banners: []
-            } as Partial<ISetting>);
-        }
-        return setting;
+    // Set defaults
+    const settingData: Partial<ISetting> = {
+      ...data,
+      name: data.name || data.key!.charAt(0).toUpperCase() + data.key!.slice(1),
+      category: data.category || "general",
+      enabled: data.enabled !== undefined ? data.enabled : true,
+      isDeleted: false,
+      banners: data.banners,
+    };
+
+    return await settingRepository.createSetting(settingData);
+  }
+
+  // Update setting by ID
+  async updateSetting(id: string, data: Partial<ISetting>) {
+    // Check if setting exists
+    const existing = await settingRepository.getSettingById(id);
+    if (!existing) {
+      throw new Error("Setting not found");
     }
 
-    // Get setting by ID
-    async getSettingById(id: string) {
-        const setting = await settingRepository.getSettingById(id);
-        if (!setting) {
-            throw new Error('Setting not found');
-        }
-        return setting;
+    // If updating key, check for duplicates
+    if (data.key && data.key !== existing.key) {
+      const keyExists = await settingRepository.keyExists(data.key, id);
+      if (keyExists) {
+        throw new Error(`Setting with key "${data.key}" already exists`);
+      }
     }
 
-    // Create new setting
-    async createSetting(data: Partial<ISetting>) {
-        // Check if key already exists
-        const existingKey = await settingRepository.keyExists(data.key!);
-        if (existingKey) {
-            throw new Error(`Setting with key "${data.key}" already exists`);
-        }
+    return await settingRepository.updateSetting(id, data);
+  }
 
-        // Set defaults
-        const settingData: Partial<ISetting> = {
-            ...data,
-            name: data.name || data.key!.charAt(0).toUpperCase() + data.key!.slice(1),
-            category: data.category || 'general',
-            enabled: data.enabled !== undefined ? data.enabled : true,
-            isDeleted: false,
-            banners: data.banners
-        };
-
-        return await settingRepository.createSetting(settingData);
+  // Update setting by key
+  async updateSettingByKey(key: string, data: Partial<ISetting>) {
+    const existing = await settingRepository.getSettingByKey(key);
+    if (!existing) {
+      throw new Error(`Setting with key "${key}" not found`);
     }
 
-    // Update setting by ID
-    async updateSetting(id: string, data: Partial<ISetting>) {
-        // Check if setting exists
-        const existing = await settingRepository.getSettingById(id);
-        if (!existing) {
-            throw new Error('Setting not found');
-        }
+    return await settingRepository.updateSettingByKey(key, data);
+  }
 
-        // If updating key, check for duplicates
-        if (data.key && data.key !== existing.key) {
-            const keyExists = await settingRepository.keyExists(data.key, id);
-            if (keyExists) {
-                throw new Error(`Setting with key "${data.key}" already exists`);
-            }
-        }
+  // Delete setting (soft delete)
+  async deleteSetting(id: string) {
+    const setting = await settingRepository.getSettingById(id);
+    if (!setting) {
+      throw new Error("Setting not found");
+    }
+    return await settingRepository.deleteSetting(id);
+  }
 
-        return await settingRepository.updateSetting(id, data);
+  // Get settings by category
+  async getSettingsByCategory(category: string) {
+    return await settingRepository.getSettingsByCategory(category);
+  }
+
+  // Toggle setting enabled status
+  async toggleSettingStatus(id: string) {
+    const setting = await settingRepository.getSettingById(id);
+    if (!setting) {
+      throw new Error("Setting not found");
+    }
+    return await settingRepository.updateSetting(id, {
+      enabled: !setting.enabled,
+    } as Partial<ISetting>);
+  }
+
+  // Add banner to setting
+  async addBanner(key: string, payload: any) {
+    let setting = await settingRepository.getSettingByKey(key);
+
+    if (!setting) {
+      // Create default setting if it doesn't exist
+      setting = await settingRepository.createSetting({
+        key: key,
+        name: key.charAt(0).toUpperCase() + key.slice(1),
+        category: key === "homepage" ? "homepage" : "general",
+        enabled: true,
+        banners: [],
+      } as unknown as Partial<ISetting>);
     }
 
-    // Update setting by key
-    async updateSettingByKey(key: string, data: Partial<ISetting>) {
-        const existing = await settingRepository.getSettingByKey(key);
-        if (!existing) {
-            throw new Error(`Setting with key "${key}" not found`);
-        }
-
-        return await settingRepository.updateSettingByKey(key, data);
+    // Ensure setting has required fields for validation (for old documents)
+    if (!setting.name) {
+      setting.name = key.charAt(0).toUpperCase() + key.slice(1);
+    }
+    if (!setting.category) {
+      setting.category = key === "homepage" ? "homepage" : "general";
     }
 
-    // Delete setting (soft delete)
-    async deleteSetting(id: string) {
-        const setting = await settingRepository.getSettingById(id);
-        if (!setting) {
-            throw new Error('Setting not found');
-        }
-        return await settingRepository.deleteSetting(id);
+    const maxOrder = setting.banners.reduce(
+      (max, b) => (b.isDeleted ? max : Math.max(max, b.order)),
+      0,
+    );
+
+    setting.banners.push({
+      ...payload,
+      order: maxOrder + 1,
+    });
+
+    await setting.save();
+    return setting.banners
+      .filter((b) => !b.isDeleted)
+      .sort((a, b) => a.order - b.order);
+  }
+
+  // Get public banners (active only)
+  async getBanners(key: string) {
+    let setting = await settingRepository.getSettingByKey(key);
+    if (!setting) {
+      // Create default setting if it doesn't exist
+      setting = await settingRepository.createSetting({
+        key: key,
+        name: key.charAt(0).toUpperCase() + key.slice(1),
+        category: key === "homepage" ? "homepage" : "general",
+        enabled: true,
+        banners: [],
+      } as unknown as Partial<ISetting>);
+    }
+    return setting.banners
+      .filter((b) => b.isActive && !b.isDeleted)
+      .sort((a, b) => a.order - b.order);
+  }
+
+  // Get all banners (admin - including inactive)
+  async getAdminBanners(key: string){
+    try {
+      let setting = await settingRepository.getSettingByKey(key);
+
+      if (!setting) {
+        setting = await settingRepository.createSetting({
+            key: key,
+            name: key.charAt(0).toUpperCase() + key.slice(1),
+            category: key === "homepage" ? "homepage" : "general",
+            enabled: true,
+            banners: [],
+        } as unknown as Partial<ISetting>);
+      }
+
+      if (!setting.banners || !Array.isArray(setting.banners)) {
+        return [];
+      }
+
+      const filtered = setting.banners.filter((b) => !b.isDeleted);
+      return filtered.sort((a, b) => a.order - b.order);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Remove banner (soft delete)
+  async removeBanner(key: string, bannerId: string) {
+    let setting = await settingRepository.getSettingByKey(key);
+    if (!setting) {
+      throw new Error(`Setting ${key} not found`);
     }
 
-    // Get settings by category
-    async getSettingsByCategory(category: string) {
-        return await settingRepository.getSettingsByCategory(category);
+    if (!setting.name) {
+      setting.name = key.charAt(0).toUpperCase() + key.slice(1);
+    }
+    if (!setting.category) {
+      setting.category = key === "homepage" ? "homepage" : "general";
     }
 
-    // Toggle setting enabled status
-    async toggleSettingStatus(id: string) {
-        const setting = await settingRepository.getSettingById(id);
-        if (!setting) {
-            throw new Error('Setting not found');
-        }
-        return await settingRepository.updateSetting(id, { enabled: !setting.enabled } as Partial<ISetting>);
+    const banner = setting.banners.id(bannerId);
+    if (!banner) {
+      throw new Error("Banner not found");
     }
 
-    /**
-     * ==================== BANNER OPERATIONS ====================
-     */
-
-    // Add banner to setting
-    async addBanner(key: string, payload: any) {
-        let setting = await settingRepository.getSettingByKey(key);
-
-        if (!setting) {
-            // Create default setting if it doesn't exist
-            setting = await settingRepository.createSetting({
-                key: key,
-                name: key.charAt(0).toUpperCase() + key.slice(1),
-                category: key === 'homepage' ? 'homepage' : 'general',
-                enabled: true,
-                banners: []
-            } as Partial<ISetting>);
-        }
-
-        // Ensure setting has required fields for validation (for old documents)
-        if (!setting.name) {
-            setting.name = key.charAt(0).toUpperCase() + key.slice(1);
-        }
-        if (!setting.category) {
-            setting.category = key === 'homepage' ? 'homepage' : 'general';
-        }
-
-        const maxOrder = setting.banners.reduce(
-            (max, b) => (b.isDeleted ? max : Math.max(max, b.order)),
-            0
-        );
-
-        setting.banners.push({
-            ...payload,
-            order: maxOrder + 1,
-        });
-
-        await setting.save();
-        return setting.banners.filter((b) => !b.isDeleted).sort((a, b) => a.order - b.order);
+    // Xóa ảnh trên Cloudinary nếu có publicId
+    if (banner.publicId) {
+      try {
+        await cloudinary.uploader.destroy(banner.publicId);
+      } catch (err) {
+        console.error("Error deleting image from Cloudinary:", err);
+      }
     }
 
-    // Get public banners (active only)
-    async getBanners(key: string) {
-        let setting = await settingRepository.getSettingByKey(key);
-        if (!setting) {
-            // Create default setting if it doesn't exist
-            setting = await settingRepository.createSetting({
-                key: key,
-                name: key.charAt(0).toUpperCase() + key.slice(1),
-                category: key === 'homepage' ? 'homepage' : 'general',
-                enabled: true,
-                banners: []
-            } as Partial<ISetting>);
-        }
-        return setting.banners.filter((b) => b.isActive && !b.isDeleted).sort((a, b) => a.order - b.order);
+    banner.isDeleted = true;
+    await setting.save();
+    return setting.banners
+      .filter((b) => !b.isDeleted)
+      .sort((a, b) => a.order - b.order);
+  }
+
+  // Update banner
+  async updateBanner(key: string, bannerId: string, data: Partial<any>) {
+    try {
+      let setting = await settingRepository.getSettingByKey(key);
+      if (!setting) {
+        throw new Error(`Setting ${key} not found`);
+      }
+
+      if (!setting.name) {
+        setting.name = key.charAt(0).toUpperCase() + key.slice(1);
+      }
+      if (!setting.category) {
+        setting.category = key === "homepage" ? "homepage" : "general";
+      }
+
+      const banner = setting.banners.id(bannerId);
+      if (!banner) {
+        throw new Error("Banner not found");
+      }
+
+      // Update only the fields that are provided
+      // Don't overwrite existing fields with undefined
+      if (data.title !== undefined) banner.title = data.title;
+      if (data.description !== undefined) banner.description = data.description;
+      if (data.linkUrl !== undefined) banner.linkUrl = data.linkUrl;
+      if (data.imageUrl !== undefined) banner.imageUrl = data.imageUrl;
+      if (data.publicId !== undefined) banner.publicId = data.publicId;
+      if (data.isActive !== undefined) banner.isActive = data.isActive;
+      if (data.order !== undefined) banner.order = data.order;
+
+      const savedSetting = await setting.save();
+
+      const result = savedSetting.banners
+        .filter((b) => !b.isDeleted)
+        .sort((a, b) => a.order - b.order);
+
+      return result;
+    } catch (error) {
+      console.error("[Service] updateBanner - Error:", error);
+      throw error;
+    }
+  }
+
+  // Reorder banners
+  async reorderBanners(
+    key: string,
+    bannerOrders: { id: string; order: number }[],
+  ) {
+    let setting = await settingRepository.getSettingByKey(key);
+    if (!setting) {
+      throw new Error(`Setting ${key} not found`);
     }
 
-    // Get all banners (admin - including inactive)
-    async getAdminBanners(key: string) {
-        try {
-            let setting = await settingRepository.getSettingByKey(key);
-        
-            if (!setting) {
-                setting = await settingRepository.createSetting({
-                    key: key,
-                    name: key.charAt(0).toUpperCase() + key.slice(1),
-                    category: key === 'homepage' ? 'homepage' : 'general',
-                    enabled: true,
-                    banners: []
-                } as Partial<ISetting>);
-            }
-            
-            if (!setting.banners || !Array.isArray(setting.banners)) {
-                return [];
-            }
-            
-            const filtered = setting.banners.filter((b) => !b.isDeleted);
-            return filtered.sort((a, b) => a.order - b.order);
-        } catch (error) {
-            throw error;
-        }
+    if (!setting.name) {
+      setting.name = key.charAt(0).toUpperCase() + key.slice(1);
+    }
+    if (!setting.category) {
+      setting.category = key === "homepage" ? "homepage" : "general";
     }
 
-    // Remove banner (soft delete)
-    async removeBanner(key: string, bannerId: string) {
-        let setting = await settingRepository.getSettingByKey(key);
-        if (!setting) {
-            throw new Error(`Setting ${key} not found`);
-        }
-        
-        if (!setting.name) {
-            setting.name = key.charAt(0).toUpperCase() + key.slice(1);
-        }
-        if (!setting.category) {
-            setting.category = key === 'homepage' ? 'homepage' : 'general';
-        }
-        
-        const banner = setting.banners.id(bannerId);
-        if (!banner) {
-            throw new Error("Banner not found");
-        }
-        
-        // Xóa ảnh trên Cloudinary nếu có publicId
-        if (banner.publicId) {
-            try {
-                await cloudinary.uploader.destroy(banner.publicId);
-            } catch (err) {
-                console.error('Error deleting image from Cloudinary:', err);
-            }
-        }
-        
-        banner.isDeleted = true;
-        await setting.save();
-        return setting.banners.filter((b) => !b.isDeleted).sort((a, b) => a.order - b.order);
-    }
+    // Update order for each banner
+    bannerOrders.forEach(({ id, order }) => {
+      const banner = setting.banners.id(id);
+      if (banner) {
+        banner.order = order;
+      }
+    });
 
-    // Update banner
-    async updateBanner(key: string, bannerId: string, data: Partial<any>) {
-        try {
-            let setting = await settingRepository.getSettingByKey(key);
-            if (!setting) {
-                throw new Error(`Setting ${key} not found`);
-            }
-            
-            if (!setting.name) {
-                setting.name = key.charAt(0).toUpperCase() + key.slice(1);
-            }
-            if (!setting.category) {
-                setting.category = key === 'homepage' ? 'homepage' : 'general';
-            }
-            
-            const banner = setting.banners.id(bannerId);
-            if (!banner) {
-                throw new Error("Banner not found");
-            }
-            
-            // Update banner fields
-            Object.assign(banner, data);
-            
-            const savedSetting = await setting.save();
-            
-            const result = savedSetting.banners.filter((b) => !b.isDeleted).sort((a, b) => a.order - b.order);
-            
-            return result;
-        } catch (error) {
-            console.error('[Service] updateBanner - Error:', error);
-            throw error;
-        }
-    }
-            
-
-    // Reorder banners
-    async reorderBanners(key: string, bannerOrders: { id: string; order: number }[]) {
-        let setting = await settingRepository.getSettingByKey(key);
-        if (!setting) {
-            throw new Error(`Setting ${key} not found`);
-        }
-
-        if (!setting.name) {
-            setting.name = key.charAt(0).toUpperCase() + key.slice(1);
-        }
-        if (!setting.category) {
-            setting.category = key === 'homepage' ? 'homepage' : 'general';
-        }
-
-        // Update order for each banner
-        bannerOrders.forEach(({ id, order }) => {
-            const banner = setting.banners.id(id);
-            if (banner) {
-                banner.order = order;
-            }
-        });
-
-        await setting.save();
-        return setting.banners.filter((b) => !b.isDeleted).sort((a, b) => a.order - b.order);
-    }
+    await setting.save();
+    return setting.banners
+      .filter((b) => !b.isDeleted)
+      .sort((a, b) => a.order - b.order);
+  }
 }
 
 export default new SettingService();

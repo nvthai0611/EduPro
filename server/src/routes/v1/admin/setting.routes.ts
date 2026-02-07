@@ -1,23 +1,13 @@
 import settingController from '../../../modules/setting/setting.controller';
 import authenticateToken from '../../../middlewares/auth/authenticateToken';
 import { authorizeRoles } from '../../../middlewares/auth/authorizeRoles';
-import { uploadSingle } from '../../../middlewares/servers/uploadCloudinary';
+import { uploadBannerImage, optionalUpload } from '../../../middlewares/servers/uploadCloudinary';
 import { Router, Request } from 'express';
 
 const router: Router = Router();
 
 router.get('/health', (req, res) => {
     res.send('Setting Admin API is working');
-});
-
-router.post('/test-upload', uploadSingle, (req: Request & { file?: Express.Multer.File }, res) => {
-    console.log('[TEST-UPLOAD] Reached controller');
-    console.log('[TEST-UPLOAD] req.file:', req.file);
-    res.json({ 
-        success: true, 
-        file: req.file,
-        message: 'Upload test complete' 
-    });
 });
 
 router.get('/', authenticateToken, authorizeRoles(['admin']), settingController.getAllSettings);
@@ -35,14 +25,14 @@ router.patch('/id/:id/toggle', authenticateToken, authorizeRoles(['admin']), set
 router.post('/', authenticateToken, authorizeRoles(['admin']), settingController.createSetting);
 
 // Upload banner image
-router.post('/upload/banner-image', uploadSingle, authenticateToken, authorizeRoles(['admin']), settingController.uploadBannerImage);
+router.post('/upload/banner-image', uploadBannerImage, authenticateToken, authorizeRoles(['admin']), settingController.uploadBannerImage);
 
-router.post('/:key/slides', uploadSingle, authenticateToken, authorizeRoles(['admin']), settingController.addBanner);
+router.post('/:key/slides', uploadBannerImage, authenticateToken, authorizeRoles(['admin']), settingController.addBanner);
 
 router.get('/:key/slides', authenticateToken, authorizeRoles(['admin']), settingController.getAdminBanners);
 
-// Update banner
-router.put('/:key/slides/:id', uploadSingle, authenticateToken, authorizeRoles(['admin']), settingController.updateBanner);
+// Update banner - uses optionalUpload to handle both file uploads and JSON updates
+router.put('/:key/slides/:id', optionalUpload('image'), authenticateToken, authorizeRoles(['admin']), settingController.updateBanner);
 
 // Delete banner (soft delete)
 router.delete('/:key/slides/:id', authenticateToken, authorizeRoles(['admin']), settingController.removeBanner);
