@@ -204,6 +204,89 @@ class NotificationController {
       });
     }
   }
+
+  async deleteNotification(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = req.user?.id;
+      const notificationId = req.params.id;
+
+      if (!userId) {
+        res.status(401).json({
+          success: false,
+          message: 'Unauthorized',
+        });
+        return;
+      }
+
+      // Validate ObjectId
+      if (!mongoose.Types.ObjectId.isValid(notificationId)) {
+        res.status(400).json({
+          success: false,
+          message: 'Invalid notification ID',
+        });
+        return;
+      }
+
+      const deleted = await notificationService.deleteNotification(
+        notificationId,
+        userId
+      );
+
+      if (!deleted) {
+        res.status(404).json({
+          success: false,
+          message: 'Notification not found or you do not have permission to delete it',
+        });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        message: 'Notification deleted successfully',
+        data: {
+          deletedId: notificationId,
+        },
+      });
+    } catch (error: any) {
+      console.error('[NotificationController] deleteNotification error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to delete notification',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      });
+    }
+  }
+
+  async clearReadNotifications(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = req.user?.id;
+
+      if (!userId) {
+        res.status(401).json({
+          success: false,
+          message: 'Unauthorized',
+        });
+        return;
+      }
+
+      const result = await notificationService.clearReadNotifications(userId);
+
+      res.status(200).json({
+        success: true,
+        message: `${result.deletedCount} read notifications cleared`,
+        data: {
+          deletedCount: result.deletedCount,
+        },
+      });
+    } catch (error: any) {
+      console.error('[NotificationController] clearReadNotifications error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to clear read notifications',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      });
+    }
+  }
 }
 
 // Export singleton instance

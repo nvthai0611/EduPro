@@ -52,22 +52,23 @@ const ProblemDescription = ({ problem }) => {
 
           {/* Định dạng Input/Output */}
           <div className="flex gap-8 flex-col">
-            <section>
+            <section className="mb-8">
               <div className="flex items-center gap-2 mb-3 text-gray-900">
                 <ScrollText className="w-4 h-4 text-emerald-500" />
                 <h4 className="m-0 text-sm font-bold uppercase tracking-wide">Đầu vào</h4>
               </div>
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 text-sm text-gray-600 font-mono italic">
-                {inputFormat}
+              <div className="bg-gray-50 border-l-4 border-gray-300 p-4 rounded-r-lg">
+                <code className="text-sm text-gray-600 font-mono whitespace-pre-wrap">{inputFormat}</code>
               </div>
             </section>
-            <section>
+
+            <section className="mb-8">
               <div className="flex items-center gap-2 mb-3 text-gray-900">
                 <Code2 className="w-4 h-4 text-purple-500" />
                 <h4 className="m-0 text-sm font-bold uppercase tracking-wide">Đầu ra</h4>
               </div>
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 text-sm text-gray-600 font-mono italic">
-                {outputFormat}
+              <div className="bg-gray-50 border-l-4 border-gray-300 p-4 rounded-r-lg">
+                <code className="text-sm text-gray-600 font-mono whitespace-pre-wrap">{outputFormat}</code>
               </div>
             </section>
           </div>

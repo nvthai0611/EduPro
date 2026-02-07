@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Editor from "@monaco-editor/react"
 import {
   Card,
@@ -10,12 +10,9 @@ import { useParams } from "react-router-dom"
 import { encryptData } from "../../utils/clientAxios"
 import ProblemDescription from "./ProblemDescription"
 import { useQuery } from "@tanstack/react-query"
-import { getProblemBySlug, runCode, sendSubmission } from "../../services/user/judgeService"
+import { getMySubmissionByProblem, getProblemBySlug, runCode, sendSubmission } from "../../services/user/judgeService"
 import SubmissionReport from "./SubmissionReport"
-
-const defaultCode = {
-  javascript: `console.log("Hello World");`,
-}
+import { useAuth } from "../../hooks/useAuth"
 
 const handleEditorWillMount = (monaco) => {
   monaco.editor.defineTheme("hackerrank-light", {
@@ -40,15 +37,18 @@ const handleEditorWillMount = (monaco) => {
 }
 
 export default function CodeEditorPage() {
-  const [code, setCode] = useState(defaultCode.javascript)
-  const [result, setResult] = useState(null);
+  const [code, setCode] = useState("// Write your code here...");
   const [running, setRunning] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
   const [view, setView] = useState('editor');
 
-  const [testResults, setTestResults] = useState([])
+  const [testResults, setTestResults] = useState(null);
+  const [results, setResult] = useState([])
 
   const { slug } = useParams();
+
+  const { user } = useAuth();
 
   const {
     data: problemData,
@@ -60,6 +60,22 @@ export default function CodeEditorPage() {
     enabled: !!slug,
     staleTime: 5 * 60 * 1000, // cache 5 phút
   })
+
+  const {
+    data: submissionData,
+  } = useQuery({
+    queryKey: ["submission", user?.userId, problemData?._id],
+    queryFn: () =>
+      getMySubmissionByProblem(user.userId, problemData._id),
+    enabled: !!user?.userId && !!problemData?._id,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  useEffect(() => {
+    if (submissionData?.sourceCode) {
+      setCode(submissionData.sourceCode);
+    }
+  }, [submissionData]);
 
   // Đang loading → show loading
   if (isLoading) {
@@ -90,7 +106,7 @@ export default function CodeEditorPage() {
 
     const response = await sendSubmission(encryptData(finalData));
 
-    setTestResults(response);
+    setResult(response);
     setSubmitting(false);
     setView('report');
   };
@@ -107,7 +123,7 @@ export default function CodeEditorPage() {
 
     const response = await runCode(finalData);
 
-    setResult(response);
+    setTestResults(response);
 
     setRunning(false);
   };
@@ -187,34 +203,47 @@ export default function CodeEditorPage() {
                     <h3 className="text-xs font-semibold text-slate-500">
                       ▶ Console Output
                     </h3>
+                    {testResults?.status && (
+                      <span className={`text-[10px] px-2 py-0.5 rounded font-medium ${testResults.status.id === 3
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-red-100 text-red-700'
+                        }`}>
+                        {testResults.status.description}
+                      </span>
+                    )}
                   </div>
 
                   {/* Content */}
-                  {result ? (
+                  {testResults ? (
                     <div className="space-y-2 max-h-60 overflow-auto p-2 rounded-md">
-                      {result.stdout && (
+                      {testResults.stdout && (
                         <pre className="bg-white text-gray rounded-md p-2 whitespace-pre-wrap">
-                          {result.stdout}
+                          {testResults.stdout}
                         </pre>
                       )}
 
-                      {result.stderr && (
+                      {testResults.stderr && (
                         <pre className="bg-red-50/60 text-red-600 rounded-md p-2 whitespace-pre-wrap">
-                          {result.stderr}
+                          {testResults.stderr}
                         </pre>
                       )}
 
-                      {result.compile_output && (
+                      {testResults.compile_output && (
                         <pre className="bg-amber-50/60 text-amber-700 rounded-md p-2 whitespace-pre-wrap">
-                          {result.compile_output}
+                          {testResults.compile_output}
                         </pre>
                       )}
 
-                      {result.message && (
+                      {testResults.message && (
                         <pre className="bg-white text-gray rounded-md p-2 whitespace-pre-wrap">
-                          {result.message}
+                          {testResults.message}
                         </pre>
                       )}
+
+                      <div className="pt-2 flex gap-4 text-[10px] text-gray-400 font-sans border-t border-gray-50">
+                        <span>Thời gian: <span className="font-semibold text-gray-600">{testResults.time || 0}s</span></span>
+                        <span>Bộ nhớ: <span className="font-semibold text-gray-600">{testResults.memory || 0} KB</span></span>
+                      </div>
                     </div>
                   ) : (
                     <div className="flex items-center justify-center h-full text-slate-400 text-xs">
@@ -227,9 +256,11 @@ export default function CodeEditorPage() {
           ) : (
             <>
               <SubmissionReport
-                result={testResults}
+                result={results}
                 problemData={problemData}
                 onBackToEditor={() => setView('editor')}
+                sourceCode={code}
+                user={user}
               />
             </>
           )}

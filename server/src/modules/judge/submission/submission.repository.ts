@@ -3,7 +3,20 @@ import SubmissionModel, { ISubmission } from "./submission.model";
 
 export class SubmissionRepository {
   static create(data: Partial<ISubmission>) {
-    return SubmissionModel.create(data);
+    return SubmissionModel.findOneAndUpdate(
+      {
+        userId: data.userId,
+        problemId: data.problemId,
+      },
+      {
+        $set: data,
+        $setOnInsert: { createdAt: new Date() },
+      },
+      {
+        upsert: true,
+        new: true,
+      }
+    );
   }
 
   static findById(id: string | Types.ObjectId) {
@@ -22,15 +35,12 @@ export class SubmissionRepository {
       .sort({ createdAt: -1 });
   }
 
-  static updateResult(
-    id: string | Types.ObjectId,
-    status: string,
-    results: any
+  static findByUserAndProblem(
+    userId: string | Types.ObjectId,
+    problemId: string | Types.ObjectId
   ) {
-    return SubmissionModel.findByIdAndUpdate(
-      id,
-      { status, results },
-      { new: true }
-    );
+    return SubmissionModel.findOne({ userId, problemId })
+      .populate("problemId")
+      .populate("userId");
   }
 }

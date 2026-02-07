@@ -54,9 +54,6 @@ const ForumSchema = new Schema<IForumDocument>(
         acceptedAnswerId: { type: Schema.Types.ObjectId, ref: "Answer" },
 
         isDeleted: { type: Boolean, default: false },
-
-        createdAt: { type: Date, default: Date.now },
-        updatedAt: { type: Date, default: Date.now },
     },
     {
         collection: "Posts",
@@ -67,8 +64,6 @@ const ForumSchema = new Schema<IForumDocument>(
 );
 
 // Indexes for performance optimization at scale
-// Compound index for sorting by createdAt (most common query)
-ForumSchema.index({ createdAt: -1 });
 
 // Index for author queries
 ForumSchema.index({ authorId: 1, createdAt: -1 });
@@ -81,9 +76,6 @@ ForumSchema.index({ title: "text", content: "text" });
 
 // Index for trending posts (by engagement)
 ForumSchema.index({ likesCount: -1, commentsCount: -1 });
-
-// Index for slug lookup (already unique, but explicit for clarity)
-ForumSchema.index({ slug: 1 });
 
 ForumSchema.pre("save", async function (next) {
   if (this.isModified("title") && !this.slug) {

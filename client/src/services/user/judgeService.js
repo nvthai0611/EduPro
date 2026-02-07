@@ -19,6 +19,11 @@ export const sendSubmission = async (data) => {
   return respone.data;
 };
 
+export const saveSubmission = async (data) => {
+  const respone =  await apiClient.post(`/judge/submissions/save`, data);
+  return respone.data;
+};
+
 export const getAllMySubmissions = async () => {
   return await apiClient.get("/judge/submissions/me");
 };
@@ -26,3 +31,7 @@ export const getAllMySubmissions = async () => {
 export const getSubmissionsById = async (id) => {
   return await apiClient.get(`/judge/submissions/${id}`);
 };
+
+export const getMySubmissionByProblem = async (userId, problemId) => {
+  return await apiClient.get(`/judge/submissions/user/${userId}/problem/${problemId}`);
+}
