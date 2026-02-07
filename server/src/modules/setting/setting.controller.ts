@@ -194,6 +194,8 @@ class SettingController {
             const { key, id } = req.params;
             const data = req.body;
             
+            console.log('[updateBanner] Received data:', { key, id, body: req.body, hasFile: !!req.file });
+            
             // Nếu có file upload mới thì cập nhật URL
             if (req.file) {
                
@@ -208,7 +210,7 @@ class SettingController {
                 
                 data.imageUrl = (req.file as any).path;
                 data.publicId = (req.file as any).filename;
-                }
+            }
             
             // Convert isActive from string to boolean if needed (FormData sends as string)
             if (typeof data.isActive === 'string') {
@@ -218,6 +220,21 @@ class SettingController {
             const banners = await settingService.updateBanner(key, id, data);
             res.status(200).json({ success: true, data: banners });
         } catch (error: any) {
+            console.error('[updateBanner] Error:', error);
+            
+            // Handle Mongoose validation errors
+            if (error.name === 'ValidationError') {
+                const validationErrors = Object.values(error.errors).map((err: any) => ({
+                    field: err.path,
+                    message: err.message
+                }));
+                return res.status(400).json({ 
+                    success: false, 
+                    error: 'Dữ liệu không hợp lệ',
+                    details: validationErrors
+                });
+            }
+            
             res.status(500).json({ success: false, error: error.message });
         }
     }
