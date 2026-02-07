@@ -1,7 +1,7 @@
 import { io } from 'socket.io-client';
 
 // Get API URL from environment or default
-const SOCKET_URL = import.meta.env.VITE_API_URL || 'https://edupro-qnsy.onrender.com';
+const SOCKET_URL = import.meta.env.VITE_SERVER_API_URL || '';
 
 // Create socket instance
 export const socket = io(SOCKET_URL, {
