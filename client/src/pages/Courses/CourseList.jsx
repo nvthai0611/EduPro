@@ -93,6 +93,8 @@ const CourseCard = ({ course }) => {
 
   const averageRating = course?.averageRating || 5.0;
 
+  const thumbnailUrl = course.thumbnail || "";
+
   const color = useMemo(() => {
     const getRandomGradient = () => {
       return GRADIENT_COLORS[
@@ -108,20 +110,30 @@ const CourseCard = ({ course }) => {
       onClick={handleClick}
       className="group rounded-xl sm:rounded-2xl shadow-md sm:shadow-lg overflow-hidden bg-white hover:shadow-xl sm:hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 sm:hover:-translate-y-2 cursor-pointer border border-gray-100"
     >
-      {/* Header with gradient background */}
-      <div
-        className={`h-40 sm:h-48 md:h-52 bg-gradient-to-br ${color} flex items-center justify-center text-white p-4 sm:p-6 text-center relative overflow-hidden`}
-      >
-        {/* Decorative circles */}
-        <div className="absolute -top-3 -right-3 sm:-top-4 sm:-right-4 w-20 h-20 sm:w-24 sm:h-24 bg-white/10 rounded-full"></div>
-        <div className="absolute -bottom-6 -left-6 sm:-bottom-8 sm:-left-8 w-24 h-24 sm:w-32 sm:h-32 bg-white/5 rounded-full"></div>
+      {thumbnailUrl ? (
+        <img
+          src={thumbnailUrl}
+          alt={course.title}
+          className="w-full h-40 sm:h-48 md:h-52 object-cover"
+        />
+      ) : (
+        <>
+          {/* Header with gradient background */}
+          <div
+            className={`h-40 sm:h-48 md:h-52 bg-gradient-to-br ${color} flex items-center justify-center text-white p-4 sm:p-6 text-center relative overflow-hidden`}
+          >
+            {/* Decorative circles */}
+            <div className="absolute -top-3 -right-3 sm:-top-4 sm:-right-4 w-20 h-20 sm:w-24 sm:h-24 bg-white/10 rounded-full"></div>
+            <div className="absolute -bottom-6 -left-6 sm:-bottom-8 sm:-left-8 w-24 h-24 sm:w-32 sm:h-32 bg-white/5 rounded-full"></div>
 
-        <div className="relative z-10">
-          <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-1 sm:mb-2 whitespace-pre-line leading-tight drop-shadow-sm">
-            {labelToUse}
-          </h3>
-        </div>
-      </div>
+            <div className="relative z-10">
+              <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-1 sm:mb-2 whitespace-pre-line leading-tight drop-shadow-sm">
+                {labelToUse}
+              </h3>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Card content */}
       <div className="p-3 sm:p-4 md:p-6">
@@ -136,7 +148,7 @@ const CourseCard = ({ course }) => {
         {/* Price and rating section */}
         <div className="flex items-center justify-between mb-3 sm:mb-4">
           <div className="flex flex-col">
-            <p className="text-xl sm:text-2xl font-bold text-orange-500 mb-0.5 sm:mb-1">
+            <p className="text-xl sm:text-2xl font-bold text-red-600 mb-0.5 sm:mb-1">
               {formatPrice(course.salePrice)}
             </p>
             {course.price && course.price > 0 && (

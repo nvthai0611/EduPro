@@ -77,6 +77,8 @@ ForumSchema.index({ title: "text", content: "text" });
 // Index for trending posts (by engagement)
 ForumSchema.index({ likesCount: -1, commentsCount: -1 });
 
+
+
 ForumSchema.pre("save", async function (next) {
   if (this.isModified("title") && !this.slug) {
     // Generate slug from title

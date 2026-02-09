@@ -67,3 +67,37 @@ export const uploadContentImage = (req: any, res: any, next: any) => {
     next();
   });
 };
+
+// Banner image upload - accepts "image" field
+export const uploadBannerImage = (req: any, res: any, next: any) => {
+  const multerSingle = upload.single("image");
+  
+  multerSingle(req, res, (err: any) => {
+    if (err) {
+      console.error('[uploadBannerImage] ERROR:', err.message);
+      return res.status(400).json({ success: false, error: err.message });
+    }
+    next();
+  });
+};
+
+// Optional upload - only processes multipart/form-data, skips JSON requests
+export const optionalUpload = (fieldName: string = "image") => {
+  return (req: any, res: any, next: any) => {
+    const contentType = req.headers['content-type'] || '';
+    
+    // Skip multer if not multipart/form-data
+    if (!contentType.includes('multipart/form-data')) {
+      return next();
+    }
+    
+    const multerSingle = upload.single(fieldName);
+    multerSingle(req, res, (err: any) => {
+      if (err) {
+        console.error(`[optionalUpload:${fieldName}] ERROR:`, err.message);
+        return res.status(400).json({ success: false, error: err.message });
+      }
+      next();
+    });
+  };
+};

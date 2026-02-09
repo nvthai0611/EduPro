@@ -27,8 +27,7 @@ export const bannersService = {
     // Tạo banner mới
     createBanner: async (bannerData, onUploadProgress) => {
     try {
-      console.log('Original bannerData:', bannerData);
-      const key = bannerData.key || 'homepage';
+     const key = bannerData.key || 'homepage';
       
       // Nếu có file, tạo FormData để upload
       if (bannerData.image instanceof File) {
@@ -64,14 +63,11 @@ export const bannersService = {
     // Cập nhật banner
     updateBanner: async (id, bannerData, onUploadProgress) => {
     try {
-      console.log('[bannersService] updateBanner called with id:', id, 'bannerData:', bannerData)
-      console.log('[bannersService] bannerData.image instanceof File?', bannerData.image instanceof File)
       const key = bannerData.key || 'homepage';
       
       // CHỈ tạo FormData NẾU có file mới được chọn
       if (bannerData.image && bannerData.image instanceof File) {
-        console.log('[bannersService] Creating FormData with NEW image file')
-        const formData = new FormData()
+       const formData = new FormData()
         formData.append('image', bannerData.image)
         formData.append('title', bannerData.title)
         formData.append('description', bannerData.description || '')
@@ -80,11 +76,9 @@ export const bannersService = {
         
         // Gửi publicId cũ để xóa ảnh cũ
         if (bannerData.oldPublicId) {
-          // console.log('[bannersService] Adding oldPublicId:', bannerData.oldPublicId)
           formData.append('oldPublicId', bannerData.oldPublicId)
         }
         
-        // console.log('[bannersService] Sending PUT request with FormData to:', `/admin/setting/${key}/slides/${id}`)
         const response = await apiClient.put(`/admin/setting/${key}/slides/${id}`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
@@ -96,17 +90,21 @@ export const bannersService = {
             }
           }
         })
-        // console.log('[bannersService] Response:', response)
         return response.data
       }
       
-      // Nếu KHÔNG có file mới, gửi JSON data thông thường (giữ nguyên imageUrl)
-      // console.log('[bannersService] Sending PUT request with JSON data (no new image)')
-      const response = await apiClient.put(`/admin/setting/${key}/slides/${id}`, bannerData);   
-      // console.log('[bannersService] Response:', response)
-        return response.data;
+      // Nếu KHÔNG có file mới, gửi JSON data với tất cả fields cần thiết
+      const updateData = {
+        title: bannerData.title,
+        description: bannerData.description || '',
+        linkUrl: bannerData.linkUrl,
+        isActive: bannerData.isActive
+      };
+      
+     const response = await apiClient.put(`/admin/setting/${key}/slides/${id}`, updateData);   
+      return response.data;
     } catch (error) {
-      console.error('Error updating banner:');
+      console.error('Error updating banner:', error);
       throw error;
     }
     },
