@@ -1,6 +1,7 @@
 import { Server } from 'socket.io';
 import axios from 'axios';
 import OrderService from '../order/order.service';
+import userService from '../user/user.service';
 
 export interface SepayTransactionsResponse {
   status: number;
@@ -28,10 +29,10 @@ export class PaymentService {
   constructor(io: Server) {
     this.io = io;
     this.baseURL = 'https://my.sepay.vn/userapi';
-    this.apiKey = process.env.SE_PAY_API_KEY;
-    this.accountNumber = process.env.SE_PAY_ACCOUNT_VA;
-    this.bankCode = process.env.SE_PAY_BANK_CODE;
-    this.bankAccountName = process.env.SE_PAY_BANK_ACCOUNT_NAME;
+    this.apiKey = process.env.SE_PAY_API_KEY || '';
+    this.accountNumber = process.env.SE_PAY_ACCOUNT_VA || '';
+    this.bankCode = process.env.SE_PAY_BANK_CODE || '';
+    this.bankAccountName = process.env.SE_PAY_BANK_ACCOUNT_NAME || '';
   }
 
   // Xử lý webhook
@@ -40,26 +41,31 @@ export class PaymentService {
     const amount = webhookData.transferAmount;
     const orderId = extractOrderId(content);
 
+    if (!orderId) {
+      return { status: "failed" };
+    }
+
     const order = await OrderService.getOrderById(orderId);
+
+    if (!order) {
+      return { status: "failed" };
+    }
 
     let paymentStatus: string;
 
-    if (order?.notes === orderId && order?.price === amount) {
+    if (order.notes === orderId && order.price === amount) {
       paymentStatus = "completed";
-      await axios.post(
-        `${BASE_URL}api/v1/admin/user/purchase/course`,
-        {
-          userId: order.userId,
-          courseId: order.courseId,
-          price: order.price,
-          orderId: order._id
-        }
-      );
+      await userService.addPurchasedCourseService({
+        userId: order.userId.toString(),
+        courseId: order.courseId.toString(),
+        price: order.price,
+        orderId: (order as any)._id.toString(),
+      });
     } else {
       paymentStatus = "failed";
     }
-    
-    return { 
+
+    return {
       status: paymentStatus,
       userId: order.userId.toString()
     };
@@ -81,7 +87,7 @@ export class PaymentService {
       );
 
       return response.data.transactions || [];
-    } catch (error) {
+    } catch (error: any) {
       console.error(
         'Lỗi khi lấy danh sách giao dịch từ Sepay',
         error.response?.data || error

@@ -5,7 +5,8 @@ import {
   HelpCircle,
   Route,
   Library,
-  MessageSquare
+  MessageSquare,
+  Code
 } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 
@@ -18,6 +19,7 @@ const SideBar = () => {
   const menuItems = [
     { path: '/', icon: Home, label: 'Trang chủ' },
     user && { path: '/my-learning', icon: Library, label: 'Khóa học' },
+    user && { path: '/problems', icon: Code, label: 'Bài tập' },
     { path: '/forum', icon: MessageSquare, label: 'Thảo luận' },
     { path: '/about', icon: BookOpen, label: 'Giới thiệu' },
     { path: '/advisory', icon: Route, label: 'Lộ trình' },
