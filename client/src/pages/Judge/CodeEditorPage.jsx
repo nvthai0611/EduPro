@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Editor from "@monaco-editor/react"
 import {
   Card,
   CardContent,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Code2, Play, Send } from "lucide-react"
+import { ChevronDown, Code2, Coffee, FileCode, Play, Send } from "lucide-react"
 import { useParams } from "react-router-dom"
 import { encryptData } from "../../utils/clientAxios"
 import ProblemDescription from "./ProblemDescription"
@@ -36,6 +36,30 @@ const handleEditorWillMount = (monaco) => {
   })
 }
 
+const LANGUAGE_CONFIG = {
+  javascript: {
+    label: "JavaScript",
+    icon: Code2,
+    color: "text-yellow-500",
+    bg: "bg-yellow-50",
+    disabled: false,
+  },
+  java: {
+    label: "Java",
+    icon: Coffee,
+    color: "text-red-500",
+    bg: "bg-red-50",
+    disabled: true,
+  },
+  c: {
+    label: "C",
+    icon: FileCode,
+    color: "text-blue-500",
+    bg: "bg-blue-50",
+    disabled: true,
+  },
+};
+
 export default function CodeEditorPage() {
   const [code, setCode] = useState("// Write your code here...");
   const [running, setRunning] = useState(false);
@@ -45,6 +69,13 @@ export default function CodeEditorPage() {
 
   const [testResults, setTestResults] = useState(null);
   const [results, setResult] = useState([])
+
+  const [language, setLanguage] = useState("javascript");
+  const [open, setOpen] = useState(false);
+
+  const dropdownRef = useRef(null);
+  const current = LANGUAGE_CONFIG[language];
+  const CurrentIcon = current.icon;
 
   const { slug } = useParams();
 
@@ -76,6 +107,17 @@ export default function CodeEditorPage() {
       setCode(submissionData.sourceCode);
     }
   }, [submissionData]);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!dropdownRef.current?.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Đang loading → show loading
   if (isLoading) {
@@ -150,9 +192,57 @@ export default function CodeEditorPage() {
                 {/* TOP BAR */}
                 <div className="flex flex-wrap gap-2 items-center justify-between px-4 py-2 border-b border-slate-200 bg-white">
 
-                  <div className="flex items-center gap-2 rounded-md border bg-slate-50 px-3 py-1.5 text-sm">
+                  {/* <div className="flex items-center gap-2 rounded-md border bg-slate-50 px-3 py-1.5 text-sm">
                     <Code2 className="h-4 w-4 text-yellow-500" />
                     <span className="font-medium text-slate-700">JavaScript</span>
+                  </div> */}
+
+                  <div className="relative w-[150px]" ref={dropdownRef}>
+                    {/* Trigger */}
+                    <div
+                      onClick={() => setOpen(!open)}
+                      className="flex items-center gap-2 rounded-md border bg-slate-50 px-3 py-1.5 text-sm cursor-pointer hover:bg-slate-100 transition"
+                    >
+                      <CurrentIcon className={`h-4 w-4 ${current.color}`} />
+                      <span className="font-medium text-slate-700">
+                        {current.label}
+                      </span>
+                      <ChevronDown className="w-4 h-4 text-slate-400 ml-auto" />
+                    </div>
+
+                    {/* Dropdown */}
+                    {open && (
+                      <div className="absolute mt-2 w-full bg-white border rounded-md shadow-md z-50 overflow-hidden">
+                        {Object.entries(LANGUAGE_CONFIG).map(([key, lang]) => {
+                          const Icon = lang.icon;
+
+                          return (
+                            <div
+                              key={key}
+                              onClick={() => {
+                                if (lang.disabled) return;
+                                setLanguage(key);
+                                setOpen(false);
+                              }}
+                              className={`flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-100 transition ${lang.disabled
+                                ? "opacity-40 cursor-not-allowed"
+                                : "cursor-pointer hover:bg-slate-100"
+                                } ${language === key ? "bg-slate-100" : ""
+                                }`}
+                            >
+                              <Icon className={`h-4 w-4 ${lang.color}`} />
+                              <span>{lang.label}</span>
+
+                              {lang.disabled && (
+                                <span className="ml-auto text-[10px] text-slate-400">
+                                  Coming soon
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex gap-2">

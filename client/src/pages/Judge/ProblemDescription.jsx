@@ -51,7 +51,7 @@ const ProblemDescription = ({ problem }) => {
           </section>
 
           {/* Định dạng Input/Output */}
-          <div className="flex gap-8 flex-col">
+          <div className="flex flex-col">
             <section className="mb-8">
               <div className="flex items-center gap-2 mb-3 text-gray-900">
                 <ScrollText className="w-4 h-4 text-emerald-500" />
@@ -62,7 +62,7 @@ const ProblemDescription = ({ problem }) => {
               </div>
             </section>
 
-            <section className="mb-8">
+            <section>
               <div className="flex items-center gap-2 mb-3 text-gray-900">
                 <Code2 className="w-4 h-4 text-purple-500" />
                 <h4 className="m-0 text-sm font-bold uppercase tracking-wide">Đầu ra</h4>

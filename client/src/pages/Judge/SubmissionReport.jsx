@@ -49,6 +49,11 @@ const SubmissionReport = ({ result, problemData, sourceCode, user, onBackToEdito
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             Quay lại
           </button>
+          <button
+            className="flex items-center gap-2 text-sm font-semibold text-blue-600 transition-colors group"
+          >
+            <a href="/problems">Làm bài khác</a>
+          </button>
         </div>
 
         {/* Thẻ tóm tắt kết quả (Summary Card) */}
@@ -118,7 +123,7 @@ const SubmissionReport = ({ result, problemData, sourceCode, user, onBackToEdito
                       <button
                         onClick={() => {
                           if (tc.status.id === 4) {
-                            window.alert(`Input\n ${problemData.testCases[idx].input.replace(/^\[|\]$/g, '')}\n\nExpected Output\n ${problemData.testCases[idx].expectedOutput}\n\nYour Output\n ${atob(tc.stdout || "")}`);
+                            window.alert(`Input\n${problemData.testCases[idx].input.replace(/^\[|\]$/g, '')}\n\nExpected Output\n${problemData.testCases[idx].expectedOutput}`);
                           } else {
                             window.alert(`Error : ${tc.status.description}`);
                           }
