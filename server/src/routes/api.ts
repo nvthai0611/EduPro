@@ -39,7 +39,7 @@ import { notificationRoutes } from "./v1/notification.routes";
 
 import { dbLogger } from "../middlewares/servers/db-logger.middleware";
 
-export const apiRouter = (io?: Server) => {
+export const apiRouter = (io: Server) => {
   // Block direct browser access to API
   // router.use(blockDirectAccess);
 
