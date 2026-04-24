@@ -2,6 +2,7 @@ import User from "./user.model";
 
 import userRepository from "./user.repository";
 import { IUser } from "./user.model";
+import orderService from "../order/order.service";
 
 class UserService {
   async register(data: Partial<IUser>): Promise<IUser> {
@@ -48,7 +49,7 @@ class UserService {
       user = await userRepository.findByEmail(email);
     }
 
-    if (!user.status || !user.isActive || !user.confirmEmail) return null;
+    if (!user || !user.status || !user.isActive || !user.confirmEmail) return null;
     if (user.role !== "customer" && user.role !== "admin") return null;
 
     return user;
@@ -56,6 +57,28 @@ class UserService {
 
   async deleteUser(id: string): Promise<IUser | null> {
     return userRepository.delete(id);
+  }
+
+  async addPurchasedCourseService({
+    userId,
+    courseId,
+    price,
+    orderId,
+  }: {
+    userId: string;
+    courseId: string;
+    price: number;
+    orderId: string;
+  }) {
+    const user = await User.findById(userId);
+    if (!user) throw new Error("User not found");
+
+    const order = await orderService.getOrderById(orderId);
+    if (!order) throw new Error("Order not found");
+
+    await user.addPurchasedCourse(courseId, price, orderId);
+
+    return user;
   }
 }
 

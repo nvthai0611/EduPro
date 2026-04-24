@@ -205,7 +205,7 @@ const CourseCard = ({ course }) => {
               Thời lượng
             </span>
             <span className="font-semibold text-gray-700 text-[10px] sm:text-xs">
-              {courseDuration}
+              {courseDuration === "N/A" ? "Đang cập nhật" : courseDuration}
             </span>
           </div>
         </div>

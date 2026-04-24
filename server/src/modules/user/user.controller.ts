@@ -74,11 +74,11 @@ class UserController {
             const user = await UserService.getUserById(id);
             if (user) {
                 res.setHeader("x-encrypted", "true");
-                res.status(200).json({ success: true, encryptedData: encryptData(user) });
+                return res.status(200).json({ success: true, encryptedData: encryptData(user) });
             } else {
                 return res.status(404).json({
                     success: false,
-                    message: 'User not found' 
+                    message: 'User not found'
                 });
             }
         } catch (error) {
@@ -181,52 +181,14 @@ class UserController {
 
     async addPurchasedCourse(req: Request, res: Response): Promise<Response> {
         try {
-            const { userId, courseId, price, orderId } = req.body;
-            if (!userId || !courseId || !price || !orderId) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Missing required fields",
-                });
-            }
+            const result = await UserService.addPurchasedCourseService(req.body);
 
-            // Validate ObjectId
-            if (
-                !mongoose.Types.ObjectId.isValid(userId) ||
-                !mongoose.Types.ObjectId.isValid(courseId) ||
-                !mongoose.Types.ObjectId.isValid(orderId)
-            ) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Invalid ID format",
-                });
-            }
-
-            // Check user
-            const user = await User.findById(userId) as IUserDocument | null;
-            if (!user)
-                return res.status(404).json({
-                    success: false,
-                    message: "User not found",
-                });
-
-            const order = await OrderService.getOrderById(orderId);
-            if (!order)
-                return res.status(404).json({
-                    success: false,
-                    message: "Order not found",
-                });
-
-            // Add new purchased course
-            await user.addPurchasedCourse(courseId, price, orderId);
-
-            return res.status(200).json({
+            return res.json({
                 success: true,
-                message: "Course added to purchasedCourses",
-                purchasedCourses: user.purchasedCourses,
+                data: result,
             });
-
         } catch (error) {
-            return res.status(500).json({ message: 'Thêm khóa học đã thanh toán thất bại', error });
+            return res.status(500).json({ message: "Error", error });
         }
     }
 

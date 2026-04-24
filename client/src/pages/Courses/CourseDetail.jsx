@@ -349,7 +349,7 @@ const CourseDetail = () => {
                 className="w-full h-80 object-cover rounded-lg shadow-2xl"
                 loading="lazy"
               />
-              <div className="absolute inset-0 bg-black/20 rounded-lg"></div>
+              <div className="absolute inset-0 rounded-lg"></div>
             </div>
           </div>
         </div>

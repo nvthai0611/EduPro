@@ -47,6 +47,9 @@ const MyCourses = () => {
     window.location.href = `/courses/${course.slug}`;
   };
 
+  console.log(purchasedCourses);
+  
+
   const formatDuration = (minutes) => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;

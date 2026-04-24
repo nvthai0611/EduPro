@@ -4,6 +4,7 @@ import OrderService from "./order.service";
 import axios from "axios";
 import User, { IUserDocument } from "../user/user.model";
 import mongoose from "mongoose";
+import userService from "../user/user.service";
 
 const BASE_URL =
   process.env.NODE_ENV === "development"
@@ -40,12 +41,17 @@ class OrderController {
   async createPaidOrder(req: Request, res: Response) {
     try {
       const newOrder = await OrderService.createOrder(req.body);
-      const order = await OrderService.getOrderById(newOrder._id.toString());
-      await axios.post(`${BASE_URL}api/v1/admin/user/purchase/course`, {
-        userId: order.userId,
-        courseId: order.courseId,
+      const order = await OrderService.getOrderById((newOrder as any)._id.toString());
+
+      if (!order) {
+        return res.status(404).json({ message: "Order không tồn tại" });
+      }
+
+      await userService.addPurchasedCourseService({
+        userId: order.userId.toString(),
+        courseId: order.courseId.toString(),
         price: order.price,
-        orderId: order._id,
+        orderId: (order as any)._id.toString(),
       });
 
       return res.json({
@@ -180,7 +186,7 @@ class OrderController {
       if (error.stack) {
         console.error("Stack trace:", error.stack);
       }
-      
+
       // Check if user already purchased
       if (error.message === "Course already purchased") {
         return res.status(400).json({
