@@ -3,6 +3,7 @@
 {
     "compilerOptions": {
         "baseUrl": "./src", // Đặt baseUrl là thư mục src
+        "ignoreDeprecations": "6.0",
         "paths": {
             "@/*": [
                 "shadcn-ui/*"

@@ -37,7 +37,7 @@ const ForumHome = () => {
   const posts = useMemo(() => data?.posts || [], [data?.posts]);
   const pagination = useMemo(() => data?.pagination || {}, [data?.pagination]);
   const { data: featuredPosts = [], isLoading: isFeaturedLoading } = useFeaturedPosts({ limit: 4 });
- 
+
   // Fetch trending posts (for sidebar)
   const { data: trendingPosts = [], isLoading: isTrendingLoading } = useTrendingPosts({
     limit: 5,
@@ -126,7 +126,7 @@ const ForumHome = () => {
                       <div className="flex items-center gap-2">
                         <img
                           src={post.author?.image || "https://static.vecteezy.com/system/resources/previews/024/766/958/non_2x/default-male-avatar-profile-icon-social-media-user-free-vector.jpg"}
-                             alt={post.authorName}
+                          alt={post.authorName}
                           className="w-6 h-6 rounded-full"
                         />
                         <span className="text-xs text-gray-600">

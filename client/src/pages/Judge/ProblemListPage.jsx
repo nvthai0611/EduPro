@@ -212,13 +212,14 @@ export default function ProblemListPage() {
                 <Code2 className="w-10 h-10 text-slate-300" />
               </div>
               <h3 className="text-lg font-semibold text-slate-900">Chưa có bài tập nào</h3>
-              <p className="text-slate-500 mb-6">Hãy bắt đầu xây dựng bộ đề đầu tiên của bạn.</p>
+              <p className="text-slate-500 mb-6">Hãy bắt đầu giải những bài toán đầu tiên của bạn.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50/80 border-b border-slate-100">
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">STT</th>
                     <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Thông tin bài toán</th>
                     <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Độ khó</th>
                     <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Thông tin</th>
@@ -227,8 +228,11 @@ export default function ProblemListPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {paginatedProblems.map((prob) => (
+                  {paginatedProblems.map((prob, index) => (
                     <tr key={prob._id} className="group hover:bg-blue-50/30 transition-colors">
+                      <td className="px-6 py-5 text-center">
+                        <span className="text-sm font-medium text-slate-600">{startIndex + index + 1}</span>
+                      </td>
                       <td className="px-6 py-5">
                         <div className="block group-hover:translate-x-1 transition-transform">
                           <h4 className="font-bold text-slate-800 group-hover:text-blue-600 transition-colors">{prob.title}</h4>

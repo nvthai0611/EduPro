@@ -154,6 +154,10 @@ export function AddProblemDialog({ initialData, trigger }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
+      <style>
+        {`.no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}
+      </style>
       <DialogTrigger asChild>
         {trigger ?? (
           <Button className="gap-2">
@@ -163,7 +167,7 @@ export function AddProblemDialog({ initialData, trigger }) {
         )}
       </DialogTrigger>
 
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto no-scrollbar">
         <DialogHeader>
           <DialogTitle>
             {initialData ? "Edit Problem" : "Add New Problem"}

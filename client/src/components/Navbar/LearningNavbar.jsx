@@ -34,7 +34,6 @@ const Navbar = () => {
   const location = useLocation();
   const forumPaths = ['/forum', '/posts'];
   const isInForum = forumPaths.some(path => location.pathname.startsWith(path));
-  const isForum = isInForum; // Re-defining for backward compatibility in the template
 
   const displayMenuItems = isInForum
     ? [
@@ -89,20 +88,9 @@ const Navbar = () => {
           <ToastContainer />
 
           {/* Search Bar - Desktop */}
-          {isForum ? 
-          // Viết bài button
-          <div className="hidden md:flex items-center flex-1 max-w-2xl justify-end">
-            <Link
-              to="/forum/create"
-              className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
-            >
-              Viết bài mới
-            </Link>
+          <div className="hidden md:flex items-center flex-1 max-w-2xl">
+            <SearchBar />
           </div>
-          :
-            <div className="hidden md:flex items-center flex-1 max-w-2xl">
-              <SearchBar />
-            </div>}
 
           {/* Desktop User Menu */}
           <div className="hidden md:flex items-center space-x-4">
@@ -110,7 +98,7 @@ const Navbar = () => {
               <div className="flex items-center space-x-4 justify-center">
                 {/* Notification Dropdown Component */}
                 <NotificationDropdown />
-                
+
                 <div className="relative" ref={userMenuRef}>
                   <button
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}

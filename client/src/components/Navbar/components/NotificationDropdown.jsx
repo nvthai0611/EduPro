@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Bell, Loader2, Trash2, X, Filter } from "lucide-react";
+import { Bell, Loader2, Trash2 } from "lucide-react";
 import { 
   useNotifications, 
   useUnreadCount, 

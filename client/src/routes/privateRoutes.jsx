@@ -9,6 +9,7 @@ import CourseLearnDetail from "../pages/Courses/CourseLearnDetail";
 import PaymentPage from "../pages/Cart/CheckOut/PaymentPage";
 import CodeEditorPage from "../pages/Judge/CodeEditorPage";
 import ProblemListPage from "../pages/Judge/ProblemListPage";
+import HeaderOnlyLayout from "../layouts/DefaultLayout/HeaderOnlyLayout";
 
 export const privateRoutes = (
   <>
@@ -24,6 +25,15 @@ export const privateRoutes = (
       <Route path="/tai-khoan" element={<Profile />} />
       <Route path="/checkout" element={<PaymentPage />} />
       <Route path="/problems" element={<ProblemListPage />} />
+    </Route>
+
+    <Route
+      element={
+        <AuthMiddleware allowedRoles={[TYPE_AUTH.ADMIN, TYPE_AUTH.CUSTOMER, TYPE_AUTH.USER]}>
+          <HeaderOnlyLayout />
+        </AuthMiddleware>
+      }
+    >
       <Route path="/problems/:slug" element={<CodeEditorPage />} />
     </Route>
 

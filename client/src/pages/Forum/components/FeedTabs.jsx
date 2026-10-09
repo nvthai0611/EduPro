@@ -1,4 +1,7 @@
+import { Link } from "react-router-dom";
 import { FeedType } from "../../../utils/constants";
+import { SquarePen } from "lucide-react";
+import { useAuth } from "../../../hooks/useAuth";
 
 const FEED_TABS = [
     { label: "Dành cho bạn", value: FeedType.FOR_YOU },
@@ -9,6 +12,8 @@ const FEED_TABS = [
 ];
 
 const FeedTabs = ({ active, onChange }) => {
+    const { user } = useAuth();
+
     return (
         <div className="flex gap-1 md:gap-6 border-b border-gray-200 mb-6 overflow-x-auto scrollbar-hide">
             {FEED_TABS.map((tab) => (
@@ -28,6 +33,21 @@ const FeedTabs = ({ active, onChange }) => {
                     )}
                 </button>
             ))}
+
+            {user && (
+                <>
+                    <div className="hidden md:flex items-center justify-end flex-1 mb-4">
+                        <Link
+                            to="/forum/create"
+                            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm hover:bg-blue-700 hover:shadow-md transition-all duration-200"
+                        >
+                            <SquarePen className="w-4 h-4" />
+                            <span>Tạo bài viết</span>
+                        </Link>
+                    </div>
+                </>
+            )
+            }
         </div>
     );
 };
